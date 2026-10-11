@@ -551,22 +551,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {/* Decorative Botanical Leaf branch & Warm Organic Shape matching Reference Image 1 */}
       <BotanicalBackground />
 
-      {/* Grid Guide Overlay */}
-      {showGrid && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 1,
-            backgroundImage: `radial-gradient(#D5C9B8 1.2px, transparent 1.2px)`,
-            backgroundSize: '24px 24px',
-            opacity: 0.65
-          }}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Empty State message & illustration matching Reference Image 1 */}
       <EmptyCanvasState visible={!hasObjects} />
 
@@ -579,6 +563,24 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           zIndex: 2
         }}
       />
+
+      {/* Grid Guide Overlay - placed directly above canvas with pointer-events: none */}
+      {showGrid && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 5,
+            backgroundImage: `
+              linear-gradient(to right, rgba(119, 125, 94, 0.14) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(119, 125, 94, 0.14) 1px, transparent 1px)
+            `,
+            backgroundSize: '24px 24px'
+          }}
+          aria-hidden="true"
+        />
+      )}
     </main>
   );
 };

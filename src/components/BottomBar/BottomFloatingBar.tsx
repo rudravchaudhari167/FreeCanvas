@@ -152,16 +152,37 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
       <div style={dividerStyle} />
 
       {/* Grid Switch matching Reference Image 1 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleGrid();
+        }}
+        title={showGrid ? 'Hide Grid Guide' : 'Show Grid Guide'}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'none',
+          border: 'none',
+          padding: '4px 6px',
+          borderRadius: 8,
+          cursor: 'pointer',
+          outline: 'none',
+          transition: 'background-color 0.15s ease'
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFE9DE')}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+      >
         <div
-          onClick={onToggleGrid}
           className={`switch-track ${showGrid ? 'active' : ''}`}
-          title="Toggle Grid Guide"
+          style={{ pointerEvents: 'none' }}
         >
           <div className="switch-thumb" />
         </div>
         <span style={{ fontSize: 12.5, fontWeight: 500, color: '#30312D' }}>Grid</span>
-      </div>
+      </button>
 
       <div style={dividerStyle} />
 
