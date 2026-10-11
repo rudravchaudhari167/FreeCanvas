@@ -10,7 +10,8 @@ import {
   IText,
   Group,
   Point,
-  FabricObject
+  FabricObject,
+  Shadow
 } from 'fabric';
 import type {
   ToolType,
@@ -20,6 +21,17 @@ import type {
 } from '../../types/canvas';
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { BotanicalBackground } from './BotanicalBackground';
+
+function hexToRgba(hex: string, alpha: number): string {
+  let c = hex.replace('#', '');
+  if (c.length === 3) {
+    c = c.split('').map((x) => x + x).join('');
+  }
+  const r = parseInt(c.slice(0, 2), 16) || 48;
+  const g = parseInt(c.slice(2, 4), 16) || 49;
+  const b = parseInt(c.slice(4, 6), 16) || 45;
+  return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})`;
+}
 
 interface CanvasWorkspaceProps {
   activeTool: ToolType;
@@ -68,6 +80,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const isPanningRef = useRef<boolean>(false);
   const lastPanPosRef = useRef<{ x: number; y: number } | null>(null);
   const isSpacePressedRef = useRef<boolean>(false);
+
+  // Active tool and settings live references for canvas events
+  const activeToolRef = useRef<ToolType>(activeTool);
+  activeToolRef.current = activeTool;
+  const settingsRef = useRef<ToolSettings>(settings);
+  settingsRef.current = settings;
 
   // Update layer list for Layers panel
   const updateLayers = useCallback(() => {
@@ -201,7 +219,38 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.on('object:removed', () => {
       if (!isHistoryActionRef.current) saveStateToHistory();
     });
-    canvas.on('path:created', () => {
+    canvas.on('path:created', (opt: any) => {
+      const tool = activeToolRef.current;
+      const currentSettings = settingsRef.current;
+      const pathObj = opt.path;
+
+      if (pathObj) {
+        if (tool === 'pencil') {
+          // Delicate graphite sketch style with semi-translucent layering & fine grain
+          pathObj.set({
+            opacity: 0.65 * currentSettings.opacity,
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round',
+            strokeDashArray: [1.2, 0.6] // subtle paper grain texture
+          });
+        } else if (tool === 'pen') {
+          // Rich, smooth solid ink line
+          pathObj.set({
+            opacity: currentSettings.opacity,
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round'
+          });
+        } else if (tool === 'marker') {
+          // Translucent chisel highlighter
+          pathObj.set({
+            opacity: 0.35 * currentSettings.opacity,
+            strokeLineCap: 'square',
+            strokeLineJoin: 'miter'
+          });
+        }
+        canvas.renderAll();
+      }
+
       if (!isHistoryActionRef.current) saveStateToHistory();
     });
 
@@ -260,22 +309,35 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const brush = new PencilBrush(canvas);
 
       if (activeTool === 'pen') {
-        brush.color = settings.color;
-        brush.width = settings.size;
+        // Smooth Fountain / Ink Pen: solid saturated color, thick smooth flow, tremor decimation
+        brush.color = hexToRgba(settings.color, settings.opacity);
+        brush.width = Math.max(2, settings.size);
         brush.strokeLineCap = 'round';
         brush.strokeLineJoin = 'round';
+        brush.decimate = 2.5; // Smooths hand jitter into clean fluid ink curves
+        brush.shadow = null;
       } else if (activeTool === 'pencil') {
-        // Natural sketch stroke: thinner line with slight texture
-        brush.color = settings.color;
-        brush.width = Math.max(1, Math.round(settings.size * 0.7));
+        // Natural Graphite Pencil: much finer sketch stroke, graphite transparency & soft graphite grain
+        const pencilSize = Math.max(1, Math.round(settings.size * 0.45));
+        brush.color = hexToRgba(settings.color, 0.65 * settings.opacity);
+        brush.width = pencilSize;
         brush.strokeLineCap = 'round';
         brush.strokeLineJoin = 'round';
+        brush.decimate = 0.4; // Preserves natural sketch nuances & textures
+        brush.shadow = new Shadow({
+          color: hexToRgba(settings.color, 0.2),
+          blur: 0.8,
+          offsetX: 0.3,
+          offsetY: 0.3
+        });
       } else if (activeTool === 'marker') {
-        // Marker/highlighter: wider with transparency
-        const hex = settings.color;
-        brush.color = hex;
-        brush.width = Math.max(14, settings.size * 2.5);
+        // Broad Chisel Marker / Highlighter
+        brush.color = hexToRgba(settings.color, 0.35 * settings.opacity);
+        brush.width = Math.max(16, settings.size * 3);
         brush.strokeLineCap = 'square';
+        brush.strokeLineJoin = 'miter';
+        brush.decimate = 2;
+        brush.shadow = null;
       }
 
       canvas.freeDrawingBrush = brush;

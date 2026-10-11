@@ -132,18 +132,47 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       aria-label="Properties Panel"
     >
       {/* Panel Header matching Reference Image 1 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-        <Sliders size={18} color="#4A4B46" />
-        <h2
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <Sliders size={18} color="#4A4B46" />
+          <h2
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: '#30312D',
+              letterSpacing: '-0.2px'
+            }}
+          >
+            Properties
+          </h2>
+        </div>
+        <span
           style={{
-            fontSize: 15,
-            fontWeight: 600,
-            color: '#30312D',
-            letterSpacing: '-0.2px'
+            fontSize: 11,
+            fontWeight: 550,
+            color: '#676C4F',
+            backgroundColor: '#EEF0E5',
+            padding: '3px 8px',
+            borderRadius: 6,
+            letterSpacing: '0.2px'
           }}
         >
-          Properties
-        </h2>
+          {selectedObject
+            ? 'Selected'
+            : activeTool === 'pen'
+            ? 'Smooth Pen'
+            : activeTool === 'pencil'
+            ? 'Sketch Pencil'
+            : activeTool === 'marker'
+            ? 'Marker'
+            : activeTool === 'text'
+            ? 'Text'
+            : activeTool === 'shape'
+            ? 'Shape'
+            : activeTool === 'eraser'
+            ? 'Eraser'
+            : 'Workspace'}
+        </span>
       </div>
 
       {/* COLOR SECTION matching Reference Image 1 */}
