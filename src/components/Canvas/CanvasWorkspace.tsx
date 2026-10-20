@@ -843,15 +843,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       {/* Empty State message & illustration matching Reference Image 1 */}
       <EmptyCanvasState visible={!hasObjects} />
 
-      {/* Interactive Fabric Canvas */}
-      <canvas
-        ref={canvasElRef}
+      {/* Interactive Fabric Canvas Container */}
+      <div
         style={{
           position: 'absolute',
           inset: 0,
           zIndex: 2
         }}
-      />
+      >
+        <canvas ref={canvasElRef} />
+      </div>
 
       {/* Grid Guide Overlay - placed directly above canvas with pointer-events: none */}
       {showGrid && (

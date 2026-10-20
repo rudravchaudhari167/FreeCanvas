@@ -499,9 +499,13 @@ export function App() {
     if (!canvas) return;
 
     if (confirm('Are you sure you want to clear the entire canvas?')) {
-      canvas.clear();
-      canvas.backgroundColor = backgroundColor;
-      canvas.renderAll();
+      if (typeof (canvas as any).resetCanvas === 'function') {
+        (canvas as any).resetCanvas();
+      } else {
+        canvas.clear();
+        canvas.backgroundColor = backgroundColor;
+        canvas.renderAll();
+      }
       showToast('Canvas cleared');
     }
   }, [backgroundColor, showToast]);

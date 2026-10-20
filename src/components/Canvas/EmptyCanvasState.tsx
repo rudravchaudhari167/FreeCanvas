@@ -5,8 +5,6 @@ interface EmptyCanvasStateProps {
 }
 
 export const EmptyCanvasState: React.FC<EmptyCanvasStateProps> = ({ visible }) => {
-  if (!visible) return null;
-
   return (
     <div
       style={{
@@ -20,8 +18,9 @@ export const EmptyCanvasState: React.FC<EmptyCanvasStateProps> = ({ visible }) =
         alignItems: 'center',
         justifyContent: 'center',
         userSelect: 'none',
-        transition: 'opacity 0.4s ease-out',
+        transition: 'opacity 0.35s ease-out, visibility 0.35s ease-out',
         opacity: visible ? 1 : 0,
+        visibility: visible ? 'visible' : 'hidden',
         zIndex: 1,
         width: 440,
         textAlign: 'center'
