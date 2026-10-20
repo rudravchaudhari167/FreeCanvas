@@ -294,7 +294,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Size</span>
-            <span style={{ fontSize: 12, fontWeight: 500, color: '#79766F' }}>{currentSize} px</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: '#79766F' }}>
+              {activeTool === 'pen' && !selectedObject
+                ? `${Math.max(3.5, Math.round(currentSize * 1.35 * 10) / 10)} px (Ink)`
+                : activeTool === 'pencil' && !selectedObject
+                ? `${Math.max(1.2, Math.round(currentSize * 0.42 * 10) / 10)} px (Lead)`
+                : activeTool === 'marker' && !selectedObject
+                ? `${Math.max(24, Math.round(currentSize * 4.5))} px (Chisel)`
+                : `${currentSize} px`}
+            </span>
           </div>
           <input
             type="range"
