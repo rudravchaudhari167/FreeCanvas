@@ -511,17 +511,36 @@ export function App() {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    canvas.clear();
-    canvas.backgroundColor = '#FFFEFA';
-    canvas.renderAll();
+    const hasStrokes = canvas.getObjects().length > 0;
+    if (hasStrokes && saveStatus === 'unsaved') {
+      const confirmed = window.confirm(
+        'You have unsaved changes. Start a fresh new project?'
+      );
+      if (!confirmed) return;
+    }
+
+    if (typeof (canvas as any).resetCanvas === 'function') {
+      (canvas as any).resetCanvas();
+    } else {
+      canvas.clear();
+      canvas.backgroundColor = '#FFFEFA';
+      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+      canvas.renderAll();
+    }
 
     setProjectId('proj_' + Date.now());
     setProjectName('Untitled Masterpiece');
     setBackgroundColor('#FFFEFA');
     setZoom(1);
+    setSelectedObject(null);
+    setActiveTool('select');
     setSaveStatus('saved');
     showToast('Created new project');
-  }, [showToast]);
+  }, [saveStatus, showToast]);
+
+  const handleNewProjectNewTab = useCallback(() => {
+    window.open(window.location.origin, '_blank');
+  }, []);
 
   // Open Project from gallery
   const handleSelectProject = useCallback((project: CanvasProject) => {
@@ -565,6 +584,13 @@ export function App() {
           handleRedo();
         } else {
           handleUndo();
+        }
+      } else if (cmdOrCtrl && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleNewProjectNewTab();
+        } else {
+          handleNewProject();
         }
       } else if (cmdOrCtrl && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -630,7 +656,9 @@ export function App() {
     handleZoomOut,
     handleResetZoom,
     handleFitScreen,
-    handleDeleteSelected
+    handleDeleteSelected,
+    handleNewProject,
+    handleNewProjectNewTab
   ]);
 
   return (
@@ -645,6 +673,7 @@ export function App() {
         onRedo={handleRedo}
         onSave={handleSaveProject}
         onNewProject={handleNewProject}
+        onNewProjectNewTab={handleNewProjectNewTab}
         onOpenProject={() => setIsProjectsOpen(true)}
         onSaveAs={() => {
           const next = prompt('Save project as:', `${projectName} (Copy)`);

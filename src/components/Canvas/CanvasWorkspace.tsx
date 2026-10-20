@@ -164,6 +164,60 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     redoStackRef.current = [];
     onHistoryChange(false, false);
 
+    // Expose undo, redo, and resetCanvas on canvas instance
+    (canvas as any).undo = () => {
+      const uStack = undoStackRef.current;
+      const rStack = redoStackRef.current;
+      if (uStack.length <= 1) return;
+
+      const currentState = uStack.pop()!;
+      rStack.push(currentState);
+      const prevState = uStack[uStack.length - 1];
+
+      isHistoryActionRef.current = true;
+      canvas.loadFromJSON(JSON.parse(prevState)).then(() => {
+        canvas.renderAll();
+        isHistoryActionRef.current = false;
+        setHasObjects(canvas.getObjects().length > 0);
+        updateLayers();
+        onHistoryChange(uStack.length > 1, rStack.length > 0);
+        onSaveTrigger(prevState);
+      });
+    };
+
+    (canvas as any).redo = () => {
+      const uStack = undoStackRef.current;
+      const rStack = redoStackRef.current;
+      if (rStack.length === 0) return;
+
+      const nextState = rStack.pop()!;
+      uStack.push(nextState);
+
+      isHistoryActionRef.current = true;
+      canvas.loadFromJSON(JSON.parse(nextState)).then(() => {
+        canvas.renderAll();
+        isHistoryActionRef.current = false;
+        setHasObjects(canvas.getObjects().length > 0);
+        updateLayers();
+        onHistoryChange(uStack.length > 1, rStack.length > 0);
+        onSaveTrigger(nextState);
+      });
+    };
+
+    (canvas as any).resetCanvas = () => {
+      canvas.clear();
+      canvas.backgroundColor = '#FFFEFA';
+      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+      canvas.renderAll();
+      const emptyJson = JSON.stringify(canvas.toJSON());
+      undoStackRef.current = [emptyJson];
+      redoStackRef.current = [];
+      setHasObjects(false);
+      updateLayers();
+      onHistoryChange(false, false);
+      onSelectionChange(null);
+    };
+
     // Resize handler
     const handleResize = () => {
       if (!containerRef.current || !fabricCanvasRef.current) return;

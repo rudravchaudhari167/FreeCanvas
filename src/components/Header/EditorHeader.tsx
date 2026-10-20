@@ -20,7 +20,8 @@ import {
   Grid,
   Sliders,
   Layers,
-  HelpCircle
+  HelpCircle,
+  ExternalLink
 } from 'lucide-react';
 import { DropdownMenu } from './DropdownMenu';
 import type { MenuItem } from './DropdownMenu';
@@ -34,6 +35,7 @@ interface EditorHeaderProps {
   onRedo: () => void;
   onSave: () => void;
   onNewProject: () => void;
+  onNewProjectNewTab: () => void;
   onOpenProject: () => void;
   onSaveAs: () => void;
   onRename: () => void;
@@ -68,6 +70,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onRedo,
   onSave,
   onNewProject,
+  onNewProjectNewTab,
   onOpenProject,
   onSaveAs,
   onRename,
@@ -92,6 +95,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
 }) => {
   const fileMenuItems: MenuItem[] = [
     { label: 'New Project', icon: <Plus size={15} />, shortcut: '⌘N', onClick: onNewProject },
+    { label: 'New Project (New Tab)', icon: <ExternalLink size={15} />, shortcut: '⌘⇧N', onClick: onNewProjectNewTab },
     { label: 'Open / My Projects', icon: <FolderOpen size={15} />, shortcut: '⌘O', onClick: onOpenProject },
     { divider: true, label: 'div1', onClick: () => {} },
     { label: 'Save', icon: <Save size={15} />, shortcut: '⌘S', onClick: onSave },
