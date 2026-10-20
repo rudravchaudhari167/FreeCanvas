@@ -88,26 +88,25 @@ export function rgbToString(r: number, g: number, b: number): string {
   return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 }
 
-export const RGB_PALETTES = {
-  primaryRGB: [
-    { name: 'Pure Red', hex: '#EF4444', rgb: 'rgb(239, 68, 68)' },
-    { name: 'Pure Green', hex: '#22C55E', rgb: 'rgb(34, 197, 94)' },
-    { name: 'Pure Blue', hex: '#3B82F6', rgb: 'rgb(59, 130, 246)' },
-    { name: 'Vibrant Yellow', hex: '#EAB308', rgb: 'rgb(234, 179, 8)' },
-    { name: 'Vibrant Cyan', hex: '#06B6D4', rgb: 'rgb(6, 182, 212)' },
-    { name: 'Vibrant Magenta', hex: '#D946EF', rgb: 'rgb(217, 70, 239)' },
-    { name: 'Clean White', hex: '#FFFFFF', rgb: 'rgb(255, 255, 255)' },
-    { name: 'Deep Charcoal', hex: '#1E293B', rgb: 'rgb(30, 41, 59)' }
-  ],
-  botanical: [
-    { name: 'Sage Green', hex: '#777D5E', rgb: 'rgb(119, 125, 94)' },
-    { name: 'Warm Peach', hex: '#EED4C5', rgb: 'rgb(238, 212, 197)' },
-    { name: 'Terracotta', hex: '#D99379', rgb: 'rgb(217, 147, 121)' },
-    { name: 'Muted Lavender', hex: '#A9A8D0', rgb: 'rgb(169, 168, 208)' },
-    { name: 'Soft Blue', hex: '#A9BDD9', rgb: 'rgb(169, 189, 217)' },
-    { name: 'Charcoal', hex: '#4A4B46', rgb: 'rgb(74, 75, 70)' }
-  ]
-};
+// Curated 14 swatches: Row 1 RGB spectrum essentials + Row 2 Botanical earthy tones
+export const CURATED_SWATCHES = [
+  // Row 1: RGB Spectrum & Essentials
+  { name: 'Red', hex: '#EF4444', rgb: 'rgb(239, 68, 68)' },
+  { name: 'Green', hex: '#22C55E', rgb: 'rgb(34, 197, 94)' },
+  { name: 'Blue', hex: '#3B82F6', rgb: 'rgb(59, 130, 246)' },
+  { name: 'Amber', hex: '#F59E0B', rgb: 'rgb(245, 158, 11)' },
+  { name: 'Violet', hex: '#8B5CF6', rgb: 'rgb(139, 92, 246)' },
+  { name: 'Pure White', hex: '#FFFFFF', rgb: 'rgb(255, 255, 255)' },
+  { name: 'Slate', hex: '#1E293B', rgb: 'rgb(30, 41, 59)' },
+  // Row 2: Botanical & Earthy Accents
+  { name: 'Sage Green', hex: '#777D5E', rgb: 'rgb(119, 125, 94)' },
+  { name: 'Warm Peach', hex: '#EED4C5', rgb: 'rgb(238, 212, 197)' },
+  { name: 'Terracotta', hex: '#D99379', rgb: 'rgb(217, 147, 121)' },
+  { name: 'Muted Lavender', hex: '#A9A8D0', rgb: 'rgb(169, 168, 208)' },
+  { name: 'Soft Blue', hex: '#A9BDD9', rgb: 'rgb(169, 189, 217)' },
+  { name: 'Butter Cream', hex: '#FAF0D7', rgb: 'rgb(250, 240, 215)' },
+  { name: 'Charcoal', hex: '#4A4B46', rgb: 'rgb(74, 75, 70)' }
+];
 
 export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   activeTool,
@@ -124,7 +123,6 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [showHexInput, setShowHexInput] = useState(false);
   const [hexValue, setHexValue] = useState(settings.color);
   const [colorMode, setColorMode] = useState<'rgb' | 'hex'>('rgb');
-  const [paletteTab, setPaletteTab] = useState<'rgb' | 'botanical'>('rgb');
   const [copiedRgb, setCopiedRgb] = useState(false);
   const [shapeTarget, setShapeTarget] = useState<'fill' | 'stroke'>('fill');
 
@@ -136,7 +134,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const isLineContext = activeTool === 'line' || activeTool === 'arrow' || selectedObject?.type === 'line';
   const isStickyContext = activeTool === 'sticky' || selectedObject?.type === 'group';
 
-  // Determine current active color based on context and selected target
+  // Determine current active color
   let currentColor = settings.color;
   if (selectedObject) {
     if (isShapeContext) {
@@ -292,29 +290,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         top: 96,
         right: 24,
         zIndex: 40,
-        width: 264,
-        backgroundColor: 'rgba(253, 251, 247, 0.94)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        width: 254,
+        backgroundColor: 'rgba(253, 251, 247, 0.95)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
         border: '1px solid #E8DED2',
-        borderRadius: 24,
-        padding: '18px 18px',
+        borderRadius: 22,
+        padding: '16px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 16,
-        boxShadow: '0 10px 32px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
-        maxHeight: 'calc(100vh - 160px)',
+        gap: 14,
+        boxShadow: '0 12px 34px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
+        maxHeight: 'calc(100vh - 150px)',
         overflowY: 'auto'
       }}
       aria-label="Properties Panel"
     >
       {/* Panel Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Sliders size={18} color="#4A4B46" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Sliders size={16} color="#4A4B46" />
           <h2
             style={{
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: 600,
               color: '#30312D',
               letterSpacing: '-0.2px'
@@ -325,11 +323,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
         <span
           style={{
-            fontSize: 11,
+            fontSize: 10.5,
             fontWeight: 550,
             color: '#676C4F',
             backgroundColor: '#EEF0E5',
-            padding: '3px 8px',
+            padding: '2.5px 7px',
             borderRadius: 6,
             letterSpacing: '0.2px'
           }}
@@ -338,32 +336,31 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </span>
       </div>
 
-      {/* COLOR SECTION WITH FULL RGB SUPPORT (Shown for all items except standalone eraser) */}
+      {/* AESTHETIC & MINIMAL COLOR SECTION WITH FULL RGB SUPPORT */}
       {!isEraserContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Header Row: Label + Format Mode Pill (RGB / HEX) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          {/* Header Row: Context Label + Minimal RGB/HEX Segmented Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 13, fontWeight: 550, color: '#4E504A' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A', letterSpacing: '-0.1px' }}>
               {isShapeContext
-                ? shapeTarget === 'fill' ? 'Shape Fill' : 'Shape Border'
+                ? shapeTarget === 'fill' ? 'Fill Color' : 'Border Color'
                 : isTextContext
                 ? 'Text Color'
                 : isStickyContext
                 ? 'Note Color'
                 : isLineContext
                 ? 'Line Color'
-                : 'Item Color'}
+                : 'Color'}
             </span>
 
-            {/* RGB / HEX mode toggle buttons */}
+            {/* Segmented RGB / HEX pill */}
             <div
               style={{
                 display: 'flex',
-                backgroundColor: '#FAF5EE',
-                border: '1px solid #E8DFD3',
-                borderRadius: 8,
+                backgroundColor: '#F0EBE1',
+                borderRadius: 999,
                 padding: '2px',
-                gap: 2
+                border: '1px solid #E4DCD0'
               }}
             >
               <button
@@ -371,13 +368,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onClick={() => setColorMode('rgb')}
                 style={{
                   padding: '2px 8px',
-                  borderRadius: 6,
-                  fontSize: 11,
+                  borderRadius: 999,
+                  fontSize: 10,
                   fontWeight: colorMode === 'rgb' ? 600 : 500,
-                  backgroundColor: colorMode === 'rgb' ? '#C9D0BD' : 'transparent',
-                  color: colorMode === 'rgb' ? '#282C1E' : '#79766F',
-                  cursor: 'pointer',
                   border: 'none',
+                  backgroundColor: colorMode === 'rgb' ? '#FFFFFF' : 'transparent',
+                  color: colorMode === 'rgb' ? '#30312D' : '#8A857A',
+                  boxShadow: colorMode === 'rgb' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -388,13 +386,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onClick={() => setColorMode('hex')}
                 style={{
                   padding: '2px 8px',
-                  borderRadius: 6,
-                  fontSize: 11,
+                  borderRadius: 999,
+                  fontSize: 10,
                   fontWeight: colorMode === 'hex' ? 600 : 500,
-                  backgroundColor: colorMode === 'hex' ? '#C9D0BD' : 'transparent',
-                  color: colorMode === 'hex' ? '#282C1E' : '#79766F',
-                  cursor: 'pointer',
                   border: 'none',
+                  backgroundColor: colorMode === 'hex' ? '#FFFFFF' : 'transparent',
+                  color: colorMode === 'hex' ? '#30312D' : '#8A857A',
+                  boxShadow: colorMode === 'hex' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -405,55 +404,68 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
           {/* Shape Dual-Target Tabs (Fill vs Border) */}
           {isShapeContext && (
-            <div style={{ display: 'flex', gap: 6, marginTop: -2 }}>
+            <div
+              style={{
+                display: 'flex',
+                backgroundColor: '#F0EBE1',
+                borderRadius: 8,
+                padding: '2px',
+                border: '1px solid #E4DCD0',
+                marginTop: -1
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setShapeTarget('fill')}
                 style={{
                   flex: 1,
-                  padding: '4px 8px',
-                  borderRadius: 7,
-                  fontSize: 11.5,
+                  padding: '3px 0',
+                  borderRadius: 6,
+                  fontSize: 11,
                   fontWeight: shapeTarget === 'fill' ? 600 : 500,
-                  backgroundColor: shapeTarget === 'fill' ? '#EAE5D9' : '#FAF6EE',
+                  backgroundColor: shapeTarget === 'fill' ? '#FFFFFF' : 'transparent',
                   color: shapeTarget === 'fill' ? '#30312D' : '#8A857A',
-                  border: '1px solid ' + (shapeTarget === 'fill' ? '#D6CBB8' : '#ECE3D5'),
-                  cursor: 'pointer'
+                  border: 'none',
+                  boxShadow: shapeTarget === 'fill' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                Fill Color
+                Fill
               </button>
               <button
                 type="button"
                 onClick={() => setShapeTarget('stroke')}
                 style={{
                   flex: 1,
-                  padding: '4px 8px',
-                  borderRadius: 7,
-                  fontSize: 11.5,
+                  padding: '3px 0',
+                  borderRadius: 6,
+                  fontSize: 11,
                   fontWeight: shapeTarget === 'stroke' ? 600 : 500,
-                  backgroundColor: shapeTarget === 'stroke' ? '#EAE5D9' : '#FAF6EE',
+                  backgroundColor: shapeTarget === 'stroke' ? '#FFFFFF' : 'transparent',
                   color: shapeTarget === 'stroke' ? '#30312D' : '#8A857A',
-                  border: '1px solid ' + (shapeTarget === 'stroke' ? '#D6CBB8' : '#ECE3D5'),
-                  cursor: 'pointer'
+                  border: 'none',
+                  boxShadow: shapeTarget === 'stroke' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                Border Color
+                Border
               </button>
             </div>
           )}
 
-          {/* Live Preview Swatch + Color Display / Copy Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Color Preview Swatch + Value Display Capsule */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <label
-              title="Click to open color picker"
+              title="Open system color picker"
               style={{
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 backgroundColor: currentColor,
                 border: '2px solid #FFFFFF',
-                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+                boxShadow: '0 2px 6px rgba(48, 49, 45, 0.12), inset 0 0 0 1px rgba(0,0,0,0.06)',
                 cursor: 'pointer',
                 position: 'relative',
                 overflow: 'hidden',
@@ -474,36 +486,38 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               />
             </label>
 
-            {/* RGB String with Copy button OR HEX input pill */}
             {colorMode === 'rgb' ? (
-              <div
+              <button
+                type="button"
                 onClick={handleCopyRgb}
-                title="Click to copy RGB code"
+                title="Click to copy RGB value"
                 style={{
                   flex: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: '#FAF5EE',
+                  backgroundColor: '#FAF6EE',
                   border: '1px solid #E8DFD3',
-                  borderRadius: 10,
-                  padding: '6px 10px',
-                  fontSize: 12,
-                  fontWeight: 550,
-                  color: '#30312D',
+                  borderRadius: 9,
+                  padding: '5px 9px',
+                  fontSize: 11.5,
+                  fontWeight: 500,
+                  color: '#4A4B46',
                   cursor: 'pointer',
-                  userSelect: 'none'
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <span>{rgbToString(currentRgb.r, currentRgb.g, currentRgb.b)}</span>
+                <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '-0.2px' }}>
+                  rgb({currentRgb.r}, {currentRgb.g}, {currentRgb.b})
+                </span>
                 {copiedRgb ? (
-                  <span style={{ fontSize: 11, color: '#38A169', display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Check size={12} /> Copied
+                  <span style={{ fontSize: 10.5, color: '#38A169', display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                    <Check size={11} /> Copied
                   </span>
                 ) : (
-                  <Copy size={13} color="#8A857A" />
+                  <Copy size={12} color="#9E9A90" />
                 )}
-              </div>
+              </button>
             ) : (
               <div
                 onClick={() => setShowHexInput(true)}
@@ -512,13 +526,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: '#FAF5EE',
+                  backgroundColor: '#FAF6EE',
                   border: '1px solid #E8DFD3',
-                  borderRadius: 10,
-                  padding: '6px 10px',
-                  fontSize: 12.5,
+                  borderRadius: 9,
+                  padding: '5px 9px',
+                  fontSize: 11.5,
                   fontWeight: 500,
-                  color: '#30312D',
+                  color: '#4A4B46',
                   cursor: 'pointer'
                 }}
               >
@@ -542,249 +556,140 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       background: 'transparent',
                       border: 'none',
                       outline: 'none',
-                      fontSize: 12.5,
+                      fontSize: 11.5,
                       fontWeight: 500,
-                      fontFamily: 'inherit',
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
                       color: '#30312D'
                     }}
                   />
                 ) : (
                   <>
-                    <span>{rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b).toUpperCase()}</span>
-                    <ChevronDown size={14} color="#8A857A" />
+                    <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+                      {rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b).toUpperCase()}
+                    </span>
+                    <ChevronDown size={13} color="#9E9A90" />
                   </>
                 )}
               </div>
             )}
           </div>
 
-          {/* INTERACTIVE RGB CHANNEL SLIDERS & NUMERIC INPUTS (Visible in RGB Mode) */}
+          {/* SLENDER & AESTHETIC RGB CHANNEL SLIDERS */}
           {colorMode === 'rgb' && (
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 8,
-                backgroundColor: '#FAF6EE',
-                border: '1px solid #ECE3D5',
-                borderRadius: 12,
-                padding: '10px 10px'
+                gap: 7,
+                backgroundColor: '#FAF7F2',
+                border: '1px solid #EBE3D7',
+                borderRadius: 11,
+                padding: '9px 10px'
               }}
             >
-              {/* Red Channel (R) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
+              {[
+                {
+                  key: 'r' as const,
+                  label: 'R',
+                  val: currentRgb.r,
+                  color: '#DC2626',
+                  bgGrad: `linear-gradient(to right, rgb(0, ${currentRgb.g}, ${currentRgb.b}), rgb(255, ${currentRgb.g}, ${currentRgb.b}))`
+                },
+                {
+                  key: 'g' as const,
+                  label: 'G',
+                  val: currentRgb.g,
+                  color: '#16A34A',
+                  bgGrad: `linear-gradient(to right, rgb(${currentRgb.r}, 0, ${currentRgb.b}), rgb(${currentRgb.r}, 255, ${currentRgb.b}))`
+                },
+                {
+                  key: 'b' as const,
+                  label: 'B',
+                  val: currentRgb.b,
+                  color: '#2563EB',
+                  bgGrad: `linear-gradient(to right, rgb(${currentRgb.r}, ${currentRgb.g}, 0), rgb(${currentRgb.r}, ${currentRgb.g}, 255))`
+                }
+              ].map((ch) => (
+                <div
+                  key={ch.key}
                   style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 6,
-                    backgroundColor: '#FEE2E2',
-                    color: '#DC2626',
-                    fontSize: 11,
-                    fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
+                    gap: 8
                   }}
                 >
-                  R
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="255"
-                  value={currentRgb.r}
-                  onChange={(e) => handleRgbChannelChange('r', Number(e.target.value))}
-                  style={{
-                    flex: 1,
-                    height: 5,
-                    background: `linear-gradient(to right, rgb(0, ${currentRgb.g}, ${currentRgb.b}), rgb(255, ${currentRgb.g}, ${currentRgb.b}))`
-                  }}
-                  title={`Red: ${currentRgb.r}`}
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="255"
-                  value={currentRgb.r}
-                  onChange={(e) => handleRgbChannelChange('r', Number(e.target.value))}
-                  style={{
-                    width: 44,
-                    padding: '3px 4px',
-                    borderRadius: 6,
-                    border: '1px solid #E2D7C5',
-                    backgroundColor: '#FFFEFA',
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: '#30312D',
-                    textAlign: 'center',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-
-              {/* Green Channel (G) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 6,
-                    backgroundColor: '#DCFCE7',
-                    color: '#16A34A',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}
-                >
-                  G
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="255"
-                  value={currentRgb.g}
-                  onChange={(e) => handleRgbChannelChange('g', Number(e.target.value))}
-                  style={{
-                    flex: 1,
-                    height: 5,
-                    background: `linear-gradient(to right, rgb(${currentRgb.r}, 0, ${currentRgb.b}), rgb(${currentRgb.r}, 255, ${currentRgb.b}))`
-                  }}
-                  title={`Green: ${currentRgb.g}`}
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="255"
-                  value={currentRgb.g}
-                  onChange={(e) => handleRgbChannelChange('g', Number(e.target.value))}
-                  style={{
-                    width: 44,
-                    padding: '3px 4px',
-                    borderRadius: 6,
-                    border: '1px solid #E2D7C5',
-                    backgroundColor: '#FFFEFA',
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: '#30312D',
-                    textAlign: 'center',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-
-              {/* Blue Channel (B) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 6,
-                    backgroundColor: '#DBEAFE',
-                    color: '#2563EB',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}
-                >
-                  B
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="255"
-                  value={currentRgb.b}
-                  onChange={(e) => handleRgbChannelChange('b', Number(e.target.value))}
-                  style={{
-                    flex: 1,
-                    height: 5,
-                    background: `linear-gradient(to right, rgb(${currentRgb.r}, ${currentRgb.g}, 0), rgb(${currentRgb.r}, ${currentRgb.g}, 255))`
-                  }}
-                  title={`Blue: ${currentRgb.b}`}
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="255"
-                  value={currentRgb.b}
-                  onChange={(e) => handleRgbChannelChange('b', Number(e.target.value))}
-                  style={{
-                    width: 44,
-                    padding: '3px 4px',
-                    borderRadius: 6,
-                    border: '1px solid #E2D7C5',
-                    backgroundColor: '#FFFEFA',
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: '#30312D',
-                    textAlign: 'center',
-                    outline: 'none'
-                  }}
-                />
-              </div>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      color: ch.color,
+                      width: 12,
+                      textAlign: 'center',
+                      letterSpacing: '0.2px',
+                      userSelect: 'none'
+                    }}
+                  >
+                    {ch.label}
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="255"
+                    value={ch.val}
+                    onChange={(e) => handleRgbChannelChange(ch.key, Number(e.target.value))}
+                    style={{
+                      flex: 1,
+                      height: 4,
+                      borderRadius: 999,
+                      background: ch.bgGrad,
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="255"
+                    value={ch.val}
+                    onChange={(e) => handleRgbChannelChange(ch.key, Number(e.target.value))}
+                    style={{
+                      width: 38,
+                      padding: '2px 2px',
+                      borderRadius: 5,
+                      border: '1px solid #E4DCD0',
+                      backgroundColor: '#FFFFFF',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                      color: '#30312D',
+                      textAlign: 'center',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           )}
 
-          {/* RGB PRESET SWATCHES */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {/* Palette selection tabs */}
+          {/* CURATED COLOR SWATCHES (RGB Spectrum + Earthy Palette in 2 Clean Rows of 7) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11.5, fontWeight: 550, color: '#79766F' }}>
-                {paletteTab === 'rgb' ? 'RGB Primary & Spectrum' : 'Botanical Presets'}
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: '#8A857A', letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                Palette
               </span>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <button
-                  type="button"
-                  onClick={() => setPaletteTab('rgb')}
-                  style={{
-                    padding: '2px 6px',
-                    borderRadius: 5,
-                    fontSize: 10.5,
-                    fontWeight: paletteTab === 'rgb' ? 600 : 500,
-                    backgroundColor: paletteTab === 'rgb' ? '#EAE5D9' : 'transparent',
-                    color: paletteTab === 'rgb' ? '#282C1E' : '#8A857A',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  RGB Palette
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaletteTab('botanical')}
-                  style={{
-                    padding: '2px 6px',
-                    borderRadius: 5,
-                    fontSize: 10.5,
-                    fontWeight: paletteTab === 'botanical' ? 600 : 500,
-                    backgroundColor: paletteTab === 'botanical' ? '#EAE5D9' : 'transparent',
-                    color: paletteTab === 'botanical' ? '#282C1E' : '#8A857A',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Earthy
-                </button>
-              </div>
+              <span style={{ fontSize: 10, color: '#9E9A90' }}>
+                RGB & Botanical
+              </span>
             </div>
 
-            {/* Swatch grid */}
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: paletteTab === 'rgb' ? 'repeat(8, 1fr)' : 'repeat(6, 1fr)',
-                gap: 5,
-                marginTop: 2
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: 5
               }}
             >
-              {(paletteTab === 'rgb' ? RGB_PALETTES.primaryRGB : RGB_PALETTES.botanical).map((item) => {
+              {CURATED_SWATCHES.map((item) => {
                 const swatchRgb = parseToRgb(item.rgb);
                 const isSelected =
                   currentRgb.r === swatchRgb.r &&
@@ -798,11 +703,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     onClick={() => handleColorChange(item.rgb)}
                     title={`${item.name} • ${item.rgb}`}
                     style={{
-                      height: 24,
+                      height: 22,
                       borderRadius: '50%',
                       backgroundColor: item.hex,
-                      border: isSelected ? '2px solid #30312D' : '2px solid #FFFFFF',
-                      boxShadow: isSelected ? '0 0 0 1px #777D5E' : '0 1px 3px rgba(0,0,0,0.12)',
+                      border: isSelected ? '2px solid #30312D' : '1.5px solid #FFFFFF',
+                      boxShadow: isSelected
+                        ? '0 0 0 1.5px #777D5E, 0 1px 3px rgba(0,0,0,0.12)'
+                        : '0 1px 2px rgba(0,0,0,0.08)',
                       cursor: 'pointer',
                       transform: isSelected ? 'scale(1.15)' : 'scale(1)',
                       transition: 'all 0.15s ease'
@@ -817,10 +724,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* SIZE / STROKE WIDTH SECTION */}
       {!isEraserContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Size</span>
-            <span style={{ fontSize: 12, fontWeight: 500, color: '#79766F' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Size</span>
+            <span style={{ fontSize: 11.5, fontWeight: 500, color: '#79766F' }}>
               {activeTool === 'pen' && !selectedObject
                 ? `${Math.max(3.5, Math.round(currentSize * 1.35 * 10) / 10)} px (Ink)`
                 : activeTool === 'pencil' && !selectedObject
@@ -841,10 +748,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       )}
 
       {/* OPACITY SECTION */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Opacity</span>
-          <span style={{ fontSize: 12, fontWeight: 500, color: '#79766F' }}>{currentOpacity}%</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Opacity</span>
+          <span style={{ fontSize: 11.5, fontWeight: 500, color: '#79766F' }}>{currentOpacity}%</span>
         </div>
         <input
           type="range"
@@ -857,20 +764,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* ERASER SPECIFIC SETTINGS */}
       {isEraserContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Eraser Mode</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 4, borderTop: '1px solid #EBE2D5' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Eraser Mode</span>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={() => onUpdateSettings({ eraserMode: 'stroke' })}
               style={{
                 flex: 1,
-                padding: '6px 8px',
-                borderRadius: 8,
-                fontSize: 12,
+                padding: '5px 8px',
+                borderRadius: 7,
+                fontSize: 11.5,
                 fontWeight: 500,
                 backgroundColor: settings.eraserMode === 'stroke' ? '#C9D0BD' : '#F5EFE5',
                 color: '#30312D',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                border: 'none'
               }}
             >
               Stroke
@@ -879,21 +787,22 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               onClick={() => onUpdateSettings({ eraserMode: 'object' })}
               style={{
                 flex: 1,
-                padding: '6px 8px',
-                borderRadius: 8,
-                fontSize: 12,
+                padding: '5px 8px',
+                borderRadius: 7,
+                fontSize: 11.5,
                 fontWeight: 500,
                 backgroundColor: settings.eraserMode === 'object' ? '#C9D0BD' : '#F5EFE5',
                 color: '#30312D',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                border: 'none'
               }}
             >
               Object
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-            <span style={{ fontSize: 12, color: '#4E504A' }}>Eraser Size</span>
-            <span style={{ fontSize: 12, color: '#79766F' }}>{settings.size} px</span>
+            <span style={{ fontSize: 11.5, color: '#4E504A' }}>Eraser Size</span>
+            <span style={{ fontSize: 11.5, color: '#79766F' }}>{settings.size} px</span>
           </div>
           <input
             type="range"
@@ -907,8 +816,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* TEXT SPECIFIC SETTINGS */}
       {isTextContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Typography</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Typography</span>
           {/* Font Family selector */}
           <select
             value={selectedObject?.fontFamily || settings.fontFamily}
@@ -917,11 +826,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               if (selectedObject) onUpdateSelectedObject({ fontFamily: e.target.value });
             }}
             style={{
-              padding: '6px 10px',
+              padding: '5px 9px',
               borderRadius: 8,
               border: '1px solid #E8DFD3',
               backgroundColor: '#FAF5EE',
-              fontSize: 12.5,
+              fontSize: 12,
               color: '#30312D',
               outline: 'none',
               cursor: 'pointer'
@@ -943,16 +852,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               }}
               style={{
                 flex: 1,
-                padding: '6px',
-                borderRadius: 8,
+                padding: '5px',
+                borderRadius: 7,
                 backgroundColor: (selectedObject?.fontWeight === 'bold' || settings.isBold) ? '#C9D0BD' : '#F5EFE5',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer'
               }}
             >
-              <Bold size={15} />
+              <Bold size={14} />
             </button>
             <button
               onClick={() => {
@@ -962,16 +872,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               }}
               style={{
                 flex: 1,
-                padding: '6px',
-                borderRadius: 8,
+                padding: '5px',
+                borderRadius: 7,
                 backgroundColor: (selectedObject?.fontStyle === 'italic' || settings.isItalic) ? '#C9D0BD' : '#F5EFE5',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer'
               }}
             >
-              <Italic size={15} />
+              <Italic size={14} />
             </button>
             <button
               onClick={() => {
@@ -981,16 +892,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               }}
               style={{
                 flex: 1,
-                padding: '6px',
-                borderRadius: 8,
+                padding: '5px',
+                borderRadius: 7,
                 backgroundColor: (selectedObject?.underline || settings.isUnderline) ? '#C9D0BD' : '#F5EFE5',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer'
               }}
             >
-              <Underline size={15} />
+              <Underline size={14} />
             </button>
           </div>
 
@@ -1005,8 +917,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 }}
                 style={{
                   flex: 1,
-                  padding: '6px',
-                  borderRadius: 8,
+                  padding: '5px',
+                  borderRadius: 7,
+                  border: 'none',
                   backgroundColor:
                     (selectedObject?.textAlign === align || settings.textAlign === align)
                       ? '#C9D0BD'
@@ -1017,9 +930,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   cursor: 'pointer'
                 }}
               >
-                {align === 'left' && <AlignLeft size={15} />}
-                {align === 'center' && <AlignCenter size={15} />}
-                {align === 'right' && <AlignRight size={15} />}
+                {align === 'left' && <AlignLeft size={14} />}
+                {align === 'center' && <AlignCenter size={14} />}
+                {align === 'right' && <AlignRight size={14} />}
               </button>
             ))}
           </div>
@@ -1028,21 +941,22 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* SHAPE SPECIFIC SETTINGS */}
       {isShapeContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Shape Selector</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Shape Selector</span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
             {[
-              { id: 'rectangle' as ShapeType, icon: <Square size={16} /> },
-              { id: 'circle' as ShapeType, icon: <Circle size={16} /> },
-              { id: 'triangle' as ShapeType, icon: <Triangle size={16} /> },
-              { id: 'star' as ShapeType, icon: <Star size={16} /> }
+              { id: 'rectangle' as ShapeType, icon: <Square size={15} /> },
+              { id: 'circle' as ShapeType, icon: <Circle size={15} /> },
+              { id: 'triangle' as ShapeType, icon: <Triangle size={15} /> },
+              { id: 'star' as ShapeType, icon: <Star size={15} /> }
             ].map((shape) => (
               <button
                 key={shape.id}
                 onClick={() => onUpdateSettings({ shapeType: shape.id })}
                 style={{
-                  padding: '8px',
-                  borderRadius: 8,
+                  padding: '7px',
+                  borderRadius: 7,
+                  border: 'none',
                   backgroundColor: settings.shapeType === shape.id ? '#C9D0BD' : '#F5EFE5',
                   display: 'flex',
                   alignItems: 'center',
@@ -1059,8 +973,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* LINE SPECIFIC SETTINGS */}
       {isLineContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Line Style</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Line Style</span>
           <div style={{ display: 'flex', gap: 6 }}>
             {(['solid', 'dashed', 'dotted'] as LineStyle[]).map((style) => (
               <button
@@ -1068,10 +982,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onClick={() => onUpdateSettings({ lineStyle: style })}
                 style={{
                   flex: 1,
-                  padding: '6px',
-                  borderRadius: 8,
-                  fontSize: 12,
+                  padding: '5px 8px',
+                  borderRadius: 7,
+                  fontSize: 11.5,
                   fontWeight: 500,
+                  border: 'none',
                   backgroundColor: settings.lineStyle === style ? '#C9D0BD' : '#F5EFE5',
                   color: '#30312D',
                   cursor: 'pointer'
@@ -1086,16 +1001,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* SELECTED OBJECT ACTIONS (Lock, Layering, Duplicate, Delete) */}
       {selectedObject && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#4E504A' }}>Object Actions</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Object Actions</span>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={onToggleLock}
               title={selectedObject.isLocked ? 'Unlock Object' : 'Lock Object'}
               style={{
                 flex: 1,
-                padding: '7px',
-                borderRadius: 8,
+                padding: '6px',
+                borderRadius: 7,
+                border: 'none',
                 backgroundColor: selectedObject.isLocked ? '#EED4C5' : '#F5EFE5',
                 display: 'flex',
                 alignItems: 'center',
@@ -1103,7 +1019,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 cursor: 'pointer'
               }}
             >
-              {selectedObject.isLocked ? <Lock size={15} color="#D99379" /> : <Unlock size={15} />}
+              {selectedObject.isLocked ? <Lock size={14} color="#D99379" /> : <Unlock size={14} />}
             </button>
 
             <button
@@ -1111,8 +1027,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               title="Bring Forward"
               style={{
                 flex: 1,
-                padding: '7px',
-                borderRadius: 8,
+                padding: '6px',
+                borderRadius: 7,
+                border: 'none',
                 backgroundColor: '#F5EFE5',
                 display: 'flex',
                 alignItems: 'center',
@@ -1120,7 +1037,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 cursor: 'pointer'
               }}
             >
-              <ArrowUp size={15} />
+              <ArrowUp size={14} />
             </button>
 
             <button
@@ -1128,8 +1045,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               title="Send Backward"
               style={{
                 flex: 1,
-                padding: '7px',
-                borderRadius: 8,
+                padding: '6px',
+                borderRadius: 7,
+                border: 'none',
                 backgroundColor: '#F5EFE5',
                 display: 'flex',
                 alignItems: 'center',
@@ -1137,7 +1055,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 cursor: 'pointer'
               }}
             >
-              <ArrowDown size={15} />
+              <ArrowDown size={14} />
             </button>
 
             <button
@@ -1145,8 +1063,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               title="Duplicate (⌘D)"
               style={{
                 flex: 1,
-                padding: '7px',
-                borderRadius: 8,
+                padding: '6px',
+                borderRadius: 7,
+                border: 'none',
                 backgroundColor: '#F5EFE5',
                 display: 'flex',
                 alignItems: 'center',
@@ -1154,7 +1073,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 cursor: 'pointer'
               }}
             >
-              <Copy size={15} />
+              <Copy size={14} />
             </button>
 
             <button
@@ -1162,8 +1081,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               title="Delete Object"
               style={{
                 flex: 1,
-                padding: '7px',
-                borderRadius: 8,
+                padding: '6px',
+                borderRadius: 7,
+                border: 'none',
                 backgroundColor: '#FDF2F0',
                 display: 'flex',
                 alignItems: 'center',
@@ -1171,7 +1091,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 cursor: 'pointer'
               }}
             >
-              <Trash2 size={15} color="#C24D3E" />
+              <Trash2 size={14} color="#C24D3E" />
             </button>
           </div>
         </div>
