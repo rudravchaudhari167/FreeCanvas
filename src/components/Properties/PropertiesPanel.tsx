@@ -88,24 +88,24 @@ export function rgbToString(r: number, g: number, b: number): string {
   return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 }
 
-// Curated 14 swatches: Row 1 RGB spectrum essentials + Row 2 Botanical earthy tones
+// Curated 14 swatches: Row 1 RGB Spectrum & Row 2 Botanical Earthy
 export const CURATED_SWATCHES = [
-  // Row 1: RGB Spectrum & Essentials
-  { name: 'Red', hex: '#EF4444', rgb: 'rgb(239, 68, 68)' },
-  { name: 'Green', hex: '#22C55E', rgb: 'rgb(34, 197, 94)' },
-  { name: 'Blue', hex: '#3B82F6', rgb: 'rgb(59, 130, 246)' },
-  { name: 'Amber', hex: '#F59E0B', rgb: 'rgb(245, 158, 11)' },
-  { name: 'Violet', hex: '#8B5CF6', rgb: 'rgb(139, 92, 246)' },
+  // Row 1: RGB Spectrum & Modern Accents
+  { name: 'Red', hex: '#D84C4C', rgb: 'rgb(216, 76, 76)' },
+  { name: 'Green', hex: '#2E8B57', rgb: 'rgb(46, 139, 87)' },
+  { name: 'Blue', hex: '#3B7AC4', rgb: 'rgb(59, 122, 196)' },
+  { name: 'Amber', hex: '#D9822B', rgb: 'rgb(217, 130, 43)' },
+  { name: 'Purple', hex: '#7E68AA', rgb: 'rgb(126, 104, 170)' },
   { name: 'Pure White', hex: '#FFFFFF', rgb: 'rgb(255, 255, 255)' },
-  { name: 'Slate', hex: '#1E293B', rgb: 'rgb(30, 41, 59)' },
-  // Row 2: Botanical & Earthy Accents
+  { name: 'Charcoal Slate', hex: '#2B2D2F', rgb: 'rgb(43, 45, 47)' },
+  // Row 2: Botanical & Warm Earth Tones
   { name: 'Sage Green', hex: '#777D5E', rgb: 'rgb(119, 125, 94)' },
-  { name: 'Warm Peach', hex: '#EED4C5', rgb: 'rgb(238, 212, 197)' },
-  { name: 'Terracotta', hex: '#D99379', rgb: 'rgb(217, 147, 121)' },
-  { name: 'Muted Lavender', hex: '#A9A8D0', rgb: 'rgb(169, 168, 208)' },
-  { name: 'Soft Blue', hex: '#A9BDD9', rgb: 'rgb(169, 189, 217)' },
-  { name: 'Butter Cream', hex: '#FAF0D7', rgb: 'rgb(250, 240, 215)' },
-  { name: 'Charcoal', hex: '#4A4B46', rgb: 'rgb(74, 75, 70)' }
+  { name: 'Warm Blush', hex: '#E8C8B5', rgb: 'rgb(232, 200, 181)' },
+  { name: 'Terracotta', hex: '#CC7A60', rgb: 'rgb(204, 122, 96)' },
+  { name: 'Muted Lavender', hex: '#A09EC4', rgb: 'rgb(160, 158, 196)' },
+  { name: 'Soft Sky', hex: '#9CB4CE', rgb: 'rgb(156, 180, 206)' },
+  { name: 'Warm Cream', hex: '#F4EBD9', rgb: 'rgb(244, 235, 217)' },
+  { name: 'Deep Earth', hex: '#4A4B46', rgb: 'rgb(74, 75, 70)' }
 ];
 
 export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
@@ -299,7 +299,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         padding: '16px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 14,
+        gap: 13,
         boxShadow: '0 12px 34px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
         maxHeight: 'calc(100vh - 150px)',
         overflowY: 'auto'
@@ -336,10 +336,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </span>
       </div>
 
-      {/* AESTHETIC & MINIMAL COLOR SECTION WITH FULL RGB SUPPORT */}
+      {/* AESTHETIC & MINIMAL COLOR SECTION */}
       {!isEraserContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {/* Header Row: Context Label + Minimal RGB/HEX Segmented Toggle */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Header Row: Context Label + Clean Micro Segmented Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A', letterSpacing: '-0.1px' }}>
               {isShapeContext
@@ -353,28 +353,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 : 'Color'}
             </span>
 
-            {/* Segmented RGB / HEX pill */}
+            {/* Understated micro pill: RGB / HEX */}
             <div
               style={{
                 display: 'flex',
-                backgroundColor: '#F0EBE1',
+                backgroundColor: '#EFEAE0',
                 borderRadius: 999,
-                padding: '2px',
-                border: '1px solid #E4DCD0'
+                padding: '1.5px',
+                border: '1px solid #E2D9CC'
               }}
             >
               <button
                 type="button"
                 onClick={() => setColorMode('rgb')}
                 style={{
-                  padding: '2px 8px',
+                  padding: '1.5px 7px',
                   borderRadius: 999,
-                  fontSize: 10,
-                  fontWeight: colorMode === 'rgb' ? 600 : 500,
+                  fontSize: 9.5,
+                  fontWeight: 650,
+                  letterSpacing: '0.4px',
                   border: 'none',
                   backgroundColor: colorMode === 'rgb' ? '#FFFFFF' : 'transparent',
                   color: colorMode === 'rgb' ? '#30312D' : '#8A857A',
-                  boxShadow: colorMode === 'rgb' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: colorMode === 'rgb' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
@@ -385,14 +386,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 type="button"
                 onClick={() => setColorMode('hex')}
                 style={{
-                  padding: '2px 8px',
+                  padding: '1.5px 7px',
                   borderRadius: 999,
-                  fontSize: 10,
-                  fontWeight: colorMode === 'hex' ? 600 : 500,
+                  fontSize: 9.5,
+                  fontWeight: 650,
+                  letterSpacing: '0.4px',
                   border: 'none',
                   backgroundColor: colorMode === 'hex' ? '#FFFFFF' : 'transparent',
                   color: colorMode === 'hex' ? '#30312D' : '#8A857A',
-                  boxShadow: colorMode === 'hex' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: colorMode === 'hex' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
@@ -407,11 +409,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             <div
               style={{
                 display: 'flex',
-                backgroundColor: '#F0EBE1',
+                backgroundColor: '#EFEAE0',
                 borderRadius: 8,
                 padding: '2px',
-                border: '1px solid #E4DCD0',
-                marginTop: -1
+                border: '1px solid #E2D9CC'
               }}
             >
               <button
@@ -421,12 +422,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   flex: 1,
                   padding: '3px 0',
                   borderRadius: 6,
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: shapeTarget === 'fill' ? 600 : 500,
                   backgroundColor: shapeTarget === 'fill' ? '#FFFFFF' : 'transparent',
                   color: shapeTarget === 'fill' ? '#30312D' : '#8A857A',
                   border: 'none',
-                  boxShadow: shapeTarget === 'fill' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: shapeTarget === 'fill' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
@@ -440,12 +441,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   flex: 1,
                   padding: '3px 0',
                   borderRadius: 6,
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: shapeTarget === 'stroke' ? 600 : 500,
                   backgroundColor: shapeTarget === 'stroke' ? '#FFFFFF' : 'transparent',
                   color: shapeTarget === 'stroke' ? '#30312D' : '#8A857A',
                   border: 'none',
-                  boxShadow: shapeTarget === 'stroke' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: shapeTarget === 'stroke' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
@@ -455,17 +456,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </div>
           )}
 
-          {/* Color Preview Swatch + Value Display Capsule */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Integrated Color Capsule Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#FAF6EF',
+              border: '1px solid #E8DFD3',
+              borderRadius: 11,
+              padding: '4px 8px 4px 6px',
+              gap: 8,
+              transition: 'border-color 0.15s ease'
+            }}
+          >
+            {/* Integrated Circular Swatch */}
             <label
-              title="Open system color picker"
+              title="Click to open color picker"
               style={{
-                width: 32,
-                height: 32,
+                width: 26,
+                height: 26,
                 borderRadius: '50%',
                 backgroundColor: currentColor,
                 border: '2px solid #FFFFFF',
-                boxShadow: '0 2px 6px rgba(48, 49, 45, 0.12), inset 0 0 0 1px rgba(0,0,0,0.06)',
+                boxShadow: '0 1px 4px rgba(48, 49, 45, 0.14), inset 0 0 0 1px rgba(0,0,0,0.06)',
                 cursor: 'pointer',
                 position: 'relative',
                 overflow: 'hidden',
@@ -487,8 +500,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </label>
 
             {colorMode === 'rgb' ? (
-              <button
-                type="button"
+              <div
                 onClick={handleCopyRgb}
                 title="Click to copy RGB value"
                 style={{
@@ -496,28 +508,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: '#FAF6EE',
-                  border: '1px solid #E8DFD3',
-                  borderRadius: 9,
-                  padding: '5px 9px',
-                  fontSize: 11.5,
-                  fontWeight: 500,
-                  color: '#4A4B46',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  userSelect: 'none'
                 }}
               >
-                <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '-0.2px' }}>
+                <span
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 500,
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                    color: '#30312D',
+                    letterSpacing: '-0.2px'
+                  }}
+                >
                   rgb({currentRgb.r}, {currentRgb.g}, {currentRgb.b})
                 </span>
                 {copiedRgb ? (
-                  <span style={{ fontSize: 10.5, color: '#38A169', display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                  <span style={{ fontSize: 10, color: '#38A169', display: 'flex', alignItems: 'center', gap: 2, fontWeight: 600 }}>
                     <Check size={11} /> Copied
                   </span>
                 ) : (
-                  <Copy size={12} color="#9E9A90" />
+                  <Copy size={12} color="#9E9A90" style={{ opacity: 0.7 }} />
                 )}
-              </button>
+              </div>
             ) : (
               <div
                 onClick={() => setShowHexInput(true)}
@@ -526,13 +539,6 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: '#FAF6EE',
-                  border: '1px solid #E8DFD3',
-                  borderRadius: 9,
-                  padding: '5px 9px',
-                  fontSize: 11.5,
-                  fontWeight: 500,
-                  color: '#4A4B46',
                   cursor: 'pointer'
                 }}
               >
@@ -564,68 +570,57 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   />
                 ) : (
                   <>
-                    <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+                    <span
+                      style={{
+                        fontSize: 11.5,
+                        fontWeight: 500,
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                        color: '#30312D'
+                      }}
+                    >
                       {rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b).toUpperCase()}
                     </span>
-                    <ChevronDown size={13} color="#9E9A90" />
+                    <ChevronDown size={12} color="#9E9A90" style={{ opacity: 0.7 }} />
                   </>
                 )}
               </div>
             )}
           </div>
 
-          {/* SLENDER & AESTHETIC RGB CHANNEL SLIDERS */}
+          {/* SLENDER & UNBOXED RGB CHANNEL SLIDERS */}
           {colorMode === 'rgb' && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 7,
-                backgroundColor: '#FAF7F2',
-                border: '1px solid #EBE3D7',
-                borderRadius: 11,
-                padding: '9px 10px'
-              }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '2px 0' }}>
               {[
                 {
                   key: 'r' as const,
                   label: 'R',
                   val: currentRgb.r,
-                  color: '#DC2626',
-                  bgGrad: `linear-gradient(to right, rgb(0, ${currentRgb.g}, ${currentRgb.b}), rgb(255, ${currentRgb.g}, ${currentRgb.b}))`
+                  color: '#C24D3E',
+                  trackGrad: 'linear-gradient(to right, rgba(194, 77, 62, 0.25), rgba(194, 77, 62, 0.95))'
                 },
                 {
                   key: 'g' as const,
                   label: 'G',
                   val: currentRgb.g,
-                  color: '#16A34A',
-                  bgGrad: `linear-gradient(to right, rgb(${currentRgb.r}, 0, ${currentRgb.b}), rgb(${currentRgb.r}, 255, ${currentRgb.b}))`
+                  color: '#427A5B',
+                  trackGrad: 'linear-gradient(to right, rgba(66, 122, 91, 0.25), rgba(66, 122, 91, 0.95))'
                 },
                 {
                   key: 'b' as const,
                   label: 'B',
                   val: currentRgb.b,
-                  color: '#2563EB',
-                  bgGrad: `linear-gradient(to right, rgb(${currentRgb.r}, ${currentRgb.g}, 0), rgb(${currentRgb.r}, ${currentRgb.g}, 255))`
+                  color: '#4A6FA5',
+                  trackGrad: 'linear-gradient(to right, rgba(74, 111, 165, 0.25), rgba(74, 111, 165, 0.95))'
                 }
               ].map((ch) => (
-                <div
-                  key={ch.key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8
-                  }}
-                >
+                <div key={ch.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span
                     style={{
-                      fontSize: 10.5,
+                      fontSize: 10,
                       fontWeight: 700,
                       color: ch.color,
-                      width: 12,
+                      width: 11,
                       textAlign: 'center',
-                      letterSpacing: '0.2px',
                       userSelect: 'none'
                     }}
                   >
@@ -633,31 +628,29 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   </span>
                   <input
                     type="range"
+                    className="rgb-channel-slider"
                     min="0"
                     max="255"
                     value={ch.val}
                     onChange={(e) => handleRgbChannelChange(ch.key, Number(e.target.value))}
                     style={{
                       flex: 1,
-                      height: 4,
-                      borderRadius: 999,
-                      background: ch.bgGrad,
-                      outline: 'none',
-                      cursor: 'pointer'
+                      background: ch.trackGrad
                     }}
                   />
                   <input
                     type="number"
+                    className="rgb-num-input"
                     min="0"
                     max="255"
                     value={ch.val}
                     onChange={(e) => handleRgbChannelChange(ch.key, Number(e.target.value))}
                     style={{
-                      width: 38,
-                      padding: '2px 2px',
-                      borderRadius: 5,
-                      border: '1px solid #E4DCD0',
-                      backgroundColor: '#FFFFFF',
+                      width: 32,
+                      padding: '1.5px 0',
+                      borderRadius: 4,
+                      border: 'none',
+                      backgroundColor: 'rgba(235, 227, 215, 0.55)',
                       fontSize: 11,
                       fontWeight: 500,
                       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
@@ -671,13 +664,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </div>
           )}
 
-          {/* CURATED COLOR SWATCHES (RGB Spectrum + Earthy Palette in 2 Clean Rows of 7) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 2 }}>
+          {/* REFINED COLOR PALETTE SWATCHES (RGB Spectrum + Earthy in 2 Rows of 7) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 10.5, fontWeight: 600, color: '#8A857A', letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 9.5, fontWeight: 650, color: '#9E9A90', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
                 Palette
               </span>
-              <span style={{ fontSize: 10, color: '#9E9A90' }}>
+              <span style={{ fontSize: 9.5, color: '#B5AE9F' }}>
                 RGB & Botanical
               </span>
             </div>
@@ -703,15 +696,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     onClick={() => handleColorChange(item.rgb)}
                     title={`${item.name} • ${item.rgb}`}
                     style={{
-                      height: 22,
+                      height: 21,
                       borderRadius: '50%',
                       backgroundColor: item.hex,
-                      border: isSelected ? '2px solid #30312D' : '1.5px solid #FFFFFF',
+                      border: isSelected ? '1.5px solid #FFFFFF' : '1px solid rgba(0,0,0,0.06)',
                       boxShadow: isSelected
-                        ? '0 0 0 1.5px #777D5E, 0 1px 3px rgba(0,0,0,0.12)'
-                        : '0 1px 2px rgba(0,0,0,0.08)',
+                        ? '0 0 0 1.5px #FAF6EE, 0 0 0 3px #777D5E, 0 1px 3px rgba(0,0,0,0.1)'
+                        : '0 1px 2px rgba(0,0,0,0.06)',
                       cursor: 'pointer',
-                      transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                      transform: isSelected ? 'scale(1.12)' : 'scale(1)',
                       transition: 'all 0.15s ease'
                     }}
                   />
@@ -724,7 +717,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* SIZE / STROKE WIDTH SECTION */}
       {!isEraserContext && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Size</span>
             <span style={{ fontSize: 11.5, fontWeight: 500, color: '#79766F' }}>
@@ -748,7 +741,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       )}
 
       {/* OPACITY SECTION */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Opacity</span>
           <span style={{ fontSize: 11.5, fontWeight: 500, color: '#79766F' }}>{currentOpacity}%</span>

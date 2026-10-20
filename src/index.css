@@ -61,7 +61,7 @@ html, body, #root {
   background: var(--text-secondary);
 }
 
-/* Range input styling */
+/* Range input styling - minimal & refined */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -76,27 +76,74 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--color-sage);
-  border: 2px solid #FFFEFA;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  background: #FFFFFF;
+  border: 1.5px solid #C8BFB0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.2s;
+  transition: transform 0.15s ease, border-color 0.15s, box-shadow 0.15s;
 }
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  background: var(--color-sage-hover);
+  border-color: var(--color-sage);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
 }
 input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--color-sage);
-  border: 2px solid #FFFEFA;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  background: #FFFFFF;
+  border: 1.5px solid #C8BFB0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   cursor: pointer;
+}
+
+/* Minimal RGB Channel Range Inputs */
+.rgb-channel-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px !important;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+.rgb-channel-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50%;
+  background: #FFFFFF !important;
+  border: 1.5px solid #BCB19F;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s;
+}
+.rgb-channel-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  border-color: #777D5E;
+}
+.rgb-channel-slider::-moz-range-thumb {
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50%;
+  background: #FFFFFF !important;
+  border: 1.5px solid #BCB19F;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+}
+
+/* Clean numeric inputs (no spin arrows) */
+.rgb-num-input::-webkit-inner-spin-button,
+.rgb-num-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.rgb-num-input {
+  -moz-appearance: textfield;
 }
 
 /* Tooltip standard utility */
