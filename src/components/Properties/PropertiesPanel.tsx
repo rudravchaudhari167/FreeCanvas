@@ -164,7 +164,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             : activeTool === 'pencil'
             ? 'Sketch Pencil'
             : activeTool === 'marker'
-            ? 'Marker'
+            ? 'Highlighter'
             : activeTool === 'text'
             ? 'Text'
             : activeTool === 'shape'

@@ -402,26 +402,37 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       if (pathObj) {
         if (tool === 'pencil') {
-          // Delicate graphite sketch style with semi-translucent layering & fine grain
+          // Authentic Sketch Pencil: fine graphite stroke, crisp continuous line, subtle graphite grain
+          const pencilAlpha = Math.min(1, 0.92 * currentSettings.opacity);
           pathObj.set({
-            opacity: 0.65 * currentSettings.opacity,
+            stroke: hexToRgba(currentSettings.color, pencilAlpha),
+            opacity: 1,
             strokeLineCap: 'round',
             strokeLineJoin: 'round',
-            strokeDashArray: [1.2, 0.6] // subtle paper grain texture
+            shadow: new Shadow({
+              color: hexToRgba(currentSettings.color, 0.22),
+              blur: 0.8,
+              offsetX: 0,
+              offsetY: 0
+            })
           });
         } else if (tool === 'pen') {
-          // Rich, smooth solid ink line
+          // Smooth Ink Pen: rich, fluid, solid ink line with no fading or double-opacity reduction
           pathObj.set({
-            opacity: currentSettings.opacity,
+            stroke: hexToRgba(currentSettings.color, currentSettings.opacity),
+            opacity: 1,
             strokeLineCap: 'round',
             strokeLineJoin: 'round'
           });
         } else if (tool === 'marker') {
-          // Translucent chisel highlighter
+          // Broad Chisel Highlighter: wide, flat-edge translucent fluorescent wash that multiplies over drawings
+          const highlighterAlpha = Math.min(1, 0.48 * currentSettings.opacity);
           pathObj.set({
-            opacity: 0.35 * currentSettings.opacity,
+            stroke: hexToRgba(currentSettings.color, highlighterAlpha),
+            opacity: 1,
             strokeLineCap: 'square',
-            strokeLineJoin: 'miter'
+            strokeLineJoin: 'miter',
+            globalCompositeOperation: 'multiply'
           });
         }
         canvas.renderAll();
@@ -490,34 +501,36 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const brush = new PencilBrush(canvas);
 
       if (activeTool === 'pen') {
-        // Smooth Fountain / Ink Pen: solid saturated color, thick smooth flow, tremor decimation
+        // Smooth Fountain / Gel Pen: solid rich ink flow, fluid curvature decimation
         brush.color = hexToRgba(settings.color, settings.opacity);
         brush.width = Math.max(2, settings.size);
         brush.strokeLineCap = 'round';
         brush.strokeLineJoin = 'round';
-        brush.decimate = 2.5; // Smooths hand jitter into clean fluid ink curves
+        brush.decimate = 1.5; // Smooths jitter into fluid, natural ink curves
         brush.shadow = null;
       } else if (activeTool === 'pencil') {
-        // Natural Graphite Pencil: much finer sketch stroke, graphite transparency & soft graphite grain
-        const pencilSize = Math.max(1, Math.round(settings.size * 0.45));
-        brush.color = hexToRgba(settings.color, 0.65 * settings.opacity);
+        // Natural Graphite Sketch Pencil: fine graphite tip, high visibility, subtle graphite halo
+        const pencilSize = Math.max(1.5, Math.round(settings.size * 0.65));
+        const pencilAlpha = Math.min(1, 0.92 * settings.opacity);
+        brush.color = hexToRgba(settings.color, pencilAlpha);
         brush.width = pencilSize;
         brush.strokeLineCap = 'round';
         brush.strokeLineJoin = 'round';
-        brush.decimate = 0.4; // Preserves natural sketch nuances & textures
+        brush.decimate = 0.5; // Preserves natural sketch nuances and responsiveness
         brush.shadow = new Shadow({
-          color: hexToRgba(settings.color, 0.2),
+          color: hexToRgba(settings.color, 0.22),
           blur: 0.8,
-          offsetX: 0.3,
-          offsetY: 0.3
+          offsetX: 0,
+          offsetY: 0
         });
       } else if (activeTool === 'marker') {
-        // Broad Chisel Marker / Highlighter
-        brush.color = hexToRgba(settings.color, 0.35 * settings.opacity);
-        brush.width = Math.max(16, settings.size * 3);
+        // Broad Chisel Highlighter: wide flat chisel edge, vibrant see-through wash
+        const highlighterAlpha = Math.min(1, 0.48 * settings.opacity);
+        brush.color = hexToRgba(settings.color, highlighterAlpha);
+        brush.width = Math.max(22, settings.size * 4);
         brush.strokeLineCap = 'square';
         brush.strokeLineJoin = 'miter';
-        brush.decimate = 2;
+        brush.decimate = 2.0;
         brush.shadow = null;
       }
 
