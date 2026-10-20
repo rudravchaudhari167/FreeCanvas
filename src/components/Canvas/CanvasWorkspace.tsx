@@ -11,7 +11,8 @@ import {
   Group,
   Point,
   FabricObject,
-  Shadow
+  Shadow,
+  util
 } from 'fabric';
 import type {
   ToolType,
@@ -81,6 +82,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const lastPanPosRef = useRef<{ x: number; y: number } | null>(null);
   const isSpacePressedRef = useRef<boolean>(false);
 
+  // Eraser state
+  const isErasingRef = useRef<boolean>(false);
+  const hasErasedRef = useRef<boolean>(false);
+
   // Active tool and settings live references for canvas events
   const activeToolRef = useRef<ToolType>(activeTool);
   activeToolRef.current = activeTool;
@@ -138,6 +143,123 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     setHasObjects(canvas.getObjects().length > 0);
     updateLayers();
   }, [onHistoryChange, onSaveTrigger, updateLayers]);
+
+  // Helper: erase strokes or objects intersecting the eraser circle
+  const eraseAtPoint = useCallback((pointer: { x: number; y: number }) => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return false;
+
+    const currentSettings = settingsRef.current;
+    const radius = Math.max(10, (currentSettings.size || 20) / 2);
+    const objects = canvas.getObjects();
+    let erasedCount = 0;
+
+    // Distance from point (px, py) to line segment (x1, y1)-(x2, y2)
+    const distToSegment = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
+      const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+      if (l2 === 0) return Math.hypot(px - x1, py - y1);
+      let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+    };
+
+    // Iterate backwards from top-most to bottom-most
+    for (let i = objects.length - 1; i >= 0; i--) {
+      const obj = objects[i];
+      if (!obj || obj === (canvas as any).backgroundImage) continue;
+      if (obj.type === 'activeSelection') continue;
+
+      const bbox = obj.getBoundingRect();
+      const strokePad = (obj.strokeWidth || 2) / 2;
+      const effectiveRadius = radius + strokePad;
+
+      const expandedBbox = {
+        left: bbox.left - effectiveRadius,
+        top: bbox.top - effectiveRadius,
+        right: bbox.left + bbox.width + effectiveRadius,
+        bottom: bbox.top + bbox.height + effectiveRadius
+      };
+
+      if (
+        pointer.x < expandedBbox.left ||
+        pointer.x > expandedBbox.right ||
+        pointer.y < expandedBbox.top ||
+        pointer.y > expandedBbox.bottom
+      ) {
+        continue;
+      }
+
+      let isHit = false;
+
+      if (typeof obj.containsPoint === 'function' && obj.containsPoint(new Point(pointer.x, pointer.y))) {
+        isHit = true;
+      } else if (obj instanceof FabricLine || obj.type === 'line') {
+        const line = obj as FabricLine;
+        const x1 = line.x1 || 0;
+        const y1 = line.y1 || 0;
+        const x2 = line.x2 || 0;
+        const y2 = line.y2 || 0;
+        if (distToSegment(pointer.x, pointer.y, x1, y1, x2, y2) <= effectiveRadius) {
+          isHit = true;
+        }
+      } else if (obj.type === 'path') {
+        const pathData = (obj as any).path;
+        if (Array.isArray(pathData) && pathData.length > 0) {
+          const matrix = obj.calcTransformMatrix ? obj.calcTransformMatrix() : null;
+          const offset = (obj as any).pathOffset || { x: 0, y: 0 };
+
+          let prevPt: { x: number; y: number } | null = null;
+          for (let pIdx = 0; pIdx < pathData.length; pIdx++) {
+            const cmd = pathData[pIdx];
+            if (!cmd || cmd.length < 3) continue;
+
+            const rawX = cmd[cmd.length - 2];
+            const rawY = cmd[cmd.length - 1];
+
+            let pt = { x: rawX, y: rawY };
+            if (matrix) {
+              const localPt = new Point(rawX - offset.x, rawY - offset.y);
+              pt = util.transformPoint(localPt, matrix);
+            }
+
+            if (Math.hypot(pointer.x - pt.x, pointer.y - pt.y) <= effectiveRadius) {
+              isHit = true;
+              break;
+            }
+
+            if (prevPt) {
+              if (distToSegment(pointer.x, pointer.y, prevPt.x, prevPt.y, pt.x, pt.y) <= effectiveRadius) {
+                isHit = true;
+                break;
+              }
+            }
+
+            prevPt = pt;
+          }
+        } else {
+          isHit = true;
+        }
+      } else {
+        isHit = true;
+      }
+
+      if (isHit) {
+        canvas.remove(obj);
+        erasedCount++;
+        if (currentSettings.eraserMode === 'object') {
+          break;
+        }
+      }
+    }
+
+    if (erasedCount > 0) {
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      return true;
+    }
+
+    return false;
+  }, []);
 
   // Initialize Fabric Canvas
   useEffect(() => {
@@ -358,6 +480,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.selection = activeTool === 'select';
     canvas.defaultCursor = 'default';
 
+    if (activeTool !== 'select') {
+      canvas.discardActiveObject();
+      canvas.renderAll();
+    }
+
     if (activeTool === 'pen' || activeTool === 'pencil' || activeTool === 'marker') {
       canvas.isDrawingMode = true;
       const brush = new PencilBrush(canvas);
@@ -396,7 +523,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       canvas.freeDrawingBrush = brush;
     } else if (activeTool === 'eraser') {
-      canvas.defaultCursor = 'crosshair';
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      const cursorRadius = Math.max(6, Math.min(48, Math.round((settings.size || 20) / 2)));
+      const cursorSize = (cursorRadius + 4) * 2;
+      const center = cursorRadius + 4;
+      const cursorSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}"><circle cx="${center}" cy="${center}" r="${cursorRadius}" fill="rgba(217, 147, 121, 0.2)" stroke="#D99379" stroke-width="2"/><circle cx="${center}" cy="${center}" r="1.5" fill="#B35D43"/></svg>`;
+      const cursorUrl = `url("data:image/svg+xml;utf8,${encodeURIComponent(cursorSvg)}") ${center} ${center}, crosshair`;
+      canvas.defaultCursor = cursorUrl;
     } else if (activeTool === 'text') {
       canvas.defaultCursor = 'text';
     } else if (['shape', 'line', 'arrow'].includes(activeTool)) {
@@ -424,12 +558,31 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       // Eraser Mode
       if (activeTool === 'eraser') {
+        isErasingRef.current = true;
+        hasErasedRef.current = false;
+
         const target = opt.target;
-        if (target) {
-          canvas.remove(target);
-          canvas.discardActiveObject();
-          canvas.renderAll();
-          saveStateToHistory();
+        if (target && target !== (canvas as any).backgroundImage) {
+          if (target.type === 'activeSelection') {
+            const subObjects = (target as any).getObjects ? (target as any).getObjects() : [];
+            const hitSub = subObjects.find((sub: any) => typeof sub.containsPoint === 'function' && sub.containsPoint(pointer));
+            if (hitSub) {
+              canvas.remove(hitSub);
+              hasErasedRef.current = true;
+            }
+            canvas.discardActiveObject();
+            canvas.renderAll();
+          } else {
+            canvas.remove(target);
+            canvas.discardActiveObject();
+            canvas.renderAll();
+            hasErasedRef.current = true;
+          }
+        } else {
+          const erased = eraseAtPoint(pointer);
+          if (erased) {
+            hasErasedRef.current = true;
+          }
         }
         return;
       }
@@ -546,6 +699,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         return;
       }
 
+      // Eraser drag movement
+      if (isErasingRef.current && activeTool === 'eraser') {
+        const pointer = canvas.getScenePoint(opt.e);
+        const erased = eraseAtPoint(pointer);
+        if (erased) {
+          hasErasedRef.current = true;
+        }
+        return;
+      }
+
       if (!isDrawingShapeRef.current || !shapeStartRef.current || !activeShapeObjectRef.current) return;
 
       const pointer = canvas.getScenePoint(opt.e);
@@ -619,6 +782,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           saveStateToHistory();
         }
       }
+
+      if (isErasingRef.current) {
+        isErasingRef.current = false;
+        if (hasErasedRef.current) {
+          hasErasedRef.current = false;
+          saveStateToHistory();
+          setHasObjects(canvas.getObjects().length > 0);
+          updateLayers();
+        }
+      }
     };
 
     canvas.on('mouse:down', handleMouseDown);
@@ -650,7 +823,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeTool, settings, saveStateToHistory]);
+  }, [activeTool, settings, saveStateToHistory, eraseAtPoint, updateLayers]);
 
   return (
     <main
