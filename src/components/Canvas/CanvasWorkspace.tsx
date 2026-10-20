@@ -23,16 +23,27 @@ import type {
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { BotanicalBackground } from './BotanicalBackground';
 
-function hexToRgba(hex: string, alpha: number): string {
-  let c = hex.replace('#', '');
+export function colorToRgba(color: string, alpha: number): string {
+  if (!color) return `rgba(74, 75, 70, ${alpha})`;
+  const trimmed = color.trim();
+  if (trimmed.startsWith('rgb')) {
+    const match = trimmed.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (match) {
+      const [, r, g, b] = match;
+      return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})`;
+    }
+  }
+  let c = trimmed.replace('#', '');
   if (c.length === 3) {
     c = c.split('').map((x) => x + x).join('');
   }
-  const r = parseInt(c.slice(0, 2), 16) || 48;
-  const g = parseInt(c.slice(2, 4), 16) || 49;
-  const b = parseInt(c.slice(4, 6), 16) || 45;
+  const r = parseInt(c.slice(0, 2), 16) || 74;
+  const g = parseInt(c.slice(2, 4), 16) || 75;
+  const b = parseInt(c.slice(4, 6), 16) || 70;
   return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})`;
 }
+
+const hexToRgba = colorToRgba;
 
 interface CanvasWorkspaceProps {
   activeTool: ToolType;
@@ -358,6 +369,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         onSelectionChange(null);
         return;
       }
+      let fillVal = typeof activeObj.fill === 'string' ? activeObj.fill : undefined;
+      let strokeVal = typeof activeObj.stroke === 'string' ? activeObj.stroke : undefined;
+      if (activeObj.type === 'group') {
+        const groupObjects = (activeObj as Group).getObjects();
+        if (groupObjects[0]) {
+          if (typeof groupObjects[0].fill === 'string') fillVal = groupObjects[0].fill;
+          if (typeof groupObjects[0].stroke === 'string') strokeVal = groupObjects[0].stroke;
+        }
+      }
       onSelectionChange({
         id: (activeObj as any).id,
         type: activeObj.type,
@@ -366,8 +386,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         width: Math.round((activeObj.width || 0) * (activeObj.scaleX || 1)),
         height: Math.round((activeObj.height || 0) * (activeObj.scaleY || 1)),
         angle: Math.round(activeObj.angle || 0),
-        fill: typeof activeObj.fill === 'string' ? activeObj.fill : undefined,
-        stroke: typeof activeObj.stroke === 'string' ? activeObj.stroke : undefined,
+        fill: fillVal,
+        stroke: strokeVal,
         strokeWidth: activeObj.strokeWidth,
         opacity: activeObj.opacity,
         isLocked: !!activeObj.lockMovementX,

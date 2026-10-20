@@ -111,9 +111,33 @@ export function App() {
     const activeObj = canvas.getActiveObject();
     if (!activeObj) return;
 
-    if (props.fill !== undefined) activeObj.set('fill', props.fill);
-    if (props.stroke !== undefined) activeObj.set('stroke', props.stroke);
-    if (props.strokeWidth !== undefined) activeObj.set('strokeWidth', props.strokeWidth);
+    if (props.fill !== undefined) {
+      activeObj.set('fill', props.fill);
+      if (activeObj.type === 'group') {
+        const groupObjects = (activeObj as Group).getObjects();
+        if (groupObjects[0]) {
+          groupObjects[0].set('fill', props.fill);
+        }
+      }
+    }
+    if (props.stroke !== undefined) {
+      activeObj.set('stroke', props.stroke);
+      if (activeObj.type === 'group') {
+        const groupObjects = (activeObj as Group).getObjects();
+        if (groupObjects[0]) {
+          groupObjects[0].set('stroke', props.stroke);
+        }
+      }
+    }
+    if (props.strokeWidth !== undefined) {
+      activeObj.set('strokeWidth', props.strokeWidth);
+      if (activeObj.type === 'group') {
+        const groupObjects = (activeObj as Group).getObjects();
+        if (groupObjects[0]) {
+          groupObjects[0].set('strokeWidth', props.strokeWidth);
+        }
+      }
+    }
     if (props.opacity !== undefined) activeObj.set('opacity', props.opacity);
     if (props.fontFamily !== undefined && (activeObj as any).fontFamily) {
       (activeObj as any).set('fontFamily', props.fontFamily);
