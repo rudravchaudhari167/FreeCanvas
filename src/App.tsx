@@ -139,23 +139,83 @@ export function App() {
       }
     }
     if (props.opacity !== undefined) activeObj.set('opacity', props.opacity);
-    if (props.fontFamily !== undefined && (activeObj as any).fontFamily) {
-      (activeObj as any).set('fontFamily', props.fontFamily);
-    }
-    if (props.fontWeight !== undefined && (activeObj as any).fontWeight) {
-      (activeObj as any).set('fontWeight', props.fontWeight);
-    }
-    if (props.fontStyle !== undefined && (activeObj as any).fontStyle) {
-      (activeObj as any).set('fontStyle', props.fontStyle);
-    }
-    if (props.underline !== undefined && (activeObj as any).underline !== undefined) {
-      (activeObj as any).set('underline', props.underline);
-    }
-    if (props.textAlign !== undefined && (activeObj as any).textAlign) {
-      (activeObj as any).set('textAlign', props.textAlign);
+
+    // Target text object directly or inside a group (e.g. sticky note)
+    const textTarget =
+      activeObj.type === 'i-text' || activeObj.type === 'text'
+        ? (activeObj as IText)
+        : activeObj.type === 'group'
+        ? ((activeObj as Group).getObjects().find((obj) => obj.type === 'i-text' || obj.type === 'text') as IText | undefined)
+        : null;
+
+    if (textTarget) {
+      if (props.fontFamily !== undefined) {
+        textTarget.set('fontFamily', props.fontFamily);
+        if ((textTarget as any).isEditing) {
+          (textTarget as any).setSelectionStyles?.({ fontFamily: props.fontFamily });
+        }
+        if (typeof document !== 'undefined' && document.fonts?.load) {
+          document.fonts.load(`16px "${props.fontFamily}"`).then(() => {
+            textTarget.initDimensions?.();
+            textTarget.set('dirty', true);
+            canvas.requestRenderAll();
+          }).catch(() => {});
+        }
+      }
+      if (props.fontWeight !== undefined) {
+        textTarget.set('fontWeight', props.fontWeight);
+        if ((textTarget as any).isEditing) {
+          (textTarget as any).setSelectionStyles?.({ fontWeight: props.fontWeight });
+        }
+      }
+      if (props.fontStyle !== undefined) {
+        textTarget.set('fontStyle', props.fontStyle);
+        if ((textTarget as any).isEditing) {
+          (textTarget as any).setSelectionStyles?.({ fontStyle: props.fontStyle });
+        }
+        if ((textTarget as any).styles) {
+          const styles = (textTarget as any).styles;
+          Object.keys(styles).forEach((lineKey) => {
+            const line = styles[lineKey];
+            if (line) {
+              Object.keys(line).forEach((charKey) => {
+                if (line[charKey]) {
+                  line[charKey].fontStyle = props.fontStyle;
+                }
+              });
+            }
+          });
+        }
+      }
+      if (props.underline !== undefined) {
+        textTarget.set('underline', props.underline);
+        if ((textTarget as any).isEditing) {
+          (textTarget as any).setSelectionStyles?.({ underline: props.underline });
+        }
+        if ((textTarget as any).styles) {
+          const styles = (textTarget as any).styles;
+          Object.keys(styles).forEach((lineKey) => {
+            const line = styles[lineKey];
+            if (line) {
+              Object.keys(line).forEach((charKey) => {
+                if (line[charKey]) {
+                  line[charKey].underline = props.underline;
+                }
+              });
+            }
+          });
+        }
+      }
+      if (props.textAlign !== undefined) {
+        textTarget.set('textAlign', props.textAlign);
+      }
+
+      textTarget.initDimensions?.();
+      textTarget.set('dirty', true);
+      activeObj.set('dirty', true);
     }
 
-    canvas.renderAll();
+    canvas.requestRenderAll();
     setSelectedObject((prev) => (prev ? { ...prev, ...props } : null));
   };
 

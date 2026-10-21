@@ -378,6 +378,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           if (typeof groupObjects[0].stroke === 'string') strokeVal = groupObjects[0].stroke;
         }
       }
+
+      let textObj: IText | null = null;
+      if (activeObj.type === 'i-text' || activeObj.type === 'text') {
+        textObj = activeObj as IText;
+      } else if (activeObj.type === 'group') {
+        const found = (activeObj as Group).getObjects().find((o) => o.type === 'i-text' || o.type === 'text');
+        if (found) textObj = found as IText;
+      }
+
       onSelectionChange({
         id: (activeObj as any).id,
         type: activeObj.type,
@@ -391,19 +400,21 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         strokeWidth: activeObj.strokeWidth,
         opacity: activeObj.opacity,
         isLocked: !!activeObj.lockMovementX,
-        text: (activeObj as IText).text,
-        fontFamily: (activeObj as IText).fontFamily,
-        fontSize: (activeObj as IText).fontSize,
-        fontWeight: (activeObj as IText).fontWeight,
-        fontStyle: (activeObj as IText).fontStyle,
-        underline: (activeObj as IText).underline,
-        textAlign: (activeObj as IText).textAlign
+        text: textObj ? textObj.text : undefined,
+        fontFamily: textObj ? textObj.fontFamily : undefined,
+        fontSize: textObj ? textObj.fontSize : undefined,
+        fontWeight: textObj ? textObj.fontWeight : undefined,
+        fontStyle: textObj ? textObj.fontStyle : undefined,
+        underline: textObj ? !!textObj.underline : undefined,
+        textAlign: textObj ? textObj.textAlign : undefined
       });
     };
 
     canvas.on('selection:created', updateSelectionProps);
     canvas.on('selection:updated', updateSelectionProps);
     canvas.on('selection:cleared', () => onSelectionChange(null));
+    canvas.on('text:changed', updateSelectionProps);
+    canvas.on('text:selection:changed', updateSelectionProps);
 
     // History trigger events
     canvas.on('object:added', () => {

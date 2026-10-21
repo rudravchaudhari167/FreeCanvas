@@ -27,6 +27,7 @@ import type {
   ShapeType,
   LineStyle
 } from '../../types/canvas';
+import { TEXT_STYLES, FONT_CATEGORIES } from '../../constants/fonts';
 
 interface PropertiesPanelProps {
   activeTool: ToolType;
@@ -127,6 +128,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [shapeTarget, setShapeTarget] = useState<'fill' | 'stroke'>('fill');
 
   const isTextContext = activeTool === 'text' || selectedObject?.type === 'i-text' || selectedObject?.type === 'text';
+  const hasTextProperties =
+    isTextContext ||
+    (selectedObject?.type === 'group' && selectedObject?.text !== undefined);
   const isShapeContext =
     activeTool === 'shape' ||
     ['rect', 'circle', 'triangle', 'polygon'].includes(selectedObject?.type || '');
@@ -811,91 +815,136 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       )}
 
       {/* TEXT SPECIFIC SETTINGS */}
-      {isTextContext && (
+      {hasTextProperties && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Typography</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Typography</span>
+            <span style={{ fontSize: 10, fontWeight: 500, color: '#8F8B81' }}>50 Styles</span>
+          </div>
+
           {/* Font Family selector */}
           <select
             value={selectedObject?.fontFamily || settings.fontFamily}
             onChange={(e) => {
-              onUpdateSettings({ fontFamily: e.target.value });
-              if (selectedObject) onUpdateSelectedObject({ fontFamily: e.target.value });
+              const font = e.target.value;
+              onUpdateSettings({ fontFamily: font });
+              if (selectedObject) onUpdateSelectedObject({ fontFamily: font });
             }}
             style={{
-              padding: '5px 9px',
+              padding: '6px 9px',
               borderRadius: 8,
               border: '1px solid #E8DFD3',
               backgroundColor: '#FAF5EE',
               fontSize: 12,
               color: '#30312D',
               outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontFamily: selectedObject?.fontFamily || settings.fontFamily
             }}
           >
-            <option value="Plus Jakarta Sans">Modern Sans</option>
-            <option value="Caveat">Handwritten Cursive</option>
-            <option value="Newsreader">Elegant Serif</option>
-            <option value="monospace">Typewriter</option>
+            {FONT_CATEGORIES.map((cat) => (
+              <optgroup key={cat} label={cat}>
+                {TEXT_STYLES.filter((f) => f.category === cat).map((f) => (
+                  <option key={f.family} value={f.family} style={{ fontFamily: f.family }}>
+                    {f.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </select>
 
           {/* Bold, Italic, Underline buttons */}
           <div style={{ display: 'flex', gap: 6 }}>
+            {/* Bold */}
             <button
+              type="button"
+              title="Bold"
               onClick={() => {
-                const next = !settings.isBold;
+                const isCurrentlyBold = selectedObject
+                  ? selectedObject.fontWeight === 'bold' || selectedObject.fontWeight === 700 || selectedObject.fontWeight === '700'
+                  : settings.isBold;
+                const next = !isCurrentlyBold;
                 onUpdateSettings({ isBold: next });
                 if (selectedObject) onUpdateSelectedObject({ fontWeight: next ? 'bold' : 'normal' });
               }}
               style={{
                 flex: 1,
-                padding: '5px',
+                padding: '6px',
                 borderRadius: 7,
-                backgroundColor: (selectedObject?.fontWeight === 'bold' || settings.isBold) ? '#C9D0BD' : '#F5EFE5',
+                backgroundColor: (selectedObject
+                  ? selectedObject.fontWeight === 'bold' || selectedObject.fontWeight === 700 || selectedObject.fontWeight === '700'
+                  : settings.isBold)
+                  ? '#C9D0BD'
+                  : '#F5EFE5',
+                color: '#30312D',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease'
               }}
             >
               <Bold size={14} />
             </button>
+
+            {/* Italic */}
             <button
+              type="button"
+              title="Italic"
               onClick={() => {
-                const next = !settings.isItalic;
+                const isCurrentlyItalic = selectedObject
+                  ? selectedObject.fontStyle === 'italic'
+                  : settings.isItalic;
+                const next = !isCurrentlyItalic;
                 onUpdateSettings({ isItalic: next });
                 if (selectedObject) onUpdateSelectedObject({ fontStyle: next ? 'italic' : 'normal' });
               }}
               style={{
                 flex: 1,
-                padding: '5px',
+                padding: '6px',
                 borderRadius: 7,
-                backgroundColor: (selectedObject?.fontStyle === 'italic' || settings.isItalic) ? '#C9D0BD' : '#F5EFE5',
+                backgroundColor: (selectedObject ? selectedObject.fontStyle === 'italic' : settings.isItalic)
+                  ? '#C9D0BD'
+                  : '#F5EFE5',
+                color: '#30312D',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease'
               }}
             >
               <Italic size={14} />
             </button>
+
+            {/* Underline */}
             <button
+              type="button"
+              title="Underline"
               onClick={() => {
-                const next = !settings.isUnderline;
+                const isCurrentlyUnderline = selectedObject
+                  ? !!selectedObject.underline
+                  : settings.isUnderline;
+                const next = !isCurrentlyUnderline;
                 onUpdateSettings({ isUnderline: next });
                 if (selectedObject) onUpdateSelectedObject({ underline: next });
               }}
               style={{
                 flex: 1,
-                padding: '5px',
+                padding: '6px',
                 borderRadius: 7,
-                backgroundColor: (selectedObject?.underline || settings.isUnderline) ? '#C9D0BD' : '#F5EFE5',
+                backgroundColor: (selectedObject ? !!selectedObject.underline : settings.isUnderline)
+                  ? '#C9D0BD'
+                  : '#F5EFE5',
+                color: '#30312D',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease'
               }}
             >
               <Underline size={14} />
