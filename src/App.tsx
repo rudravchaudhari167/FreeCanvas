@@ -4,6 +4,7 @@ import {
   FabricImage,
   Rect,
   IText,
+  Textbox,
   Group,
   FabricObject
 } from 'fabric';
@@ -141,44 +142,46 @@ export function App() {
     if (props.opacity !== undefined) activeObj.set('opacity', props.opacity);
 
     // Target text object directly or inside a group (e.g. sticky note)
-    const textTarget =
-      activeObj.type === 'i-text' || activeObj.type === 'text'
-        ? (activeObj as IText)
+    let textTarget: any =
+      activeObj.type === 'i-text' || activeObj.type === 'text' || activeObj.type === 'textbox'
+        ? activeObj
         : activeObj.type === 'group'
-        ? ((activeObj as Group).getObjects().find((obj) => obj.type === 'i-text' || obj.type === 'text') as IText | undefined)
+        ? (activeObj as Group).getObjects().find((obj) => obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox')
         : null;
 
     if (textTarget) {
       if (props.fontFamily !== undefined) {
         textTarget.set('fontFamily', props.fontFamily);
-        if ((textTarget as any).isEditing) {
-          (textTarget as any).setSelectionStyles?.({ fontFamily: props.fontFamily });
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ fontFamily: props.fontFamily });
         }
         if (typeof document !== 'undefined' && document.fonts?.load) {
           document.fonts.load(`16px "${props.fontFamily}"`).then(() => {
-            textTarget.initDimensions?.();
-            textTarget.set('dirty', true);
-            canvas.requestRenderAll();
+            if (textTarget) {
+              textTarget.initDimensions?.();
+              textTarget.set('dirty', true);
+              canvas.requestRenderAll();
+            }
           }).catch(() => {});
         }
       }
       if (props.fontWeight !== undefined) {
         textTarget.set('fontWeight', props.fontWeight);
-        if ((textTarget as any).isEditing) {
-          (textTarget as any).setSelectionStyles?.({ fontWeight: props.fontWeight });
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ fontWeight: props.fontWeight });
         }
       }
       if (props.fontStyle !== undefined) {
         textTarget.set('fontStyle', props.fontStyle);
-        if ((textTarget as any).isEditing) {
-          (textTarget as any).setSelectionStyles?.({ fontStyle: props.fontStyle });
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ fontStyle: props.fontStyle });
         }
-        if ((textTarget as any).styles) {
-          const styles = (textTarget as any).styles;
+        if (textTarget.styles) {
+          const styles = textTarget.styles;
           Object.keys(styles).forEach((lineKey) => {
             const line = styles[lineKey];
             if (line) {
-              Object.keys(line).forEach((charKey) => {
+              Object.keys(line).forEach((charKey: string) => {
                 if (line[charKey]) {
                   line[charKey].fontStyle = props.fontStyle;
                 }
@@ -189,15 +192,15 @@ export function App() {
       }
       if (props.underline !== undefined) {
         textTarget.set('underline', props.underline);
-        if ((textTarget as any).isEditing) {
-          (textTarget as any).setSelectionStyles?.({ underline: props.underline });
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ underline: props.underline });
         }
-        if ((textTarget as any).styles) {
-          const styles = (textTarget as any).styles;
+        if (textTarget.styles) {
+          const styles = textTarget.styles;
           Object.keys(styles).forEach((lineKey) => {
             const line = styles[lineKey];
             if (line) {
-              Object.keys(line).forEach((charKey) => {
+              Object.keys(line).forEach((charKey: string) => {
                 if (line[charKey]) {
                   line[charKey].underline = props.underline;
                 }
@@ -207,7 +210,40 @@ export function App() {
         }
       }
       if (props.textAlign !== undefined) {
-        textTarget.set('textAlign', props.textAlign);
+        if (activeObj.type === 'i-text' && activeObj === textTarget) {
+          // Seamlessly convert standalone plain IText into Textbox so width-based text alignment is visible immediately
+          const oldText = activeObj as IText;
+          const currentW = Math.max((oldText.width || 0) * (oldText.scaleX || 1), 260);
+          const textbox = new Textbox(oldText.text || '', {
+            left: oldText.left,
+            top: oldText.top,
+            width: currentW,
+            fontFamily: oldText.fontFamily,
+            fontSize: oldText.fontSize,
+            fill: oldText.fill,
+            stroke: oldText.stroke,
+            strokeWidth: oldText.strokeWidth,
+            fontWeight: oldText.fontWeight,
+            fontStyle: oldText.fontStyle,
+            underline: oldText.underline,
+            textAlign: props.textAlign as any,
+            opacity: oldText.opacity,
+            angle: oldText.angle,
+            padding: 6
+          });
+          canvas.remove(oldText);
+          canvas.add(textbox);
+          canvas.setActiveObject(textbox);
+          textTarget = textbox;
+        } else {
+          textTarget.set('textAlign', props.textAlign);
+          if (textTarget.type === 'textbox' && (!textTarget.width || textTarget.width < 200)) {
+            textTarget.set('width', 260);
+          }
+        }
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ textAlign: props.textAlign });
+        }
       }
 
       textTarget.initDimensions?.();
@@ -538,13 +574,14 @@ export function App() {
       } as any
     });
 
-    const noteText = new IText('Fresh thought...', {
+    const noteText = new Textbox('Fresh thought...', {
       left: 16,
       top: 18,
       fontFamily: "'Caveat', cursive",
       fontSize: 22,
       fill: '#30312D',
-      width: noteWidth - 32
+      width: noteWidth - 32,
+      textAlign: settings.textAlign || 'left'
     });
 
     const stickyGroup = new Group([bgRect, noteText], {

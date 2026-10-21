@@ -127,7 +127,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [copiedRgb, setCopiedRgb] = useState(false);
   const [shapeTarget, setShapeTarget] = useState<'fill' | 'stroke'>('fill');
 
-  const isTextContext = activeTool === 'text' || selectedObject?.type === 'i-text' || selectedObject?.type === 'text';
+  const isTextContext =
+    activeTool === 'text' ||
+    selectedObject?.type === 'i-text' ||
+    selectedObject?.type === 'text' ||
+    selectedObject?.type === 'textbox';
   const hasTextProperties =
     isTextContext ||
     (selectedObject?.type === 'group' && selectedObject?.text !== undefined);
@@ -260,7 +264,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const getItemBadgeLabel = () => {
     if (selectedObject) {
       const type = selectedObject.type || '';
-      if (type === 'i-text' || type === 'text') return 'Text Object';
+      if (type === 'i-text' || type === 'text' || type === 'textbox') return 'Text Object';
       if (type === 'rect') return 'Rectangle';
       if (type === 'circle') return 'Circle';
       if (type === 'triangle') return 'Triangle';
@@ -953,33 +957,39 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
           {/* Alignment */}
           <div style={{ display: 'flex', gap: 6 }}>
-            {(['left', 'center', 'right'] as const).map((align) => (
-              <button
-                key={align}
-                onClick={() => {
-                  onUpdateSettings({ textAlign: align });
-                  if (selectedObject) onUpdateSelectedObject({ textAlign: align });
-                }}
-                style={{
-                  flex: 1,
-                  padding: '5px',
-                  borderRadius: 7,
-                  border: 'none',
-                  backgroundColor:
-                    (selectedObject?.textAlign === align || settings.textAlign === align)
-                      ? '#C9D0BD'
-                      : '#F5EFE5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                {align === 'left' && <AlignLeft size={14} />}
-                {align === 'center' && <AlignCenter size={14} />}
-                {align === 'right' && <AlignRight size={14} />}
-              </button>
-            ))}
+            {(['left', 'center', 'right'] as const).map((align) => {
+              const currentAlign = (selectedObject && selectedObject.textAlign) ? selectedObject.textAlign : (settings.textAlign || 'left');
+              const isSelected = currentAlign === align;
+
+              return (
+                <button
+                  key={align}
+                  type="button"
+                  title={align === 'left' ? 'Align Left' : align === 'center' ? 'Align Center' : 'Align Right'}
+                  onClick={() => {
+                    onUpdateSettings({ textAlign: align });
+                    if (selectedObject) onUpdateSelectedObject({ textAlign: align });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    borderRadius: 7,
+                    border: 'none',
+                    backgroundColor: isSelected ? '#C9D0BD' : '#F5EFE5',
+                    color: isSelected ? '#252623' : '#6A675F',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {align === 'left' && <AlignLeft size={14} />}
+                  {align === 'center' && <AlignCenter size={14} />}
+                  {align === 'right' && <AlignRight size={14} />}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

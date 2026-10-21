@@ -8,6 +8,7 @@ import {
   Polygon,
   Line as FabricLine,
   IText,
+  Textbox,
   Group,
   Point,
   FabricObject,
@@ -113,7 +114,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       let name = 'Object ' + (index + 1);
       const type = obj.type || 'unknown';
       if (type === 'path') name = `Drawing ${index + 1}`;
-      else if (type === 'i-text' || type === 'text') name = `Text: "${(obj as IText).text?.slice(0, 12)}..."`;
+      else if (type === 'i-text' || type === 'text' || type === 'textbox') name = `Text: "${(obj as IText).text?.slice(0, 12)}..."`;
       else if (type === 'rect') name = `Rectangle ${index + 1}`;
       else if (type === 'circle') name = `Circle ${index + 1}`;
       else if (type === 'triangle') name = `Triangle ${index + 1}`;
@@ -380,10 +381,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       let textObj: IText | null = null;
-      if (activeObj.type === 'i-text' || activeObj.type === 'text') {
+      if (activeObj.type === 'i-text' || activeObj.type === 'text' || activeObj.type === 'textbox') {
         textObj = activeObj as IText;
       } else if (activeObj.type === 'group') {
-        const found = (activeObj as Group).getObjects().find((o) => o.type === 'i-text' || o.type === 'text');
+        const found = (activeObj as Group).getObjects().find((o) => o.type === 'i-text' || o.type === 'text' || o.type === 'textbox');
         if (found) textObj = found as IText;
       }
 
@@ -637,22 +638,24 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       // Text Creation Mode
       if (activeTool === 'text' && !opt.target) {
-        const iText = new IText('Type your thoughts...', {
+        const textbox = new Textbox('Type your thoughts...', {
           left: pointer.x,
           top: pointer.y,
+          width: 260,
           fontFamily: settings.fontFamily,
           fontSize: settings.fontSize || 22,
           fill: settings.color,
           fontWeight: settings.isBold ? 'bold' : 'normal',
           fontStyle: settings.isItalic ? 'italic' : 'normal',
           underline: settings.isUnderline,
-          textAlign: settings.textAlign,
-          opacity: settings.opacity
+          textAlign: settings.textAlign || 'left',
+          opacity: settings.opacity,
+          padding: 6
         });
-        canvas.add(iText);
-        canvas.setActiveObject(iText);
-        iText.enterEditing();
-        iText.selectAll();
+        canvas.add(textbox);
+        canvas.setActiveObject(textbox);
+        textbox.enterEditing();
+        textbox.selectAll();
         canvas.renderAll();
         saveStateToHistory();
         return;
