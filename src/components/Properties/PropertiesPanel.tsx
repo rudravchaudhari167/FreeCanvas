@@ -679,7 +679,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(7, 1fr)',
-                gap: 5
+                gap: 6
               }}
             >
               {CURATED_SWATCHES.map((item) => {
@@ -696,7 +696,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     onClick={() => handleColorChange(item.rgb)}
                     title={`${item.name} • ${item.rgb}`}
                     style={{
-                      height: 21,
+                      width: '100%',
+                      aspectRatio: '1 / 1',
+                      padding: 0,
                       borderRadius: '50%',
                       backgroundColor: item.hex,
                       border: isSelected ? '1.5px solid #FFFFFF' : '1px solid rgba(0,0,0,0.06)',
@@ -705,7 +707,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         : '0 1px 2px rgba(0,0,0,0.06)',
                       cursor: 'pointer',
                       transform: isSelected ? 'scale(1.12)' : 'scale(1)',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.15s ease',
+                      boxSizing: 'border-box'
                     }}
                   />
                 );
