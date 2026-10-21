@@ -1079,7 +1079,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   title={shape.name}
                   onClick={() => {
                     onUpdateSettings({ shapeType: shape.id });
-                    if (selectedObject) {
+                    if (activeTool === 'select' && selectedObject) {
                       onUpdateSelectedObject({ shapeType: shape.id });
                     }
                   }}

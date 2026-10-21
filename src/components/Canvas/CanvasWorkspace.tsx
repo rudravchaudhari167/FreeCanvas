@@ -624,6 +624,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         return;
       }
 
+      // If already drawing a shape/line/arrow, do not create another shape
+      if (isDrawingShapeRef.current) {
+        return;
+      }
+
       // If user clicked on an existing object or control handle, and not erasing, let Fabric handle selection/transformation
       if (opt.target && activeTool !== 'eraser') {
         return;
@@ -861,7 +866,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     };
 
-    const handleMouseUp = (opt?: any) => {
+    const handleMouseUp = () => {
       if (isPanningRef.current) {
         isPanningRef.current = false;
         lastPanPosRef.current = null;
@@ -873,20 +878,35 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         const start = shapeStartRef.current;
         shapeStartRef.current = null;
         const obj = activeShapeObjectRef.current;
+        activeShapeObjectRef.current = null;
 
         if (obj && start) {
-          const pointer = opt?.e ? canvas.getScenePoint(opt.e) : { x: obj.left || start.x, y: obj.top || start.y };
-          const distDragged = Math.hypot(pointer.x - start.x, pointer.y - start.y);
+          // Measure actual size drawn on canvas
+          let actualW = 0;
+          let actualH = 0;
+          if (obj instanceof FabricCircle) {
+            actualW = (obj.radius || 0) * 2;
+            actualH = actualW;
+          } else if (obj instanceof Ellipse) {
+            actualW = (obj.rx || 0) * 2;
+            actualH = (obj.ry || 0) * 2;
+          } else if (obj instanceof Polygon) {
+            actualW = 50 * (obj.scaleX || 1);
+            actualH = 50 * (obj.scaleY || 1);
+          } else {
+            actualW = (obj.width || 0) * (obj.scaleX || 1);
+            actualH = (obj.height || 0) * (obj.scaleY || 1);
+          }
 
           // If shape is arrow, add arrowhead
           if (activeTool === 'arrow') {
             const line = obj as FabricLine;
             let x1 = line.x1 || start.x;
             let y1 = line.y1 || start.y;
-            let x2 = line.x2 || pointer.x;
-            let y2 = line.y2 || pointer.y;
+            let x2 = line.x2 || start.x;
+            let y2 = line.y2 || start.y;
 
-            if (distDragged < 10) {
+            if (Math.hypot(x2 - x1, y2 - y1) < 10) {
               x2 = x1 + 120;
               y2 = y1;
               line.set({ x1, y1, x2, y2 });
@@ -909,18 +929,20 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             canvas.remove(line);
             const arrowGroup = new Group([line, arrowHead], { selectable: true });
             canvas.add(arrowGroup);
-            canvas.setActiveObject(arrowGroup);
             arrowGroup.setCoords();
           } else if (activeTool === 'line') {
             const line = obj as FabricLine;
-            if (distDragged < 10) {
-              line.set({ x1: start.x, y1: start.y, x2: start.x + 120, y2: start.y });
+            let x1 = line.x1 || start.x;
+            let y1 = line.y1 || start.y;
+            let x2 = line.x2 || start.x;
+            let y2 = line.y2 || start.y;
+            if (Math.hypot(x2 - x1, y2 - y1) < 10) {
+              line.set({ x1, y1, x2: x1 + 120, y2: y1 });
             }
-            canvas.setActiveObject(line);
             line.setCoords();
           } else if (activeTool === 'shape') {
-            // If the user single-clicked without dragging (< 8px), provide a beautiful default size
-            if (distDragged < 8) {
+            // ONLY if the user single-clicked without dragging (< 10px), provide a standard default size
+            if (actualW < 10 && actualH < 10) {
               if (obj instanceof FabricCircle) {
                 obj.set({ radius: 50, left: start.x - 50, top: start.y - 50 });
               } else if (obj instanceof Ellipse) {
@@ -933,18 +955,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
                 obj.set({ scaleX: 2.2, scaleY: 2.2, left: start.x - 55, top: start.y - 55 });
               }
             }
-            canvas.setActiveObject(obj);
             obj.setCoords();
           } else {
-            canvas.setActiveObject(obj);
             obj.setCoords();
           }
 
-          activeShapeObjectRef.current = null;
           canvas.renderAll();
           saveStateToHistory();
-          // Switch back to select tool so the user can immediately move, scale, and style the shape without spawning more
-          onToolChange?.('select');
         }
       }
 
