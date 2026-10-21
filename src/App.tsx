@@ -3,6 +3,10 @@ import {
   Canvas as FabricCanvas,
   FabricImage,
   Rect,
+  Circle as FabricCircle,
+  Ellipse,
+  Triangle as FabricTriangle,
+  Polygon,
   IText,
   Textbox,
   Group,
@@ -140,6 +144,115 @@ export function App() {
       }
     }
     if (props.opacity !== undefined) activeObj.set('opacity', props.opacity);
+
+    // Shape Morphing / Changing
+    if (props.shapeType !== undefined) {
+      const isCurrentShape = ['rect', 'circle', 'ellipse', 'triangle', 'polygon'].includes(activeObj.type || '');
+      if (isCurrentShape) {
+        const curLeft = activeObj.left || 100;
+        const curTop = activeObj.top || 100;
+        const curWidth = Math.max(20, (activeObj.width || 100) * (activeObj.scaleX || 1));
+        const curHeight = Math.max(20, (activeObj.height || 100) * (activeObj.scaleY || 1));
+        const curFill = typeof activeObj.fill === 'string' ? activeObj.fill : (settings.fillColor || settings.color || '#E8EBD9');
+        const curStroke = typeof activeObj.stroke === 'string' ? activeObj.stroke : (settings.strokeColor || '#5E6547');
+        const curStrokeWidth = activeObj.strokeWidth !== undefined ? activeObj.strokeWidth : 2;
+        const curOpacity = activeObj.opacity !== undefined ? activeObj.opacity : 1;
+        const curAngle = activeObj.angle || 0;
+
+        let newObj: FabricObject;
+        const commonProps = {
+          left: curLeft,
+          top: curTop,
+          fill: curFill,
+          stroke: curStroke,
+          strokeWidth: curStrokeWidth,
+          opacity: curOpacity,
+          angle: curAngle,
+          selectable: true
+        };
+
+        if (props.shapeType === 'circle') {
+          const radius = Math.max(curWidth, curHeight) / 2;
+          newObj = new FabricCircle({ ...commonProps, radius });
+        } else if (props.shapeType === 'ellipse') {
+          newObj = new Ellipse({ ...commonProps, rx: curWidth / 2, ry: curHeight / 2 });
+        } else if (props.shapeType === 'triangle') {
+          newObj = new FabricTriangle({ ...commonProps, width: curWidth, height: curHeight });
+        } else if (props.shapeType === 'rounded-rect') {
+          newObj = new Rect({ ...commonProps, width: curWidth, height: curHeight, rx: 16, ry: 16 });
+        } else if (props.shapeType === 'rectangle') {
+          newObj = new Rect({ ...commonProps, width: curWidth, height: curHeight, rx: 0, ry: 0 });
+        } else if (props.shapeType === 'diamond') {
+          const diamondPoints = [
+            { x: 25, y: 0 },
+            { x: 50, y: 25 },
+            { x: 25, y: 50 },
+            { x: 0, y: 25 }
+          ];
+          newObj = new Polygon(diamondPoints, {
+            ...commonProps,
+            scaleX: curWidth / 50,
+            scaleY: curHeight / 50
+          });
+        } else if (props.shapeType === 'star') {
+          const starPoints = [
+            { x: 25, y: 0 },
+            { x: 32, y: 15 },
+            { x: 49, y: 17 },
+            { x: 37, y: 30 },
+            { x: 40, y: 47 },
+            { x: 25, y: 38 },
+            { x: 10, y: 47 },
+            { x: 13, y: 30 },
+            { x: 1, y: 17 },
+            { x: 18, y: 15 }
+          ];
+          newObj = new Polygon(starPoints, {
+            ...commonProps,
+            scaleX: curWidth / 50,
+            scaleY: curHeight / 50
+          });
+        } else {
+          // Regular Hexagon
+          const hexPoints = [
+            { x: 12.5, y: 0 },
+            { x: 37.5, y: 0 },
+            { x: 50, y: 25 },
+            { x: 37.5, y: 50 },
+            { x: 12.5, y: 50 },
+            { x: 0, y: 25 }
+          ];
+          newObj = new Polygon(hexPoints, {
+            ...commonProps,
+            scaleX: curWidth / 50,
+            scaleY: curHeight / 50
+          });
+        }
+
+        (newObj as any).shapeType = props.shapeType;
+        canvas.remove(activeObj);
+        canvas.add(newObj);
+        canvas.setActiveObject(newObj);
+        newObj.setCoords();
+        canvas.requestRenderAll();
+        setSelectedObject({
+          id: (newObj as any).id,
+          type: newObj.type,
+          left: Math.round(newObj.left || 0),
+          top: Math.round(newObj.top || 0),
+          width: Math.round(curWidth),
+          height: Math.round(curHeight),
+          angle: Math.round(newObj.angle || 0),
+          fill: typeof newObj.fill === 'string' ? newObj.fill : undefined,
+          stroke: typeof newObj.stroke === 'string' ? newObj.stroke : undefined,
+          strokeWidth: newObj.strokeWidth,
+          opacity: newObj.opacity,
+          isLocked: !!newObj.lockMovementX,
+          shapeType: props.shapeType
+        });
+        return;
+      }
+    }
 
     // Target text object directly or inside a group (e.g. sticky note)
     let textTarget: any =
@@ -879,6 +992,7 @@ export function App() {
           fabricCanvasRef.current = c;
           setFabricCanvas(c);
         }}
+        onToolChange={setActiveTool}
       />
 
       {/* 5. RIGHT PROPERTIES PANEL matching Reference Image 1 */}

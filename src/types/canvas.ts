@@ -75,6 +75,7 @@ export interface SelectedObjectProperties {
   fontStyle?: string;
   underline?: boolean;
   textAlign?: string;
+  shapeType?: ShapeType;
 }
 
 export interface LayerItem {

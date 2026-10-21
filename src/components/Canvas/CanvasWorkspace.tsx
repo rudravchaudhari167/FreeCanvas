@@ -4,6 +4,7 @@ import {
   PencilBrush,
   Rect,
   Circle as FabricCircle,
+  Ellipse,
   Triangle as FabricTriangle,
   Polygon,
   Line as FabricLine,
@@ -19,7 +20,8 @@ import type {
   ToolType,
   ToolSettings,
   SelectedObjectProperties,
-  LayerItem
+  LayerItem,
+  ShapeType
 } from '../../types/canvas';
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { BotanicalBackground } from './BotanicalBackground';
@@ -59,6 +61,7 @@ interface CanvasWorkspaceProps {
   onLayersUpdate: (layers: LayerItem[]) => void;
   canvasRefCallback?: (canvas: FabricCanvas | null) => void;
   onToolUsed?: () => void;
+  onToolChange?: (tool: ToolType) => void;
 }
 
 export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
@@ -72,7 +75,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   onHistoryChange,
   onSaveTrigger,
   onLayersUpdate,
-  canvasRefCallback
+  canvasRefCallback,
+  onToolChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -388,6 +392,22 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         if (found) textObj = found as IText;
       }
 
+      let detectedShapeType: ShapeType | undefined = (activeObj as any).shapeType;
+      if (!detectedShapeType) {
+        if (activeObj instanceof FabricCircle || activeObj.type === 'circle') {
+          detectedShapeType = 'circle';
+        } else if (activeObj instanceof Ellipse || activeObj.type === 'ellipse') {
+          detectedShapeType = 'ellipse';
+        } else if (activeObj instanceof FabricTriangle || activeObj.type === 'triangle') {
+          detectedShapeType = 'triangle';
+        } else if (activeObj instanceof Rect || activeObj.type === 'rect') {
+          const r = activeObj as Rect;
+          detectedShapeType = r.rx && r.rx > 0 ? 'rounded-rect' : 'rectangle';
+        } else if (activeObj instanceof Polygon || activeObj.type === 'polygon') {
+          detectedShapeType = 'polygon';
+        }
+      }
+
       onSelectionChange({
         id: (activeObj as any).id,
         type: activeObj.type,
@@ -407,7 +427,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         fontWeight: textObj ? textObj.fontWeight : undefined,
         fontStyle: textObj ? textObj.fontStyle : undefined,
         underline: textObj ? !!textObj.underline : undefined,
-        textAlign: textObj ? textObj.textAlign : undefined
+        textAlign: textObj ? textObj.textAlign : undefined,
+        shapeType: detectedShapeType
       });
     };
 
@@ -603,6 +624,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         return;
       }
 
+      // If user clicked on an existing object or control handle, and not erasing, let Fabric handle selection/transformation
+      if (opt.target && activeTool !== 'eraser') {
+        return;
+      }
+
       const pointer = canvas.getScenePoint(opt.e);
 
       // Eraser Mode
@@ -667,11 +693,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         shapeStartRef.current = { x: pointer.x, y: pointer.y };
 
         let shapeObj: FabricObject;
+        const fillColor = settings.fillColor || settings.color || '#E8EBD9';
+        const strokeColor = settings.strokeColor || '#5E6547';
         const commonProps = {
           left: pointer.x,
           top: pointer.y,
-          fill: settings.color,
-          stroke: settings.strokeColor || '#5E6547',
+          fill: fillColor,
+          stroke: strokeColor,
           strokeWidth: settings.strokeWidth || 2,
           opacity: settings.opacity,
           selectable: true
@@ -679,34 +707,75 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
         if (settings.shapeType === 'circle') {
           shapeObj = new FabricCircle({ ...commonProps, radius: 1 });
+        } else if (settings.shapeType === 'ellipse') {
+          shapeObj = new Ellipse({ ...commonProps, rx: 1, ry: 1 });
         } else if (settings.shapeType === 'triangle') {
           shapeObj = new FabricTriangle({ ...commonProps, width: 2, height: 2 });
-        } else if (settings.shapeType === 'star') {
-          // 5-point star
-          const starPoints = [
-            { x: 0, y: -25 },
-            { x: 7, y: -10 },
-            { x: 24, y: -8 },
-            { x: 12, y: 5 },
-            { x: 15, y: 22 },
-            { x: 0, y: 13 },
-            { x: -15, y: 22 },
-            { x: -12, y: 5 },
-            { x: -24, y: -8 },
-            { x: -7, y: -10 }
-          ];
-          shapeObj = new Polygon(starPoints, { ...commonProps });
-        } else {
-          // Rectangle or Rounded Rectangle
+        } else if (settings.shapeType === 'rounded-rect') {
           shapeObj = new Rect({
             ...commonProps,
             width: 2,
             height: 2,
-            rx: settings.shapeType === 'rounded-rect' ? 12 : 0,
-            ry: settings.shapeType === 'rounded-rect' ? 12 : 0
+            rx: 16,
+            ry: 16
+          });
+        } else if (settings.shapeType === 'diamond') {
+          const diamondPoints = [
+            { x: 25, y: 0 },
+            { x: 50, y: 25 },
+            { x: 25, y: 50 },
+            { x: 0, y: 25 }
+          ];
+          shapeObj = new Polygon(diamondPoints, {
+            ...commonProps,
+            scaleX: 0.04,
+            scaleY: 0.04
+          });
+        } else if (settings.shapeType === 'star') {
+          const starPoints = [
+            { x: 25, y: 0 },
+            { x: 32, y: 15 },
+            { x: 49, y: 17 },
+            { x: 37, y: 30 },
+            { x: 40, y: 47 },
+            { x: 25, y: 38 },
+            { x: 10, y: 47 },
+            { x: 13, y: 30 },
+            { x: 1, y: 17 },
+            { x: 18, y: 15 }
+          ];
+          shapeObj = new Polygon(starPoints, {
+            ...commonProps,
+            scaleX: 0.04,
+            scaleY: 0.04
+          });
+        } else if (settings.shapeType === 'polygon') {
+          // Regular Hexagon
+          const hexPoints = [
+            { x: 12.5, y: 0 },
+            { x: 37.5, y: 0 },
+            { x: 50, y: 25 },
+            { x: 37.5, y: 50 },
+            { x: 12.5, y: 50 },
+            { x: 0, y: 25 }
+          ];
+          shapeObj = new Polygon(hexPoints, {
+            ...commonProps,
+            scaleX: 0.04,
+            scaleY: 0.04
+          });
+        } else {
+          // Standard Rectangle
+          shapeObj = new Rect({
+            ...commonProps,
+            width: 2,
+            height: 2,
+            rx: 0,
+            ry: 0
           });
         }
 
+        (shapeObj as any).shapeType = settings.shapeType;
         activeShapeObjectRef.current = shapeObj;
         canvas.add(shapeObj);
         return;
@@ -767,16 +836,22 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const obj = activeShapeObjectRef.current;
 
       if (activeTool === 'shape') {
-        const width = Math.abs(pointer.x - start.x);
-        const height = Math.abs(pointer.y - start.y);
+        const width = Math.max(2, Math.abs(pointer.x - start.x));
+        const height = Math.max(2, Math.abs(pointer.y - start.y));
         const left = Math.min(pointer.x, start.x);
         const top = Math.min(pointer.y, start.y);
 
         if (obj instanceof FabricCircle) {
           const radius = Math.max(width, height) / 2;
           obj.set({ radius, left, top });
+        } else if (obj instanceof Ellipse) {
+          obj.set({ rx: width / 2, ry: height / 2, left, top });
         } else if (obj instanceof Rect || obj instanceof FabricTriangle) {
           obj.set({ width, height, left, top });
+        } else if (obj instanceof Polygon) {
+          const scaleX = Math.max(0.04, width / 50);
+          const scaleY = Math.max(0.04, height / 50);
+          obj.set({ scaleX, scaleY, left, top });
         }
         canvas.renderAll();
       } else if (activeTool === 'line' || activeTool === 'arrow') {
@@ -786,7 +861,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (opt?: any) => {
       if (isPanningRef.current) {
         isPanningRef.current = false;
         lastPanPosRef.current = null;
@@ -795,16 +870,28 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       if (isDrawingShapeRef.current) {
         isDrawingShapeRef.current = false;
+        const start = shapeStartRef.current;
         shapeStartRef.current = null;
+        const obj = activeShapeObjectRef.current;
 
-        if (activeShapeObjectRef.current) {
+        if (obj && start) {
+          const pointer = opt?.e ? canvas.getScenePoint(opt.e) : { x: obj.left || start.x, y: obj.top || start.y };
+          const distDragged = Math.hypot(pointer.x - start.x, pointer.y - start.y);
+
           // If shape is arrow, add arrowhead
           if (activeTool === 'arrow') {
-            const line = activeShapeObjectRef.current as FabricLine;
-            const x1 = line.x1 || 0;
-            const y1 = line.y1 || 0;
-            const x2 = line.x2 || 0;
-            const y2 = line.y2 || 0;
+            const line = obj as FabricLine;
+            let x1 = line.x1 || start.x;
+            let y1 = line.y1 || start.y;
+            let x2 = line.x2 || pointer.x;
+            let y2 = line.y2 || pointer.y;
+
+            if (distDragged < 10) {
+              x2 = x1 + 120;
+              y2 = y1;
+              line.set({ x1, y1, x2, y2 });
+            }
+
             const angle = Math.atan2(y2 - y1, x2 - x1);
             const headLength = 16;
 
@@ -813,7 +900,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               top: y2,
               originX: 'center',
               originY: 'center',
-              pointType: 'arrow_start',
               angle: (angle * 180) / Math.PI + 90,
               width: headLength,
               height: headLength,
@@ -824,13 +910,41 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             const arrowGroup = new Group([line, arrowHead], { selectable: true });
             canvas.add(arrowGroup);
             canvas.setActiveObject(arrowGroup);
+            arrowGroup.setCoords();
+          } else if (activeTool === 'line') {
+            const line = obj as FabricLine;
+            if (distDragged < 10) {
+              line.set({ x1: start.x, y1: start.y, x2: start.x + 120, y2: start.y });
+            }
+            canvas.setActiveObject(line);
+            line.setCoords();
+          } else if (activeTool === 'shape') {
+            // If the user single-clicked without dragging (< 8px), provide a beautiful default size
+            if (distDragged < 8) {
+              if (obj instanceof FabricCircle) {
+                obj.set({ radius: 50, left: start.x - 50, top: start.y - 50 });
+              } else if (obj instanceof Ellipse) {
+                obj.set({ rx: 65, ry: 45, left: start.x - 65, top: start.y - 45 });
+              } else if (obj instanceof FabricTriangle) {
+                obj.set({ width: 110, height: 100, left: start.x - 55, top: start.y - 50 });
+              } else if (obj instanceof Rect) {
+                obj.set({ width: 130, height: 90, left: start.x - 65, top: start.y - 45 });
+              } else if (obj instanceof Polygon) {
+                obj.set({ scaleX: 2.2, scaleY: 2.2, left: start.x - 55, top: start.y - 55 });
+              }
+            }
+            canvas.setActiveObject(obj);
+            obj.setCoords();
           } else {
-            canvas.setActiveObject(activeShapeObjectRef.current);
+            canvas.setActiveObject(obj);
+            obj.setCoords();
           }
 
           activeShapeObjectRef.current = null;
           canvas.renderAll();
           saveStateToHistory();
+          // Switch back to select tool so the user can immediately move, scale, and style the shape without spawning more
+          onToolChange?.('select');
         }
       }
 
@@ -874,7 +988,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeTool, settings, saveStateToHistory, eraseAtPoint, updateLayers]);
+  }, [activeTool, settings, saveStateToHistory, eraseAtPoint, updateLayers, onToolChange]);
 
   return (
     <main
