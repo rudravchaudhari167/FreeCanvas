@@ -84,7 +84,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
   if (activeTab === 'uploads') currentList = userUploads;
   else if (activeTab === 'illustrations') currentList = PRESET_ILLUSTRATIONS;
   else if (activeTab === 'stickers') currentList = PRESET_STICKERS;
-  else if (activeTab === 'recent') currentList = [...userUploads, ...PRESET_ILLUSTRATIONS].slice(0, 8);
+  else if (activeTab === 'recent') currentList = [...userUploads, ...PRESET_ILLUSTRATIONS, ...PRESET_STICKERS].slice(0, 10);
 
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();

@@ -637,10 +637,12 @@ export function App() {
         }
 
         // Determine natural dimensions
-        const objWidth =
+        const rawWidth =
           objectToInsert.getScaledWidth?.() || objectToInsert.width || 200;
-        const objHeight =
+        const rawHeight =
           objectToInsert.getScaledHeight?.() || objectToInsert.height || 200;
+        const objWidth = rawWidth > 0 && !isNaN(rawWidth) ? rawWidth : 200;
+        const objHeight = rawHeight > 0 && !isNaN(rawHeight) ? rawHeight : 200;
 
         // Scale to a comfortable workspace dimension (max ~280px)
         const maxDim = 280;
@@ -648,6 +650,7 @@ export function App() {
         if (objWidth > maxDim || objHeight > maxDim) {
           scale = maxDim / Math.max(objWidth, objHeight);
         }
+        if (!scale || isNaN(scale) || scale <= 0) scale = 1;
 
         objectToInsert.set({
           scaleX: (objectToInsert.scaleX || 1) * scale,

@@ -393,7 +393,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
     name: 'Washi Tape Sage',
     category: 'stickers',
     type: 'svg',
-    createdAt: Date.now() - 20000,
+    createdAt: Date.now() - 140000,
     width: 180,
     height: 48,
     url: svgToUri(`
@@ -404,11 +404,277 @@ export const PRESET_STICKERS: GalleryAsset[] = [
     `)
   },
   {
+    id: 'stk-washi-terracotta',
+    name: 'Washi Tape Terracotta',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 130000,
+    width: 180,
+    height: 48,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="180" height="48" viewBox="0 0 180 48" fill="none">
+        <path d="M0 5 L10 0 L170 0 L180 5 L176 43 L168 48 L8 48 L0 41 Z" fill="#E5A995" opacity="0.92"/>
+        <!-- subtle decorative diagonal stripes -->
+        <line x1="30" y1="4" x2="45" y2="44" stroke="#D99379" stroke-width="3" opacity="0.45"/>
+        <line x1="60" y1="4" x2="75" y2="44" stroke="#D99379" stroke-width="3" opacity="0.45"/>
+        <line x1="90" y1="4" x2="105" y2="44" stroke="#D99379" stroke-width="3" opacity="0.45"/>
+        <line x1="120" y1="4" x2="135" y2="44" stroke="#D99379" stroke-width="3" opacity="0.45"/>
+        <line x1="150" y1="4" x2="165" y2="44" stroke="#D99379" stroke-width="3" opacity="0.45"/>
+        <!-- central stitched line -->
+        <line x1="12" y1="24" x2="168" y2="24" stroke="#FAF5EE" stroke-width="1.6" stroke-dasharray="5 3"/>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-wax-seal',
+    name: 'Artisan Wax Seal',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 120000,
+    width: 120,
+    height: 120,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <!-- organic melted wax perimeter -->
+        <path d="M60 10 C78 9 92 18 102 30 C114 44 112 62 108 78 C104 94 92 108 74 111 C56 114 40 106 28 96 C16 84 10 68 12 50 C14 34 26 18 42 12 C48 10 54 10 60 10 Z" fill="#B85B43"/>
+        <circle cx="60" cy="60" r="40" fill="#A24E38"/>
+        <circle cx="60" cy="60" r="37" stroke="#FAF5EE" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
+        <!-- debossed botanical branch in center -->
+        <path d="M60 82 Q58 60 60 38" stroke="#EED4C5" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="52" cy="48" rx="4" ry="7" transform="rotate(-30 52 48)" fill="#EED4C5"/>
+        <ellipse cx="68" cy="52" rx="4" ry="7" transform="rotate(30 68 52)" fill="#EED4C5"/>
+        <ellipse cx="51" cy="64" rx="4" ry="7" transform="rotate(-35 51 64)" fill="#EED4C5"/>
+        <ellipse cx="69" cy="68" rx="4" ry="7" transform="rotate(35 69 68)" fill="#EED4C5"/>
+        <circle cx="60" cy="36" r="3" fill="#EED4C5"/>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-coffee-cup',
+    name: 'Morning Coffee',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 110000,
+    width: 130,
+    height: 130,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 130 130" fill="none">
+        <!-- steam wisps -->
+        <path d="M50 36 C45 28 55 20 48 12" stroke="#B08968" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M65 34 C60 24 70 18 64 8" stroke="#B08968" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M80 36 C75 28 85 20 78 12" stroke="#B08968" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <!-- saucer -->
+        <ellipse cx="65" cy="108" rx="46" ry="9" fill="#D8DAC7"/>
+        <ellipse cx="65" cy="108" rx="36" ry="6" fill="#FAF5EE"/>
+        <!-- cup handle -->
+        <path d="M86 54 C104 54 104 84 86 84" stroke="#C57E65" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <!-- cup body -->
+        <path d="M36 48 L42 94 Q65 102 88 94 L94 48 Z" fill="#EED4C5"/>
+        <ellipse cx="65" cy="48" rx="29" ry="8" fill="#C57E65"/>
+        <!-- latte art foam & heart -->
+        <ellipse cx="65" cy="48" rx="25" ry="6.5" fill="#FAF5EE"/>
+        <path d="M65 52 C61 48 57 50 57 53 C57 56 65 59 65 59 C65 59 73 56 73 53 C73 50 69 48 65 52 Z" fill="#C57E65"/>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-gold-stars',
+    name: 'Top Pick Stars',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 100000,
+    width: 140,
+    height: 140,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140" fill="none">
+        <!-- ribbon tails below -->
+        <path d="M48 85 L35 125 L55 115 L68 125 L60 85 Z" fill="#D99379"/>
+        <path d="M92 85 L80 125 L92 115 L112 125 L100 85 Z" fill="#C57E65"/>
+        <!-- rosette circular badge -->
+        <circle cx="70" cy="65" r="48" fill="#E8B07A"/>
+        <circle cx="70" cy="65" r="41" fill="#FAF5EE"/>
+        <circle cx="70" cy="65" r="37" stroke="#E8B07A" stroke-width="1.8" stroke-dasharray="3 3"/>
+        <!-- 3 central gold stars -->
+        <polygon points="70,40 73,50 84,50 75,56 78,66 70,60 62,66 65,56 56,50 67,50" fill="#E8B07A"/>
+        <polygon points="50,56 52,63 60,63 54,67 56,74 50,70 44,74 46,67 40,63 48,63" fill="#D99379"/>
+        <polygon points="90,56 92,63 100,63 94,67 96,74 90,70 84,74 86,67 80,63 88,63" fill="#D99379"/>
+        <!-- curved banner ribbon label -->
+        <path d="M36 82 Q70 74 104 82 L100 95 Q70 87 40 95 Z" fill="#5E6547"/>
+        <text x="70" y="90" font-family="'Cinzel', serif, sans-serif" font-size="8.5" font-weight="bold" fill="#FAF5EE" text-anchor="middle" letter-spacing="1.5">FAVORITE</text>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-postage-stamp',
+    name: 'Vintage Postage',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 90000,
+    width: 130,
+    height: 150,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="130" height="150" viewBox="0 0 130 150" fill="none">
+        <!-- stamp paper with perforated edge simulation -->
+        <rect x="10" y="10" width="110" height="130" rx="3" fill="#FAF5EE" stroke="#E8DFD3" stroke-width="2"/>
+        <!-- scalloped perforations on borders -->
+        <circle cx="10" cy="25" r="3.5" fill="#FAF5EE"/>
+        <circle cx="10" cy="45" r="3.5" fill="#FAF5EE"/>
+        <circle cx="10" cy="65" r="3.5" fill="#FAF5EE"/>
+        <circle cx="10" cy="85" r="3.5" fill="#FAF5EE"/>
+        <circle cx="10" cy="105" r="3.5" fill="#FAF5EE"/>
+        <circle cx="10" cy="125" r="3.5" fill="#FAF5EE"/>
+        <circle cx="120" cy="25" r="3.5" fill="#FAF5EE"/>
+        <circle cx="120" cy="45" r="3.5" fill="#FAF5EE"/>
+        <circle cx="120" cy="65" r="3.5" fill="#FAF5EE"/>
+        <circle cx="120" cy="85" r="3.5" fill="#FAF5EE"/>
+        <circle cx="120" cy="105" r="3.5" fill="#FAF5EE"/>
+        <circle cx="120" cy="125" r="3.5" fill="#FAF5EE"/>
+        <!-- inner vignette frame -->
+        <rect x="22" y="22" width="86" height="106" rx="2" fill="#FAF6F0" stroke="#777D5E" stroke-width="1.8"/>
+        <!-- botanical motif inside stamp -->
+        <path d="M65 92 Q64 68 65 44" stroke="#5E6547" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="54" cy="58" rx="6" ry="11" transform="rotate(-30 54 58)" fill="#777D5E"/>
+        <ellipse cx="76" cy="64" rx="6" ry="11" transform="rotate(30 76 64)" fill="#889571"/>
+        <circle cx="65" cy="42" r="5" fill="#D99379"/>
+        <!-- cancellation wavy postal lines -->
+        <path d="M15 40 Q40 32 65 40 Q90 48 115 40" stroke="#30312D" stroke-width="1" opacity="0.35"/>
+        <path d="M15 48 Q40 40 65 48 Q90 56 115 48" stroke="#30312D" stroke-width="1" opacity="0.35"/>
+        <text x="65" y="118" font-family="'Caveat', cursive" font-size="12" font-weight="bold" fill="#777D5E" text-anchor="middle">postale • 12c</text>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-pushpin-tag',
+    name: 'Memo Pushpin Tag',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 80000,
+    width: 130,
+    height: 130,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 130 130" fill="none">
+        <!-- drop shadow -->
+        <rect x="22" y="32" width="88" height="88" rx="8" fill="rgba(60,50,40,0.1)"/>
+        <!-- angled memo note -->
+        <g transform="rotate(-5 65 65)">
+          <rect x="20" y="24" width="88" height="86" rx="7" fill="#FAF0D7" stroke="#E2D4B6" stroke-width="1.5"/>
+          <!-- folded corner top right -->
+          <path d="M92 24 L108 40 L92 40 Z" fill="#D8C6A5"/>
+          <!-- note lines -->
+          <line x1="32" y1="52" x2="94" y2="52" stroke="#D8DAC7" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="32" y1="68" x2="94" y2="68" stroke="#D8DAC7" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="32" y1="84" x2="74" y2="84" stroke="#D8DAC7" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="34" cy="52" r="2.5" fill="#D99379"/>
+          <circle cx="34" cy="68" r="2.5" fill="#D99379"/>
+          <circle cx="34" cy="84" r="2.5" fill="#D99379"/>
+          <!-- pushpin at top center -->
+          <circle cx="64" cy="24" r="7.5" fill="#C57E65"/>
+          <circle cx="62" cy="22" r="2.5" fill="#FAF5EE"/>
+          <path d="M64 31 L64 38" stroke="#79766F" stroke-width="2" stroke-linecap="round"/>
+        </g>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-good-vibes',
+    name: 'Good Vibes Banner',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 70000,
+    width: 160,
+    height: 80,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80" fill="none">
+        <!-- swallowtail ribbon fold shadow -->
+        <path d="M12 48 L28 42 L28 58 Z" fill="#C28751"/>
+        <path d="M148 48 L132 42 L132 58 Z" fill="#C28751"/>
+        <!-- ribbon swallowtail ends -->
+        <path d="M28 22 L8 22 L18 36 L8 50 L28 50 Z" fill="#D99379"/>
+        <path d="M132 22 L152 22 L142 36 L152 50 L132 50 Z" fill="#D99379"/>
+        <!-- central ribbon banner body -->
+        <rect x="22" y="16" width="116" height="40" rx="8" fill="#E8B07A" stroke="#FAF5EE" stroke-width="2"/>
+        <!-- text -->
+        <text x="80" y="42" font-family="'Caveat', cursive, sans-serif" font-size="21" font-weight="bold" fill="#30312D" text-anchor="middle">good vibes</text>
+        <circle cx="34" cy="36" r="3" fill="#FAF5EE"/>
+        <circle cx="126" cy="36" r="3" fill="#FAF5EE"/>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-done-stamp',
+    name: 'Approved Done Seal',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 60000,
+    width: 120,
+    height: 120,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <!-- circular stamp ring -->
+        <circle cx="60" cy="60" r="50" fill="#F4F6EE" stroke="#5E6547" stroke-width="2.5"/>
+        <circle cx="60" cy="60" r="43" stroke="#777D5E" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <!-- large green checkmark -->
+        <path d="M42 60 L54 72 L78 46" stroke="#5E6547" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- curved approval label -->
+        <text x="60" y="94" font-family="'Cinzel', serif, sans-serif" font-size="10.5" font-weight="bold" fill="#5E6547" text-anchor="middle" letter-spacing="3">COMPLETE</text>
+        <circle cx="34" cy="60" r="2" fill="#777D5E"/>
+        <circle cx="86" cy="60" r="2" fill="#777D5E"/>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-heart-boho',
+    name: 'Bohemian Heart',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 50000,
+    width: 130,
+    height: 130,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 130 130" fill="none">
+        <!-- soft watercolor peach aura -->
+        <path d="M65 108 C35 88 16 68 16 48 C16 30 30 18 46 18 C56 18 62 24 65 29 C68 24 74 18 84 18 C100 18 114 30 114 48 C114 68 95 88 65 108 Z" fill="#EED4C5" opacity="0.85"/>
+        <!-- sketched inner heart contour -->
+        <path d="M65 100 C39 82 24 64 24 48 C24 34 35 24 48 24 C57 24 62 29 65 33 C68 29 73 24 82 24 C95 24 106 34 106 48 C106 64 91 82 65 100 Z" stroke="#C57E65" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- starry sparkles -->
+        <path d="M98 22 L100 27 L105 29 L100 31 L98 36 L96 31 L91 29 L96 27 Z" fill="#E8B07A"/>
+        <circle cx="28" cy="74" r="3" fill="#D99379"/>
+        <circle cx="102" cy="68" r="2.5" fill="#E8B07A"/>
+      </svg>
+    `)
+  },
+  {
+    id: 'stk-boho-arch',
+    name: 'Aesthetic Boho Arch',
+    category: 'stickers',
+    type: 'svg',
+    createdAt: Date.now() - 40000,
+    width: 130,
+    height: 160,
+    url: svgToUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="130" height="160" viewBox="0 0 130 160" fill="none">
+        <!-- outer arch container -->
+        <path d="M20 148 L20 65 A45 45 0 0 1 110 65 L110 148 Z" fill="#FAF5EE" stroke="#E8DFD3" stroke-width="2"/>
+        <!-- nested terracotta arch with sun -->
+        <path d="M30 148 L30 65 A35 35 0 0 1 100 65 L100 148 Z" fill="#EED4C5"/>
+        <!-- rising sun -->
+        <circle cx="65" cy="100" r="22" fill="#E8B07A"/>
+        <!-- radiating sun beams -->
+        <line x1="65" y1="70" x2="65" y2="62" stroke="#D99379" stroke-width="2" stroke-linecap="round"/>
+        <line x1="44" y1="79" x2="38" y2="73" stroke="#D99379" stroke-width="2" stroke-linecap="round"/>
+        <line x1="86" y1="79" x2="92" y2="73" stroke="#D99379" stroke-width="2" stroke-linecap="round"/>
+        <!-- sage green lower horizon band -->
+        <path d="M30 124 L100 124 L100 148 L30 148 Z" fill="#777D5E"/>
+        <circle cx="65" cy="136" r="4" fill="#FAF5EE"/>
+      </svg>
+    `)
+  },
+  {
     id: 'stk-idea-badge',
     name: 'Spark of Idea',
     category: 'stickers',
     type: 'svg',
-    createdAt: Date.now() - 15000,
+    createdAt: Date.now() - 30000,
     width: 120,
     height: 120,
     url: svgToUri(`
@@ -425,7 +691,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
     name: 'Peach Bloom',
     category: 'stickers',
     type: 'svg',
-    createdAt: Date.now() - 10000,
+    createdAt: Date.now() - 20000,
     width: 140,
     height: 140,
     url: svgToUri(`
@@ -444,7 +710,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
     name: 'Make It Yours Stamp',
     category: 'stickers',
     type: 'svg',
-    createdAt: Date.now() - 5000,
+    createdAt: Date.now() - 10000,
     width: 160,
     height: 80,
     url: svgToUri(`
