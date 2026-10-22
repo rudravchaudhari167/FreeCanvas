@@ -3,10 +3,6 @@ import {
   Canvas as FabricCanvas,
   FabricImage,
   Rect,
-  Circle as FabricCircle,
-  Ellipse,
-  Triangle as FabricTriangle,
-  Polygon,
   IText,
   Textbox,
   Group,
@@ -20,6 +16,7 @@ import type {
 } from './types/canvas';
 import type { CanvasProject } from './types/project';
 import { saveProject } from './services/db';
+import { createFabricShape } from './constants/shapes';
 
 import { EditorHeader } from './components/Header/EditorHeader';
 import { LeftToolbar } from './components/Toolbar/LeftToolbar';
@@ -147,7 +144,7 @@ export function App() {
 
     // Shape Morphing / Changing
     if (props.shapeType !== undefined) {
-      const isCurrentShape = ['rect', 'circle', 'ellipse', 'triangle', 'polygon'].includes(activeObj.type || '');
+      const isCurrentShape = ['rect', 'circle', 'ellipse', 'triangle', 'polygon', 'path'].includes(activeObj.type || '');
       if (isCurrentShape) {
         const curLeft = activeObj.left || 100;
         const curTop = activeObj.top || 100;
@@ -159,7 +156,6 @@ export function App() {
         const curOpacity = activeObj.opacity !== undefined ? activeObj.opacity : 1;
         const curAngle = activeObj.angle || 0;
 
-        let newObj: FabricObject;
         const commonProps = {
           left: curLeft,
           top: curTop,
@@ -171,63 +167,7 @@ export function App() {
           selectable: true
         };
 
-        if (props.shapeType === 'circle') {
-          const radius = Math.max(curWidth, curHeight) / 2;
-          newObj = new FabricCircle({ ...commonProps, radius });
-        } else if (props.shapeType === 'ellipse') {
-          newObj = new Ellipse({ ...commonProps, rx: curWidth / 2, ry: curHeight / 2 });
-        } else if (props.shapeType === 'triangle') {
-          newObj = new FabricTriangle({ ...commonProps, width: curWidth, height: curHeight });
-        } else if (props.shapeType === 'rounded-rect') {
-          newObj = new Rect({ ...commonProps, width: curWidth, height: curHeight, rx: 16, ry: 16 });
-        } else if (props.shapeType === 'rectangle') {
-          newObj = new Rect({ ...commonProps, width: curWidth, height: curHeight, rx: 0, ry: 0 });
-        } else if (props.shapeType === 'diamond') {
-          const diamondPoints = [
-            { x: 25, y: 0 },
-            { x: 50, y: 25 },
-            { x: 25, y: 50 },
-            { x: 0, y: 25 }
-          ];
-          newObj = new Polygon(diamondPoints, {
-            ...commonProps,
-            scaleX: curWidth / 50,
-            scaleY: curHeight / 50
-          });
-        } else if (props.shapeType === 'star') {
-          const starPoints = [
-            { x: 25, y: 0 },
-            { x: 32, y: 15 },
-            { x: 49, y: 17 },
-            { x: 37, y: 30 },
-            { x: 40, y: 47 },
-            { x: 25, y: 38 },
-            { x: 10, y: 47 },
-            { x: 13, y: 30 },
-            { x: 1, y: 17 },
-            { x: 18, y: 15 }
-          ];
-          newObj = new Polygon(starPoints, {
-            ...commonProps,
-            scaleX: curWidth / 50,
-            scaleY: curHeight / 50
-          });
-        } else {
-          // Regular Hexagon
-          const hexPoints = [
-            { x: 12.5, y: 0 },
-            { x: 37.5, y: 0 },
-            { x: 50, y: 25 },
-            { x: 37.5, y: 50 },
-            { x: 12.5, y: 50 },
-            { x: 0, y: 25 }
-          ];
-          newObj = new Polygon(hexPoints, {
-            ...commonProps,
-            scaleX: curWidth / 50,
-            scaleY: curHeight / 50
-          });
-        }
+        const newObj = createFabricShape(props.shapeType, commonProps, curWidth, curHeight);
 
         (newObj as any).shapeType = props.shapeType;
         canvas.remove(activeObj);

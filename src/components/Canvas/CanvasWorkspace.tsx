@@ -7,6 +7,7 @@ import {
   Ellipse,
   Triangle as FabricTriangle,
   Polygon,
+  Path,
   Line as FabricLine,
   IText,
   Textbox,
@@ -23,6 +24,11 @@ import type {
   LayerItem,
   ShapeType
 } from '../../types/canvas';
+import {
+  createFabricShape,
+  resizeShapeObject,
+  applyDefaultShapeDimensions
+} from '../../constants/shapes';
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { BotanicalBackground } from './BotanicalBackground';
 
@@ -697,7 +703,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         isDrawingShapeRef.current = true;
         shapeStartRef.current = { x: pointer.x, y: pointer.y };
 
-        let shapeObj: FabricObject;
         const fillColor = settings.fillColor || settings.color || '#E8EBD9';
         const strokeColor = settings.strokeColor || '#5E6547';
         const commonProps = {
@@ -710,77 +715,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           selectable: true
         };
 
-        if (settings.shapeType === 'circle') {
-          shapeObj = new FabricCircle({ ...commonProps, radius: 1 });
-        } else if (settings.shapeType === 'ellipse') {
-          shapeObj = new Ellipse({ ...commonProps, rx: 1, ry: 1 });
-        } else if (settings.shapeType === 'triangle') {
-          shapeObj = new FabricTriangle({ ...commonProps, width: 2, height: 2 });
-        } else if (settings.shapeType === 'rounded-rect') {
-          shapeObj = new Rect({
-            ...commonProps,
-            width: 2,
-            height: 2,
-            rx: 16,
-            ry: 16
-          });
-        } else if (settings.shapeType === 'diamond') {
-          const diamondPoints = [
-            { x: 25, y: 0 },
-            { x: 50, y: 25 },
-            { x: 25, y: 50 },
-            { x: 0, y: 25 }
-          ];
-          shapeObj = new Polygon(diamondPoints, {
-            ...commonProps,
-            scaleX: 0.04,
-            scaleY: 0.04
-          });
-        } else if (settings.shapeType === 'star') {
-          const starPoints = [
-            { x: 25, y: 0 },
-            { x: 32, y: 15 },
-            { x: 49, y: 17 },
-            { x: 37, y: 30 },
-            { x: 40, y: 47 },
-            { x: 25, y: 38 },
-            { x: 10, y: 47 },
-            { x: 13, y: 30 },
-            { x: 1, y: 17 },
-            { x: 18, y: 15 }
-          ];
-          shapeObj = new Polygon(starPoints, {
-            ...commonProps,
-            scaleX: 0.04,
-            scaleY: 0.04
-          });
-        } else if (settings.shapeType === 'polygon') {
-          // Regular Hexagon
-          const hexPoints = [
-            { x: 12.5, y: 0 },
-            { x: 37.5, y: 0 },
-            { x: 50, y: 25 },
-            { x: 37.5, y: 50 },
-            { x: 12.5, y: 50 },
-            { x: 0, y: 25 }
-          ];
-          shapeObj = new Polygon(hexPoints, {
-            ...commonProps,
-            scaleX: 0.04,
-            scaleY: 0.04
-          });
-        } else {
-          // Standard Rectangle
-          shapeObj = new Rect({
-            ...commonProps,
-            width: 2,
-            height: 2,
-            rx: 0,
-            ry: 0
-          });
-        }
-
-        (shapeObj as any).shapeType = settings.shapeType;
+        const shapeObj = createFabricShape(settings.shapeType, commonProps, 2, 2);
         activeShapeObjectRef.current = shapeObj;
         canvas.add(shapeObj);
         return;
@@ -846,18 +781,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         const left = Math.min(pointer.x, start.x);
         const top = Math.min(pointer.y, start.y);
 
-        if (obj instanceof FabricCircle) {
-          const radius = Math.max(width, height) / 2;
-          obj.set({ radius, left, top });
-        } else if (obj instanceof Ellipse) {
-          obj.set({ rx: width / 2, ry: height / 2, left, top });
-        } else if (obj instanceof Rect || obj instanceof FabricTriangle) {
-          obj.set({ width, height, left, top });
-        } else if (obj instanceof Polygon) {
-          const scaleX = Math.max(0.04, width / 50);
-          const scaleY = Math.max(0.04, height / 50);
-          obj.set({ scaleX, scaleY, left, top });
-        }
+        resizeShapeObject(obj, width, height, left, top);
         canvas.renderAll();
       } else if (activeTool === 'line' || activeTool === 'arrow') {
         const line = obj as FabricLine;
@@ -890,9 +814,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           } else if (obj instanceof Ellipse) {
             actualW = (obj.rx || 0) * 2;
             actualH = (obj.ry || 0) * 2;
-          } else if (obj instanceof Polygon) {
-            actualW = 50 * (obj.scaleX || 1);
-            actualH = 50 * (obj.scaleY || 1);
+          } else if (obj instanceof Polygon || obj instanceof Path) {
+            actualW = (obj.width || 100) * (obj.scaleX || 1);
+            actualH = (obj.height || 100) * (obj.scaleY || 1);
           } else {
             actualW = (obj.width || 0) * (obj.scaleX || 1);
             actualH = (obj.height || 0) * (obj.scaleY || 1);
@@ -943,17 +867,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           } else if (activeTool === 'shape') {
             // ONLY if the user single-clicked without dragging (< 10px), provide a standard default size
             if (actualW < 10 && actualH < 10) {
-              if (obj instanceof FabricCircle) {
-                obj.set({ radius: 50, left: start.x - 50, top: start.y - 50 });
-              } else if (obj instanceof Ellipse) {
-                obj.set({ rx: 65, ry: 45, left: start.x - 65, top: start.y - 45 });
-              } else if (obj instanceof FabricTriangle) {
-                obj.set({ width: 110, height: 100, left: start.x - 55, top: start.y - 50 });
-              } else if (obj instanceof Rect) {
-                obj.set({ width: 130, height: 90, left: start.x - 65, top: start.y - 45 });
-              } else if (obj instanceof Polygon) {
-                obj.set({ scaleX: 2.2, scaleY: 2.2, left: start.x - 55, top: start.y - 55 });
-              }
+              applyDefaultShapeDimensions(obj, start.x, start.y);
             }
             obj.setCoords();
           } else {

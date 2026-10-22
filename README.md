@@ -20,7 +20,7 @@
   - **Marker / Highlighter**: Translucent chisel strokes for highlighting and artistic fills.
   - **Eraser**: Dual-mode object and stroke deletion.
   - **Editable Text**: Multi-font typography (`Plus Jakarta Sans`, `Caveat` handwritten script, `Newsreader` serif, monospace) with Bold, Italic, Underline, and alignment.
-  - **Shapes**: Drag-to-create Rectangles, Rounded Rectangles, Circles, Triangles, and 5-Point Stars with customizable fill, stroke, and opacity.
+  - **Geometric & Creative Shapes (34 Shapes)**: Drag-to-create or click-to-place with categorized filter pills (Basic, Polygons, Stars & Badges, Arrows, and Creative Symbols: Heart, Cloud, Shield, Crescent, Lightning Bolt, Speech Bubble, Thought Bubble, Teardrop Pin, 4/6/8-Point Stars, 12-Point Badge, Cross, Chevron, and more) with real-time shape morphing, customizable fill, border stroke, and opacity.
   - **Straight Lines & Arrows**: Directional connectors with solid, dashed, or dotted styling.
   - **Sticky Notes**: Soft pastel note cards with handwritten thought capture.
   - **Transform & Select**: Move, resize with boundary handles, rotate, lock/unlock, duplicate, and reorder.

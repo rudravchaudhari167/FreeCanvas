@@ -8,11 +8,6 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Square,
-  Circle,
-  Triangle,
-  Star,
-  Hexagon,
   Lock,
   Unlock,
   Copy,
@@ -25,10 +20,15 @@ import type {
   ToolType,
   ToolSettings,
   SelectedObjectProperties,
-  ShapeType,
   LineStyle
 } from '../../types/canvas';
 import { TEXT_STYLES, FONT_CATEGORIES } from '../../constants/fonts';
+import {
+  SHAPE_DEFINITIONS,
+  SHAPE_CATEGORIES,
+  getShapeName,
+  type ShapeCategory
+} from '../../constants/shapes';
 
 interface PropertiesPanelProps {
   activeTool: ToolType;
@@ -127,6 +127,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [colorMode, setColorMode] = useState<'rgb' | 'hex'>('rgb');
   const [copiedRgb, setCopiedRgb] = useState(false);
   const [shapeTarget, setShapeTarget] = useState<'fill' | 'stroke'>('fill');
+  const [selectedShapeCategory, setSelectedShapeCategory] = useState<ShapeCategory>('all');
 
   const isTextContext =
     activeTool === 'text' ||
@@ -138,7 +139,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     (selectedObject?.type === 'group' && selectedObject?.text !== undefined);
   const isShapeContext =
     activeTool === 'shape' ||
-    ['rect', 'circle', 'ellipse', 'triangle', 'polygon'].includes(selectedObject?.type || '');
+    ['rect', 'circle', 'ellipse', 'triangle', 'polygon', 'path'].includes(selectedObject?.type || '') ||
+    !!selectedObject?.shapeType;
   const isEraserContext = activeTool === 'eraser' && !selectedObject;
   const isLineContext = activeTool === 'line' || activeTool === 'arrow' || selectedObject?.type === 'line';
   const isStickyContext = activeTool === 'sticky' || selectedObject?.type === 'group';
@@ -266,18 +268,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     if (selectedObject) {
       const type = selectedObject.type || '';
       if (type === 'i-text' || type === 'text' || type === 'textbox') return 'Text Object';
-      if (type === 'rect') return selectedObject.shapeType === 'rounded-rect' ? 'Rounded Rect' : 'Rectangle';
+      if (selectedObject.shapeType) return getShapeName(selectedObject.shapeType);
+      if (type === 'rect') return 'Rectangle';
       if (type === 'circle') return 'Circle';
       if (type === 'ellipse') return 'Ellipse';
       if (type === 'triangle') return 'Triangle';
-      if (type === 'polygon') {
-        if (selectedObject.shapeType === 'diamond') return 'Diamond';
-        if (selectedObject.shapeType === 'polygon') return 'Hexagon';
-        return 'Star Shape';
-      }
+      if (type === 'polygon') return 'Polygon';
+      if (type === 'path') return 'Shape / Path';
       if (type === 'line') return 'Line Object';
       if (type === 'group') return 'Sticky Note';
-      if (type === 'path') return 'Drawing Stroke';
       return 'Selected Item';
     }
     if (activeTool === 'pen') return 'Smooth Pen';
@@ -285,17 +284,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     if (activeTool === 'marker') return 'Highlighter';
     if (activeTool === 'text') return 'Text Tool';
     if (activeTool === 'shape') {
-      const shapeNames: Record<ShapeType, string> = {
-        'rectangle': 'Rectangle Shape',
-        'rounded-rect': 'Rounded Rect',
-        'circle': 'Circle Shape',
-        'ellipse': 'Ellipse Shape',
-        'triangle': 'Triangle Shape',
-        'diamond': 'Diamond Shape',
-        'star': 'Star Shape',
-        'polygon': 'Hexagon Shape'
-      };
-      return shapeNames[settings.shapeType] || 'Geometric Shape';
+      return getShapeName(settings.shapeType);
     }
     if (activeTool === 'line') return 'Straight Line';
     if (activeTool === 'arrow') return 'Arrow Connector';
@@ -1013,64 +1002,51 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Geometric Shapes</span>
             <span style={{ fontSize: 11, color: '#888B7E', textTransform: 'capitalize' }}>
-              {(selectedObject?.shapeType || settings.shapeType).replace('-', ' ')}
+              {getShapeName(selectedObject?.shapeType || settings.shapeType)}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-            {[
-              {
-                id: 'rectangle' as ShapeType,
-                name: 'Rectangle',
-                icon: <Square size={15} />
-              },
-              {
-                id: 'rounded-rect' as ShapeType,
-                name: 'Rounded Rectangle',
-                icon: (
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="6" ry="6" />
-                  </svg>
-                )
-              },
-              {
-                id: 'circle' as ShapeType,
-                name: 'Circle',
-                icon: <Circle size={15} />
-              },
-              {
-                id: 'ellipse' as ShapeType,
-                name: 'Ellipse',
-                icon: (
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <ellipse cx="12" cy="12" rx="9" ry="5.5" />
-                  </svg>
-                )
-              },
-              {
-                id: 'triangle' as ShapeType,
-                name: 'Triangle',
-                icon: <Triangle size={15} />
-              },
-              {
-                id: 'diamond' as ShapeType,
-                name: 'Diamond',
-                icon: (
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="12 2 22 12 12 22 2 12" />
-                  </svg>
-                )
-              },
-              {
-                id: 'star' as ShapeType,
-                name: 'Star',
-                icon: <Star size={15} />
-              },
-              {
-                id: 'polygon' as ShapeType,
-                name: 'Hexagon',
-                icon: <Hexagon size={15} />
-              }
-            ].map((shape) => {
+
+          {/* Category filter pills */}
+          <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
+            {SHAPE_CATEGORIES.map((cat) => {
+              const isCatActive = selectedShapeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedShapeCategory(cat.id)}
+                  style={{
+                    padding: '3px 7px',
+                    borderRadius: 6,
+                    fontSize: 10.5,
+                    fontWeight: isCatActive ? 600 : 500,
+                    border: 'none',
+                    backgroundColor: isCatActive ? '#5E6547' : '#F0E8DC',
+                    color: isCatActive ? '#FFFFFF' : '#686B5E',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Shape Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: 5,
+              maxHeight: 180,
+              overflowY: 'auto',
+              paddingRight: 2
+            }}
+          >
+            {SHAPE_DEFINITIONS.filter(
+              (s) => selectedShapeCategory === 'all' || s.category === selectedShapeCategory
+            ).map((shape) => {
               const currentActiveShape = selectedObject?.shapeType || settings.shapeType;
               const isSelected = currentActiveShape === shape.id;
               return (
@@ -1084,7 +1060,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     }
                   }}
                   style={{
-                    padding: '8px 4px',
+                    padding: '7px 3px',
                     borderRadius: 7,
                     border: isSelected ? '1px solid #777D5E' : '1px solid transparent',
                     backgroundColor: isSelected ? '#C9D0BD' : '#F5EFE5',

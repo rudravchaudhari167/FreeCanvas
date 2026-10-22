@@ -13,14 +13,44 @@ export type ToolType =
   | 'more';
 
 export type ShapeType =
+  // Basic & Polygons
   | 'rectangle'
   | 'rounded-rect'
   | 'circle'
   | 'ellipse'
   | 'triangle'
+  | 'right-triangle'
+  | 'trapezoid'
+  | 'parallelogram'
   | 'diamond'
-  | 'star'
-  | 'polygon';
+  | 'pentagon'
+  | 'polygon' // Hexagon
+  | 'heptagon'
+  | 'octagon'
+  // Stars & Badges
+  | 'star-4'
+  | 'star' // 5-Point Star
+  | 'star-6'
+  | 'star-8'
+  | 'badge-12'
+  | 'sparkle'
+  // Arrows & Flow
+  | 'arrow-right'
+  | 'arrow-left'
+  | 'arrow-up'
+  | 'arrow-down'
+  | 'chevron-right'
+  | 'double-arrow'
+  // Symbols & Creative
+  | 'heart'
+  | 'shield'
+  | 'crescent'
+  | 'cross'
+  | 'cloud'
+  | 'speech-bubble'
+  | 'thought-bubble'
+  | 'lightning'
+  | 'teardrop';
 
 export type EraserMode = 'stroke' | 'object';
 
