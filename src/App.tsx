@@ -6,7 +6,9 @@ import {
   IText,
   Textbox,
   Group,
-  FabricObject
+  FabricObject,
+  loadSVGFromString,
+  util
 } from 'fabric';
 import type {
   ToolType,
@@ -569,35 +571,108 @@ export function App() {
     canvas.renderAll();
   }, [handleResetZoom]);
 
-  // Insert image onto canvas (from Gallery or file upload)
+  // Insert image or illustration onto canvas (from Gallery or file upload)
   const handleInsertImage = useCallback(
-    (url: string, name: string) => {
+    async (url: string, name: string) => {
       const canvas = fabricCanvasRef.current;
       if (!canvas) return;
 
-      FabricImage.fromURL(url).then((img) => {
-        // Scale to reasonable initial size
-        const maxDim = 320;
-        let scale = 1;
-        if ((img.width || 0) > maxDim || (img.height || 0) > maxDim) {
-          scale = maxDim / Math.max(img.width || 1, img.height || 1);
+      try {
+        let objectToInsert: FabricObject | null = null;
+
+        // Check if the URL is an SVG (data URI, raw SVG, or .svg file)
+        const isSvg =
+          url.startsWith('data:image/svg+xml') ||
+          url.trim().startsWith('<svg') ||
+          url.includes('.svg');
+
+        if (isSvg) {
+          // Extract SVG string
+          let svgContent = '';
+          if (url.startsWith('data:image/svg+xml;base64,')) {
+            try {
+              svgContent = atob(url.replace('data:image/svg+xml;base64,', ''));
+            } catch {
+              svgContent = '';
+            }
+          } else if (url.startsWith('data:image/svg+xml')) {
+            const commaIndex = url.indexOf(',');
+            if (commaIndex !== -1) {
+              try {
+                svgContent = decodeURIComponent(url.slice(commaIndex + 1));
+              } catch {
+                svgContent = url.slice(commaIndex + 1);
+              }
+            }
+          } else if (url.trim().startsWith('<svg')) {
+            svgContent = url;
+          }
+
+          if (svgContent && svgContent.includes('<svg')) {
+            try {
+              const { objects, options } = await loadSVGFromString(svgContent);
+              const validObjects = (objects || []).filter(
+                (o): o is FabricObject => o != null
+              );
+              if (validObjects.length > 0) {
+                const group = util.groupSVGElements(validObjects, options);
+                objectToInsert = group;
+              }
+            } catch (svgErr) {
+              console.warn('loadSVGFromString failed, falling back to FabricImage:', svgErr);
+            }
+          }
         }
 
-        const center = canvas.getCenterPoint();
-        img.set({
-          left: center.x - ((img.width || 0) * scale) / 2,
-          top: center.y - ((img.height || 0) * scale) / 2,
-          scaleX: scale,
-          scaleY: scale,
+        // Fallback or raster image loading (PNG, JPEG, WebP)
+        if (!objectToInsert) {
+          objectToInsert = await FabricImage.fromURL(url, {
+            crossOrigin: 'anonymous'
+          });
+        }
+
+        if (!objectToInsert) {
+          showToast(`Could not load "${name}"`);
+          return;
+        }
+
+        // Determine natural dimensions
+        const objWidth =
+          objectToInsert.getScaledWidth?.() || objectToInsert.width || 200;
+        const objHeight =
+          objectToInsert.getScaledHeight?.() || objectToInsert.height || 200;
+
+        // Scale to a comfortable workspace dimension (max ~280px)
+        const maxDim = 280;
+        let scale = 1;
+        if (objWidth > maxDim || objHeight > maxDim) {
+          scale = maxDim / Math.max(objWidth, objHeight);
+        }
+
+        objectToInsert.set({
+          scaleX: (objectToInsert.scaleX || 1) * scale,
+          scaleY: (objectToInsert.scaleY || 1) * scale,
           selectable: true
         });
 
-        canvas.add(img);
-        canvas.setActiveObject(img);
+        canvas.add(objectToInsert);
+
+        // Center directly in the active visible viewport so user immediately sees it
+        if (typeof (canvas as any).viewportCenterObject === 'function') {
+          (canvas as any).viewportCenterObject(objectToInsert);
+        } else {
+          canvas.centerObject(objectToInsert);
+        }
+
+        objectToInsert.setCoords();
+        canvas.setActiveObject(objectToInsert);
         canvas.renderAll();
         setActiveTool('select');
         showToast(`Inserted "${name}"`);
-      });
+      } catch (err) {
+        console.error('Failed to insert illustration/image:', err);
+        showToast(`Could not insert "${name}"`);
+      }
     },
     [showToast]
   );
