@@ -129,21 +129,27 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [shapeTarget, setShapeTarget] = useState<'fill' | 'stroke'>('fill');
   const [selectedShapeCategory, setSelectedShapeCategory] = useState<ShapeCategory>('all');
 
+  const isStickyContext =
+    activeTool === 'sticky' ||
+    selectedObject?.type === 'group' ||
+    !!selectedObject?.isStickyNote;
   const isTextContext =
-    activeTool === 'text' ||
-    selectedObject?.type === 'i-text' ||
-    selectedObject?.type === 'text' ||
-    selectedObject?.type === 'textbox';
+    !isStickyContext &&
+    (activeTool === 'text' ||
+      selectedObject?.type === 'i-text' ||
+      selectedObject?.type === 'text' ||
+      selectedObject?.type === 'textbox');
   const hasTextProperties =
     isTextContext ||
-    (selectedObject?.type === 'group' && selectedObject?.text !== undefined);
+    isStickyContext ||
+    (selectedObject?.type === 'group' && selectedObject?.text !== undefined) ||
+    selectedObject?.text !== undefined;
   const isShapeContext =
     activeTool === 'shape' ||
     ['rect', 'circle', 'ellipse', 'triangle', 'polygon', 'path'].includes(selectedObject?.type || '') ||
     !!selectedObject?.shapeType;
   const isEraserContext = activeTool === 'eraser' && !selectedObject;
   const isLineContext = activeTool === 'line' || activeTool === 'arrow' || selectedObject?.type === 'line';
-  const isStickyContext = activeTool === 'sticky' || selectedObject?.type === 'group';
 
   // Determine current active color
   let currentColor = settings.color;
@@ -153,10 +159,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         shapeTarget === 'fill'
           ? (selectedObject.fill || settings.color)
           : (selectedObject.stroke || settings.strokeColor || '#5E6547');
+    } else if (isStickyContext) {
+      currentColor = selectedObject.backgroundColor || selectedObject.fill || settings.stickyColor || '#FAF0D7';
     } else if (isTextContext) {
       currentColor = selectedObject.fill || settings.color;
-    } else if (isStickyContext) {
-      currentColor = selectedObject.fill || settings.stickyColor || '#FAF0D7';
     } else {
       currentColor = selectedObject.stroke || selectedObject.fill || settings.color;
     }
@@ -215,7 +221,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     } else if (isStickyContext) {
       onUpdateSettings({ stickyColor: newColor });
       if (selectedObject) {
-        onUpdateSelectedObject({ fill: newColor });
+        onUpdateSelectedObject({ fill: newColor, backgroundColor: newColor });
       }
     } else {
       onUpdateSettings({ color: newColor, strokeColor: newColor });

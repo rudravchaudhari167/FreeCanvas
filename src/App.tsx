@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Canvas as FabricCanvas,
   FabricImage,
-  Rect,
   IText,
   Textbox,
   Group,
   FabricObject,
   Shadow,
+  Control,
   loadSVGFromString,
   util
 } from 'fabric';
@@ -116,14 +116,20 @@ export function App() {
     const activeObj = canvas.getActiveObject();
     if (!activeObj) return;
 
-    if (props.fill !== undefined) {
-      activeObj.set('fill', props.fill);
-      if (activeObj.type === 'group') {
-        const groupObjects = (activeObj as Group).getObjects();
-        if (groupObjects[0]) {
-          groupObjects[0].set('fill', props.fill);
-        }
+    if (props.fill !== undefined || props.backgroundColor !== undefined) {
+      const colorVal = props.backgroundColor || props.fill;
+      if ((activeObj as any).isStickyNote) {
+        activeObj.set('backgroundColor', colorVal);
         activeObj.set('dirty', true);
+      } else if (props.fill !== undefined) {
+        activeObj.set('fill', props.fill);
+        if (activeObj.type === 'group') {
+          const groupObjects = (activeObj as Group).getObjects();
+          if (groupObjects[0]) {
+            groupObjects[0].set('fill', props.fill);
+          }
+          activeObj.set('dirty', true);
+        }
       }
     }
     if (props.stroke !== undefined) {
@@ -693,68 +699,119 @@ export function App() {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    const noteWidth = 190;
-    const noteHeight = 170;
+    const noteWidth = 200;
+    const minNoteHeight = 170;
+    const initialNoteColor = settings.stickyColor || '#FAF0D7';
 
-    const bgRect = new Rect({
+    const stickyNote = new Textbox('Type a thought...', {
       width: noteWidth,
-      height: noteHeight,
-      fill: settings.stickyColor || '#FAF0D7', // warm pastel yellow
+      fontFamily: settings.fontFamily || "'Caveat', cursive",
+      fontSize: 22,
+      fill: '#30312D',
+      backgroundColor: initialNoteColor,
       stroke: '#E2D4B6',
       strokeWidth: 1.5,
-      rx: 10,
-      ry: 10,
+      padding: 18,
+      textAlign: settings.textAlign || 'left',
       shadow: new Shadow({
         color: 'rgba(80, 70, 50, 0.16)',
         blur: 12,
         offsetX: 3,
         offsetY: 6
       }),
-      selectable: false
-    });
-
-    const noteText = new Textbox('Type a thought...', {
-      left: 18,
-      top: 20,
-      fontFamily: settings.fontFamily || "'Caveat', cursive",
-      fontSize: 22,
-      fill: '#30312D',
-      width: noteWidth - 36,
-      textAlign: settings.textAlign || 'left',
       editable: true,
       splitByGrapheme: true
     });
 
-    const stickyGroup = new Group([bgRect, noteText], {
-      selectable: true,
-      subTargetCheck: true,
-      interactive: true
-    });
-    (stickyGroup as any).isStickyNote = true;
+    (stickyNote as any).isStickyNote = true;
 
-    // Dynamically expand sticky note height if text exceeds initial height
-    noteText.on('changed', () => {
-      const minHeight = 170;
-      const neededHeight = Math.max(minHeight, (noteText.height || 0) + 40);
-      if (Math.abs(bgRect.height - neededHeight) > 2) {
-        bgRect.set('height', neededHeight);
-        stickyGroup.set('height', neededHeight);
-        stickyGroup.set('dirty', true);
-        canvas.requestRenderAll();
+    // Enforce minimum card height so note looks like a classic sticky note card
+    (stickyNote as any).calcTextHeight = function () {
+      const natural = Textbox.prototype.calcTextHeight.call(this);
+      return Math.max(minNoteHeight, natural);
+    };
+
+    // Custom rounded background renderer for sticky note
+    (stickyNote as any)._renderBackground = function (ctx: CanvasRenderingContext2D) {
+      if (!this.backgroundColor) return;
+      const dim = this._getNonTransformedDimensions();
+      const w = dim.x;
+      const h = Math.max(minNoteHeight, dim.y);
+      const r = 10;
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.strokeStyle = (this.stroke as string) || '#E2D4B6';
+      ctx.lineWidth = this.strokeWidth || 1.5;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(-w / 2, -h / 2, w, h, r);
+      } else {
+        ctx.rect(-w / 2, -h / 2, w, h);
+      }
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      this._removeShadow(ctx);
+    };
+
+    // Add visible Delete control button directly on the top-right corner of the note!
+    stickyNote.controls.deleteControl = new Control({
+      x: 0.5,
+      y: -0.5,
+      offsetY: -12,
+      offsetX: 12,
+      cursorStyle: 'pointer',
+      mouseUpHandler: (_eventData, transformData) => {
+        const target = transformData.target;
+        const c = target.canvas;
+        if (c) {
+          c.remove(target);
+          c.discardActiveObject();
+          c.requestRenderAll();
+          setSelectedObject(null);
+        }
+        return true;
+      },
+      render: (ctx, left, top) => {
+        const size = 22;
+        ctx.save();
+        ctx.translate(left, top);
+        // Button circle
+        ctx.beginPath();
+        ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#FDF2F0';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#D99379';
+        ctx.stroke();
+
+        // X / Trash icon
+        ctx.beginPath();
+        const s = 4.5;
+        ctx.moveTo(-s, -s);
+        ctx.lineTo(s, s);
+        ctx.moveTo(s, -s);
+        ctx.lineTo(-s, s);
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = '#C24D3E';
+        ctx.stroke();
+        ctx.restore();
       }
     });
 
-    canvas.add(stickyGroup);
+    stickyNote.initDimensions();
+
+    canvas.add(stickyNote);
 
     // Center in current active viewport
     if (typeof (canvas as any).viewportCenterObject === 'function') {
-      (canvas as any).viewportCenterObject(stickyGroup);
+      (canvas as any).viewportCenterObject(stickyNote);
     } else {
-      canvas.centerObject(stickyGroup);
+      canvas.centerObject(stickyNote);
     }
 
-    stickyGroup.setCoords();
-    canvas.setActiveObject(stickyGroup);
+    stickyNote.setCoords();
+    canvas.setActiveObject(stickyNote);
     canvas.renderAll();
     setActiveTool('select');
     showToast('Added Sticky Note');
@@ -762,8 +819,8 @@ export function App() {
     // Automatically enter text editing mode so user can write immediately!
     setTimeout(() => {
       try {
-        noteText.enterEditing();
-        noteText.selectAll();
+        stickyNote.enterEditing();
+        stickyNote.selectAll();
         canvas.requestRenderAll();
       } catch (err) {
         console.warn('Auto enter editing on sticky note:', err);

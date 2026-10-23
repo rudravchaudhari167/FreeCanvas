@@ -380,9 +380,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         onSelectionChange(null);
         return;
       }
+      const isSticky = !!(activeObj as any).isStickyNote;
       let fillVal = typeof activeObj.fill === 'string' ? activeObj.fill : undefined;
       let strokeVal = typeof activeObj.stroke === 'string' ? activeObj.stroke : undefined;
-      if (activeObj.type === 'group') {
+      if (isSticky) {
+        fillVal = typeof activeObj.backgroundColor === 'string' ? activeObj.backgroundColor : (fillVal || '#FAF0D7');
+      } else if (activeObj.type === 'group') {
         const groupObjects = (activeObj as Group).getObjects();
         if (groupObjects[0]) {
           if (typeof groupObjects[0].fill === 'string') fillVal = groupObjects[0].fill;
@@ -434,7 +437,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         fontStyle: textObj ? textObj.fontStyle : undefined,
         underline: textObj ? !!textObj.underline : undefined,
         textAlign: textObj ? textObj.textAlign : undefined,
-        shapeType: detectedShapeType
+        shapeType: detectedShapeType,
+        isStickyNote: isSticky,
+        backgroundColor: typeof activeObj.backgroundColor === 'string' ? activeObj.backgroundColor : undefined
       });
     };
 

@@ -106,6 +106,8 @@ export interface SelectedObjectProperties {
   underline?: boolean;
   textAlign?: string;
   shapeType?: ShapeType;
+  isStickyNote?: boolean;
+  backgroundColor?: string;
 }
 
 export interface LayerItem {
