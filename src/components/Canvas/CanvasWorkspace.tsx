@@ -399,7 +399,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       if (isSticky) {
-        fillVal = bgVal || (typeof activeObj.fill === 'string' ? activeObj.fill : '#FAF0D7');
+        fillVal = bgVal || '#FAF0D7';
+        strokeVal = (activeObj as any).cardStroke || '#E2D4B6';
       } else if (activeObj.type === 'group') {
         const groupObjects = (activeObj as Group).getObjects();
         if (groupObjects[0]) {
@@ -434,7 +435,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         angle: Math.round(activeObj.angle || 0),
         fill: fillVal,
         stroke: strokeVal,
-        strokeWidth: activeObj.strokeWidth,
+        strokeWidth: isSticky ? ((activeObj as any).cardStrokeWidth || 1.5) : activeObj.strokeWidth,
         opacity: activeObj.opacity,
         isLocked: !!activeObj.lockMovementX,
         text: textObj ? textObj.text : undefined,
@@ -454,7 +455,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.on('selection:created', updateSelectionProps);
     canvas.on('selection:updated', updateSelectionProps);
     canvas.on('selection:cleared', () => onSelectionChange(null));
-    canvas.on('text:changed', updateSelectionProps);
+    canvas.on('text:changed', (opt: any) => {
+      const target = opt.target;
+      if (target && target.isStickyNote) {
+        target.set('stroke', null);
+        target.set('strokeWidth', 0);
+      }
+      updateSelectionProps();
+    });
     canvas.on('text:selection:changed', updateSelectionProps);
 
     // Double-click to enter editing on text or group text (e.g. Sticky Notes or Stickers)

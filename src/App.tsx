@@ -127,19 +127,22 @@ export function App() {
       const colorVal = props.textColor;
       if ((activeObj as any).isStickyNote) {
         activeObj.set('fill', colorVal);
+        activeObj.set('stroke', null);
+        activeObj.set('strokeWidth', 0);
         if ((activeObj as any).isEditing) {
-          if ((activeObj as any).selectionStart !== (activeObj as any).selectionEnd) {
-            (activeObj as any).setSelectionStyles?.({ fill: colorVal });
-          } else {
-            (activeObj as any).set('fill', colorVal);
-          }
+          (activeObj as any).setSelectionStyles?.({ fill: colorVal, stroke: null, strokeWidth: 0 });
+          (activeObj as any).hiddenTextarea?.focus();
         }
         if ((activeObj as any).styles) {
           const styles = (activeObj as any).styles;
           Object.keys(styles).forEach((lineKey) => {
             if (styles[lineKey]) {
               Object.keys(styles[lineKey]).forEach((charKey) => {
-                if (styles[lineKey][charKey]) styles[lineKey][charKey].fill = colorVal;
+                if (styles[lineKey][charKey]) {
+                  styles[lineKey][charKey].fill = colorVal;
+                  delete styles[lineKey][charKey].stroke;
+                  delete styles[lineKey][charKey].strokeWidth;
+                }
               });
             }
           });
@@ -209,20 +212,34 @@ export function App() {
       }
     }
     if (props.stroke !== undefined) {
-      activeObj.set('stroke', props.stroke);
-      if (activeObj.type === 'group') {
-        const groupObjects = (activeObj as Group).getObjects();
-        if (groupObjects[0]) {
-          groupObjects[0].set('stroke', props.stroke);
+      if ((activeObj as any).isStickyNote) {
+        (activeObj as any).cardStroke = props.stroke;
+        activeObj.set('stroke', null);
+        activeObj.set('strokeWidth', 0);
+        activeObj.set('dirty', true);
+      } else {
+        activeObj.set('stroke', props.stroke);
+        if (activeObj.type === 'group') {
+          const groupObjects = (activeObj as Group).getObjects();
+          if (groupObjects[0]) {
+            groupObjects[0].set('stroke', props.stroke);
+          }
         }
       }
     }
     if (props.strokeWidth !== undefined) {
-      activeObj.set('strokeWidth', props.strokeWidth);
-      if (activeObj.type === 'group') {
-        const groupObjects = (activeObj as Group).getObjects();
-        if (groupObjects[0]) {
-          groupObjects[0].set('strokeWidth', props.strokeWidth);
+      if ((activeObj as any).isStickyNote) {
+        (activeObj as any).cardStrokeWidth = props.strokeWidth;
+        activeObj.set('stroke', null);
+        activeObj.set('strokeWidth', 0);
+        activeObj.set('dirty', true);
+      } else {
+        activeObj.set('strokeWidth', props.strokeWidth);
+        if (activeObj.type === 'group') {
+          const groupObjects = (activeObj as Group).getObjects();
+          if (groupObjects[0]) {
+            groupObjects[0].set('strokeWidth', props.strokeWidth);
+          }
         }
       }
     }
@@ -792,14 +809,19 @@ export function App() {
     const minNoteHeight = 170;
     const initialNoteColor = settings.stickyColor || '#FAF0D7';
 
+    const initialTextColor =
+      settings.color && settings.color.toLowerCase() !== initialNoteColor.toLowerCase()
+        ? settings.color
+        : '#2B2D2F';
+
     const stickyNote = new Textbox('Type a thought...', {
       width: noteWidth,
       fontFamily: settings.fontFamily || "'Caveat', cursive",
       fontSize: 22,
-      fill: settings.color || '#30312D',
+      fill: initialTextColor,
       backgroundColor: initialNoteColor,
-      stroke: '#E2D4B6',
-      strokeWidth: 1.5,
+      stroke: null,
+      strokeWidth: 0,
       padding: 18,
       textAlign: settings.textAlign || 'left',
       shadow: new Shadow({
@@ -813,6 +835,8 @@ export function App() {
     });
 
     (stickyNote as any).isStickyNote = true;
+    (stickyNote as any).cardStroke = '#E2D4B6';
+    (stickyNote as any).cardStrokeWidth = 1.5;
 
     // Enforce minimum card height so note looks like a classic sticky note card
     (stickyNote as any).calcTextHeight = function () {
@@ -829,8 +853,8 @@ export function App() {
       const r = 10;
       ctx.save();
       ctx.fillStyle = this.backgroundColor;
-      ctx.strokeStyle = (this.stroke as string) || '#E2D4B6';
-      ctx.lineWidth = this.strokeWidth || 1.5;
+      ctx.strokeStyle = (this as any).cardStroke || '#E2D4B6';
+      ctx.lineWidth = (this as any).cardStrokeWidth || 1.5;
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
         ctx.roundRect(-w / 2, -h / 2, w, h, r);

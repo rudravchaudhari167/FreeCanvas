@@ -244,7 +244,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       if (stickyColorTarget === 'text') {
         onUpdateSettings({ color: newColor });
         if (selectedObject) {
-          onUpdateSelectedObject({ textColor: newColor, fill: newColor });
+          onUpdateSelectedObject({ textColor: newColor });
         }
       } else {
         onUpdateSettings({ stickyColor: newColor });
@@ -272,7 +272,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const handleTextColorChange = (newColor: string) => {
     onUpdateSettings({ color: newColor });
     if (selectedObject) {
-      onUpdateSelectedObject({ textColor: newColor, fill: newColor });
+      onUpdateSelectedObject({ textColor: newColor });
     }
   };
 
