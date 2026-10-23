@@ -93,10 +93,12 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
       </button>
 
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           onAddStickyNote();
           onClose();
         }}
+        onMouseDown={(e) => e.stopPropagation()}
         style={menuItemStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

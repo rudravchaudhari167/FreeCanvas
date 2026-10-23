@@ -444,6 +444,35 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.on('text:changed', updateSelectionProps);
     canvas.on('text:selection:changed', updateSelectionProps);
 
+    // Double-click to enter editing on text or group text (e.g. Sticky Notes)
+    canvas.on('mouse:dblclick', (opt: any) => {
+      const target = opt.target;
+      if (!target) return;
+      let textObj: Textbox | IText | null = null;
+      if (target instanceof Textbox || target.type === 'textbox' || target instanceof IText || target.type === 'i-text') {
+        textObj = target as Textbox | IText;
+      } else if (target.type === 'group' || (target as any).isStickyNote) {
+        const group = target as Group;
+        const subTargets = opt.subTargets || [];
+        const subText = subTargets.find((o: any) => o.type === 'textbox' || o.type === 'i-text');
+        if (subText) {
+          textObj = subText as Textbox | IText;
+        } else {
+          textObj = (group.getObjects().find((o) => o.type === 'textbox' || o.type === 'i-text') as Textbox | IText) || null;
+        }
+      }
+
+      if (textObj && typeof textObj.enterEditing === 'function') {
+        try {
+          textObj.enterEditing(opt.e);
+          textObj.selectAll();
+          canvas.requestRenderAll();
+        } catch (err) {
+          console.warn('Error on dblclick enterEditing:', err);
+        }
+      }
+    });
+
     // History trigger events
     canvas.on('object:added', () => {
       if (!isHistoryActionRef.current) saveStateToHistory();

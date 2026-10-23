@@ -7,6 +7,7 @@ import {
   Textbox,
   Group,
   FabricObject,
+  Shadow,
   loadSVGFromString,
   util
 } from 'fabric';
@@ -122,6 +123,7 @@ export function App() {
         if (groupObjects[0]) {
           groupObjects[0].set('fill', props.fill);
         }
+        activeObj.set('dirty', true);
       }
     }
     if (props.stroke !== undefined) {
@@ -218,6 +220,12 @@ export function App() {
               canvas.requestRenderAll();
             }
           }).catch(() => {});
+        }
+      }
+      if (props.fontSize !== undefined) {
+        textTarget.set('fontSize', props.fontSize);
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ fontSize: props.fontSize });
         }
       }
       if (props.fontWeight !== undefined) {
@@ -685,48 +693,83 @@ export function App() {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    const center = canvas.getCenterPoint();
-    const noteWidth = 180;
-    const noteHeight = 160;
+    const noteWidth = 190;
+    const noteHeight = 170;
 
     const bgRect = new Rect({
       width: noteWidth,
       height: noteHeight,
-      fill: '#FAF0D7', // warm pastel yellow
+      fill: settings.stickyColor || '#FAF0D7', // warm pastel yellow
       stroke: '#E2D4B6',
       strokeWidth: 1.5,
-      rx: 8,
-      ry: 8,
-      shadow: {
-        color: 'rgba(80, 70, 50, 0.15)',
-        blur: 10,
-        offsetX: 2,
-        offsetY: 4
-      } as any
+      rx: 10,
+      ry: 10,
+      shadow: new Shadow({
+        color: 'rgba(80, 70, 50, 0.16)',
+        blur: 12,
+        offsetX: 3,
+        offsetY: 6
+      }),
+      selectable: false
     });
 
-    const noteText = new Textbox('Fresh thought...', {
-      left: 16,
-      top: 18,
-      fontFamily: "'Caveat', cursive",
+    const noteText = new Textbox('Type a thought...', {
+      left: 18,
+      top: 20,
+      fontFamily: settings.fontFamily || "'Caveat', cursive",
       fontSize: 22,
       fill: '#30312D',
-      width: noteWidth - 32,
-      textAlign: settings.textAlign || 'left'
+      width: noteWidth - 36,
+      textAlign: settings.textAlign || 'left',
+      editable: true,
+      splitByGrapheme: true
     });
 
     const stickyGroup = new Group([bgRect, noteText], {
-      left: center.x - noteWidth / 2,
-      top: center.y - noteHeight / 2,
-      selectable: true
+      selectable: true,
+      subTargetCheck: true,
+      interactive: true
+    });
+    (stickyGroup as any).isStickyNote = true;
+
+    // Dynamically expand sticky note height if text exceeds initial height
+    noteText.on('changed', () => {
+      const minHeight = 170;
+      const neededHeight = Math.max(minHeight, (noteText.height || 0) + 40);
+      if (Math.abs(bgRect.height - neededHeight) > 2) {
+        bgRect.set('height', neededHeight);
+        stickyGroup.set('height', neededHeight);
+        stickyGroup.set('dirty', true);
+        canvas.requestRenderAll();
+      }
     });
 
     canvas.add(stickyGroup);
+
+    // Center in current active viewport
+    if (typeof (canvas as any).viewportCenterObject === 'function') {
+      (canvas as any).viewportCenterObject(stickyGroup);
+    } else {
+      canvas.centerObject(stickyGroup);
+    }
+
+    stickyGroup.setCoords();
     canvas.setActiveObject(stickyGroup);
     canvas.renderAll();
     setActiveTool('select');
     showToast('Added Sticky Note');
-  }, [showToast]);
+
+    // Automatically enter text editing mode so user can write immediately!
+    setTimeout(() => {
+      try {
+        noteText.enterEditing();
+        noteText.selectAll();
+        canvas.requestRenderAll();
+      } catch (err) {
+        console.warn('Auto enter editing on sticky note:', err);
+      }
+    }, 60);
+  }, [settings.stickyColor, settings.fontFamily, settings.textAlign, showToast]);
 
   // Apply Workspace Templates
   const handleApplyTemplate = useCallback((type: 'blank' | 'dots' | 'grid' | 'warm') => {
