@@ -64,7 +64,7 @@ interface CanvasWorkspaceProps {
   onSelectionChange: (props: SelectedObjectProperties | null) => void;
   onHistoryChange: (canUndo: boolean, canRedo: boolean) => void;
   onSaveTrigger: (canvasJson: string) => void;
-  onLayersUpdate: (layers: LayerItem[]) => void;
+  onLayersUpdate?: (layers: LayerItem[]) => void;
   canvasRefCallback?: (canvas: FabricCanvas | null) => void;
   onToolUsed?: () => void;
   onToolChange?: (tool: ToolType) => void;
@@ -142,7 +142,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       };
     }).reverse();
 
-    onLayersUpdate(layerItems);
+    if (onLayersUpdate) {
+      onLayersUpdate(layerItems);
+    }
   }, [onLayersUpdate]);
 
   // Push state to undo stack

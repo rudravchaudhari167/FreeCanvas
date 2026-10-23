@@ -311,7 +311,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       if (selectedObject.isStickyNote) return 'Sticky Note';
       const type = selectedObject.type || '';
       if (type === 'group') return 'Sticker';
-      if (type === 'i-text' || type === 'text' || type === 'textbox') return 'Text Object';
+      if (type === 'i-text' || type === 'text' || type === 'textbox') return 'Text';
       if (selectedObject.shapeType) return getShapeName(selectedObject.shapeType);
       if (type === 'rect') return 'Rectangle';
       if (type === 'circle') return 'Circle';
@@ -319,7 +319,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       if (type === 'triangle') return 'Triangle';
       if (type === 'polygon') return 'Polygon';
       if (type === 'path') return 'Shape / Path';
-      if (type === 'line') return 'Line Object';
+      if (type === 'line') return 'Line';
       return 'Selected Item';
     }
     if (activeTool === 'pen') return 'Smooth Pen';
@@ -866,42 +866,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       {/* ERASER SPECIFIC SETTINGS */}
       {isEraserContext && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 4, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Eraser Mode</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              onClick={() => onUpdateSettings({ eraserMode: 'stroke' })}
-              style={{
-                flex: 1,
-                padding: '5px 8px',
-                borderRadius: 7,
-                fontSize: 11.5,
-                fontWeight: 500,
-                backgroundColor: settings.eraserMode === 'stroke' ? '#C9D0BD' : '#F5EFE5',
-                color: '#30312D',
-                cursor: 'pointer',
-                border: 'none'
-              }}
-            >
-              Stroke
-            </button>
-            <button
-              onClick={() => onUpdateSettings({ eraserMode: 'object' })}
-              style={{
-                flex: 1,
-                padding: '5px 8px',
-                borderRadius: 7,
-                fontSize: 11.5,
-                fontWeight: 500,
-                backgroundColor: settings.eraserMode === 'object' ? '#C9D0BD' : '#F5EFE5',
-                color: '#30312D',
-                cursor: 'pointer',
-                border: 'none'
-              }}
-            >
-              Object
-            </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 11.5, color: '#4E504A' }}>Eraser Size</span>
             <span style={{ fontSize: 11.5, color: '#79766F' }}>{settings.size} px</span>
           </div>
@@ -1303,14 +1268,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
       )}
 
-      {/* SELECTED OBJECT ACTIONS (Lock, Layering, Duplicate, Delete) */}
+      {/* SELECTED ACTIONS (Lock, Layering, Duplicate, Delete) */}
       {selectedObject && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Object Actions</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Actions</span>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={onToggleLock}
-              title={selectedObject.isLocked ? 'Unlock Object' : 'Lock Object'}
+              title={selectedObject.isLocked ? 'Unlock' : 'Lock'}
               style={{
                 flex: 1,
                 padding: '6px',

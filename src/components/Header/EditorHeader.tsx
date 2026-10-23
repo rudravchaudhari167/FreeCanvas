@@ -19,7 +19,6 @@ import {
   Maximize2,
   Grid,
   Sliders,
-  Layers,
   HelpCircle,
   ExternalLink
 } from 'lucide-react';
@@ -58,7 +57,6 @@ interface EditorHeaderProps {
   showToolbar: boolean;
   onToggleToolbar: () => void;
   onOpenShortcuts: () => void;
-  onOpenLayers: () => void;
 }
 
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -90,8 +88,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onToggleGrid,
   showProperties,
   onToggleProperties,
-  onOpenShortcuts,
-  onOpenLayers
+  onOpenShortcuts
 }) => {
   const fileMenuItems: MenuItem[] = [
     { label: 'New Project', icon: <Plus size={15} />, shortcut: '⌘N', onClick: onNewProject },
@@ -127,7 +124,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
     { divider: true, label: 'div1', onClick: () => {} },
     { label: showGrid ? 'Hide Grid' : 'Show Grid', icon: <Grid size={15} />, onClick: onToggleGrid },
     { label: showProperties ? 'Hide Properties' : 'Show Properties', icon: <Sliders size={15} />, onClick: onToggleProperties },
-    { label: 'Layers Panel', icon: <Layers size={15} />, onClick: onOpenLayers },
     { divider: true, label: 'div2', onClick: () => {} },
     { label: 'Keyboard Shortcuts', icon: <HelpCircle size={15} />, shortcut: '?', onClick: onOpenShortcuts }
   ];

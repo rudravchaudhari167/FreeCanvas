@@ -14,8 +14,7 @@ import {
 import type {
   ToolType,
   ToolSettings,
-  SelectedObjectProperties,
-  LayerItem
+  SelectedObjectProperties
 } from './types/canvas';
 import type { CanvasProject } from './types/project';
 import { saveProject } from './services/db';
@@ -31,7 +30,6 @@ import { CanvasWorkspace } from './components/Canvas/CanvasWorkspace';
 import { GalleryModal } from './components/Modals/GalleryModal';
 import { ExportModal } from './components/Modals/ExportModal';
 import { ProjectsModal } from './components/Modals/ProjectsModal';
-import { LayersModal } from './components/Modals/LayersModal';
 import { ShortcutsModal } from './components/Modals/ShortcutsModal';
 import { Toast } from './components/Modals/Toast';
 
@@ -76,14 +74,10 @@ export function App() {
   const [canUndo, setCanUndo] = useState<boolean>(false);
   const [canRedo, setCanRedo] = useState<boolean>(false);
 
-  // Layers list
-  const [layers, setLayers] = useState<LayerItem[]>([]);
-
   // Modals state
   const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isProjectsOpen, setIsProjectsOpen] = useState<boolean>(false);
-  const [isLayersOpen, setIsLayersOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [isMoreToolsOpen, setIsMoreToolsOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1178,7 +1172,6 @@ export function App() {
         showToolbar={showToolbar}
         onToggleToolbar={() => setShowToolbar(!showToolbar)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        onOpenLayers={() => setIsLayersOpen(true)}
       />
 
       {/* 2. LEFT TOOLBAR matching Reference Image 1 */}
@@ -1198,7 +1191,6 @@ export function App() {
         onOpenGallery={() => setIsGalleryOpen(true)}
         onAddStickyNote={handleAddStickyNote}
         onSelectArrowTool={() => setActiveTool('arrow')}
-        onOpenLayers={() => setIsLayersOpen(true)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onClearCanvas={handleClearCanvas}
         onApplyTemplate={handleApplyTemplate}
@@ -1218,7 +1210,6 @@ export function App() {
           setCanRedo(r);
         }}
         onSaveTrigger={handleCanvasChangeTrigger}
-        onLayersUpdate={setLayers}
         canvasRefCallback={(c) => {
           fabricCanvasRef.current = c;
           setFabricCanvas(c);
@@ -1277,17 +1268,6 @@ export function App() {
         onSelectProject={handleSelectProject}
         onNewProject={handleNewProject}
         onToast={showToast}
-      />
-
-      <LayersModal
-        isOpen={isLayersOpen}
-        onClose={() => setIsLayersOpen(false)}
-        layers={layers}
-        fabricCanvas={fabricCanvas}
-        onRefreshLayers={() => {
-          // forces layer re-eval
-          if (fabricCanvas) fabricCanvas.renderAll();
-        }}
       />
 
       <ShortcutsModal

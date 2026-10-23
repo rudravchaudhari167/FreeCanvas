@@ -3,7 +3,6 @@ import {
   Image as ImageIcon,
   StickyNote,
   ArrowUpRight,
-  Layers,
   HelpCircle,
   RotateCcw
 } from 'lucide-react';
@@ -14,7 +13,6 @@ interface MoreToolsMenuProps {
   onOpenGallery: () => void;
   onAddStickyNote: () => void;
   onSelectArrowTool: () => void;
-  onOpenLayers: () => void;
   onOpenShortcuts: () => void;
   onClearCanvas: () => void;
   onApplyTemplate: (type: 'blank' | 'dots' | 'grid' | 'warm') => void;
@@ -26,7 +24,6 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
   onOpenGallery,
   onAddStickyNote,
   onSelectArrowTool,
-  onOpenLayers,
   onOpenShortcuts,
   onClearCanvas,
   onApplyTemplate
@@ -118,19 +115,6 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
       >
         <ArrowUpRight size={16} color="#5E6547" />
         <span>Arrow Connector</span>
-      </button>
-
-      <button
-        onClick={() => {
-          onOpenLayers();
-          onClose();
-        }}
-        style={menuItemStyle}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <Layers size={16} color="#4A4843" />
-        <span>Layers & Objects</span>
       </button>
 
       <div style={{ height: 1, backgroundColor: '#EFE8DE', margin: '6px 0' }} />
