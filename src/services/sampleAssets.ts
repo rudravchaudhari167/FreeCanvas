@@ -400,6 +400,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
       <svg xmlns="http://www.w3.org/2000/svg" width="180" height="48" viewBox="0 0 180 48" fill="none">
         <path d="M0 6 L12 0 L168 0 L180 6 L175 42 L165 48 L15 48 L0 42 Z" fill="#D8DAC7" opacity="0.9"/>
         <line x1="10" y1="24" x2="170" y2="24" stroke="#777D5E" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.6"/>
+        <text x="90" y="29" font-family="'Caveat', cursive, sans-serif" font-size="16" font-weight="bold" fill="#476332" text-anchor="middle" letter-spacing="2">BOTANICAL NOTES</text>
       </svg>
     `)
   },
@@ -422,6 +423,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <line x1="150" y1="4" x2="165" y2="44" stroke="#D99379" stroke-width="3" opacity="0.45"/>
         <!-- central stitched line -->
         <line x1="12" y1="24" x2="168" y2="24" stroke="#FAF5EE" stroke-width="1.6" stroke-dasharray="5 3"/>
+        <text x="90" y="29" font-family="'Caveat', cursive, sans-serif" font-size="16" font-weight="bold" fill="#8F2D17" text-anchor="middle" letter-spacing="2">WILD &amp; FREE</text>
       </svg>
     `)
   },
@@ -440,12 +442,13 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <circle cx="60" cy="60" r="40" fill="#A24E38"/>
         <circle cx="60" cy="60" r="37" stroke="#FAF5EE" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
         <!-- debossed botanical branch in center -->
-        <path d="M60 82 Q58 60 60 38" stroke="#EED4C5" stroke-width="2" stroke-linecap="round"/>
+        <path d="M60 76 Q58 56 60 38" stroke="#EED4C5" stroke-width="2" stroke-linecap="round"/>
         <ellipse cx="52" cy="48" rx="4" ry="7" transform="rotate(-30 52 48)" fill="#EED4C5"/>
         <ellipse cx="68" cy="52" rx="4" ry="7" transform="rotate(30 68 52)" fill="#EED4C5"/>
-        <ellipse cx="51" cy="64" rx="4" ry="7" transform="rotate(-35 51 64)" fill="#EED4C5"/>
-        <ellipse cx="69" cy="68" rx="4" ry="7" transform="rotate(35 69 68)" fill="#EED4C5"/>
+        <ellipse cx="51" cy="62" rx="4" ry="7" transform="rotate(-35 51 62)" fill="#EED4C5"/>
+        <ellipse cx="69" cy="66" rx="4" ry="7" transform="rotate(35 69 66)" fill="#EED4C5"/>
         <circle cx="60" cy="36" r="3" fill="#EED4C5"/>
+        <text x="60" y="93" font-family="'Cinzel', serif, sans-serif" font-size="7.5" font-weight="bold" fill="#FFDFC0" text-anchor="middle" letter-spacing="2.5">HANDMADE</text>
       </svg>
     `)
   },
@@ -474,6 +477,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <!-- latte art foam & heart -->
         <ellipse cx="65" cy="48" rx="25" ry="6.5" fill="#FAF5EE"/>
         <path d="M65 52 C61 48 57 50 57 53 C57 56 65 59 65 59 C65 59 73 56 73 53 C73 50 69 48 65 52 Z" fill="#C57E65"/>
+        <text x="65" y="78" font-family="'Caveat', cursive, sans-serif" font-size="15" font-weight="bold" fill="#7A391A" text-anchor="middle">cozy moments</text>
       </svg>
     `)
   },
@@ -499,8 +503,8 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <polygon points="50,56 52,63 60,63 54,67 56,74 50,70 44,74 46,67 40,63 48,63" fill="#D99379"/>
         <polygon points="90,56 92,63 100,63 94,67 96,74 90,70 84,74 86,67 80,63 88,63" fill="#D99379"/>
         <!-- curved banner ribbon label -->
-        <path d="M36 82 Q70 74 104 82 L100 95 Q70 87 40 95 Z" fill="#5E6547"/>
-        <text x="70" y="90" font-family="'Cinzel', serif, sans-serif" font-size="8.5" font-weight="bold" fill="#FAF5EE" text-anchor="middle" letter-spacing="1.5">FAVORITE</text>
+        <path d="M36 82 Q70 74 104 82 L100 95 Q70 87 40 95 Z" fill="#2E4624"/>
+        <text x="70" y="90" font-family="'Cinzel', serif, sans-serif" font-size="9" font-weight="bold" fill="#FFDA66" text-anchor="middle" letter-spacing="2">FAVORITE</text>
       </svg>
     `)
   },
@@ -539,7 +543,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <!-- cancellation wavy postal lines -->
         <path d="M15 40 Q40 32 65 40 Q90 48 115 40" stroke="#30312D" stroke-width="1" opacity="0.35"/>
         <path d="M15 48 Q40 40 65 48 Q90 56 115 48" stroke="#30312D" stroke-width="1" opacity="0.35"/>
-        <text x="65" y="118" font-family="'Caveat', cursive" font-size="12" font-weight="bold" fill="#777D5E" text-anchor="middle">postale • 12c</text>
+        <text x="65" y="118" font-family="'Caveat', cursive, sans-serif" font-size="14" font-weight="bold" fill="#B32B19" text-anchor="middle">par avion • 12c</text>
       </svg>
     `)
   },
@@ -561,12 +565,15 @@ export const PRESET_STICKERS: GalleryAsset[] = [
           <!-- folded corner top right -->
           <path d="M92 24 L108 40 L92 40 Z" fill="#D8C6A5"/>
           <!-- note lines -->
-          <line x1="32" y1="52" x2="94" y2="52" stroke="#D8DAC7" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="32" y1="68" x2="94" y2="68" stroke="#D8DAC7" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="32" y1="84" x2="74" y2="84" stroke="#D8DAC7" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="32" y1="52" x2="94" y2="52" stroke="#E5DAC7" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="68" x2="94" y2="68" stroke="#E5DAC7" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="84" x2="74" y2="84" stroke="#E5DAC7" stroke-width="1.5" stroke-linecap="round"/>
           <circle cx="34" cy="52" r="2.5" fill="#D99379"/>
           <circle cx="34" cy="68" r="2.5" fill="#D99379"/>
           <circle cx="34" cy="84" r="2.5" fill="#D99379"/>
+          <!-- handwritten colored text -->
+          <text x="64" y="64" font-family="'Caveat', cursive, sans-serif" font-size="16" font-weight="bold" fill="#A8321C" text-anchor="middle">remember this</text>
+          <text x="64" y="80" font-family="'Caveat', cursive, sans-serif" font-size="13" font-weight="bold" fill="#466630" text-anchor="middle">★ make art daily</text>
           <!-- pushpin at top center -->
           <circle cx="64" cy="24" r="7.5" fill="#C57E65"/>
           <circle cx="62" cy="22" r="2.5" fill="#FAF5EE"/>
@@ -594,7 +601,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <!-- central ribbon banner body -->
         <rect x="22" y="16" width="116" height="40" rx="8" fill="#E8B07A" stroke="#FAF5EE" stroke-width="2"/>
         <!-- text -->
-        <text x="80" y="42" font-family="'Caveat', cursive, sans-serif" font-size="21" font-weight="bold" fill="#30312D" text-anchor="middle">good vibes</text>
+        <text x="80" y="42" font-family="'Caveat', cursive, sans-serif" font-size="23" font-weight="bold" fill="#992312" text-anchor="middle">good vibes</text>
         <circle cx="34" cy="36" r="3" fill="#FAF5EE"/>
         <circle cx="126" cy="36" r="3" fill="#FAF5EE"/>
       </svg>
@@ -614,9 +621,9 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <circle cx="60" cy="60" r="50" fill="#F4F6EE" stroke="#5E6547" stroke-width="2.5"/>
         <circle cx="60" cy="60" r="43" stroke="#777D5E" stroke-width="1.5" stroke-dasharray="4 3"/>
         <!-- large green checkmark -->
-        <path d="M42 60 L54 72 L78 46" stroke="#5E6547" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M42 60 L54 72 L78 46" stroke="#2B6122" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
         <!-- curved approval label -->
-        <text x="60" y="94" font-family="'Cinzel', serif, sans-serif" font-size="10.5" font-weight="bold" fill="#5E6547" text-anchor="middle" letter-spacing="3">COMPLETE</text>
+        <text x="60" y="94" font-family="'Cinzel', serif, sans-serif" font-size="11" font-weight="bold" fill="#1C5E16" text-anchor="middle" letter-spacing="3.5">COMPLETED</text>
         <circle cx="34" cy="60" r="2" fill="#777D5E"/>
         <circle cx="86" cy="60" r="2" fill="#777D5E"/>
       </svg>
@@ -636,6 +643,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <path d="M65 108 C35 88 16 68 16 48 C16 30 30 18 46 18 C56 18 62 24 65 29 C68 24 74 18 84 18 C100 18 114 30 114 48 C114 68 95 88 65 108 Z" fill="#EED4C5" opacity="0.85"/>
         <!-- sketched inner heart contour -->
         <path d="M65 100 C39 82 24 64 24 48 C24 34 35 24 48 24 C57 24 62 29 65 33 C68 29 73 24 82 24 C95 24 106 34 106 48 C106 64 91 82 65 100 Z" stroke="#C57E65" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="65" y="62" font-family="'Caveat', cursive, sans-serif" font-size="20" font-weight="bold" fill="#BA2820" text-anchor="middle">sweet love</text>
         <!-- starry sparkles -->
         <path d="M98 22 L100 27 L105 29 L100 31 L98 36 L96 31 L91 29 L96 27 Z" fill="#E8B07A"/>
         <circle cx="28" cy="74" r="3" fill="#D99379"/>
@@ -665,7 +673,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <line x1="86" y1="79" x2="92" y2="73" stroke="#D99379" stroke-width="2" stroke-linecap="round"/>
         <!-- sage green lower horizon band -->
         <path d="M30 124 L100 124 L100 148 L30 148 Z" fill="#777D5E"/>
-        <circle cx="65" cy="136" r="4" fill="#FAF5EE"/>
+        <text x="65" y="141" font-family="'Cinzel', serif, sans-serif" font-size="8.5" font-weight="bold" fill="#FFE8A3" text-anchor="middle" letter-spacing="3">GOLDEN HOUR</text>
       </svg>
     `)
   },
@@ -682,7 +690,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <circle cx="60" cy="60" r="50" fill="#EED4C5"/>
         <circle cx="60" cy="60" r="42" stroke="#D99379" stroke-width="2" stroke-dasharray="4 3"/>
         <path d="M60 30 L66 48 L85 48 L70 59 L75 78 L60 67 L45 78 L50 59 L35 48 L54 48 Z" fill="#D99379"/>
-        <text x="60" y="98" font-family="'Caveat', cursive" font-size="16" font-weight="bold" fill="#30312D" text-anchor="middle">idea</text>
+        <text x="60" y="98" font-family="'Caveat', cursive, sans-serif" font-size="17" font-weight="bold" fill="#B83A1D" text-anchor="middle">creative spark ✨</text>
       </svg>
     `)
   },
@@ -702,6 +710,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
         <circle cx="70" cy="100" r="22" fill="#EED4C5" opacity="0.95"/>
         <circle cx="40" cy="70" r="22" fill="#EED4C5" opacity="0.95"/>
         <circle cx="70" cy="70" r="16" fill="#D99379"/>
+        <text x="70" y="75" font-family="'Caveat', cursive, sans-serif" font-size="16" font-weight="bold" fill="#FFF2CE" text-anchor="middle">bloom</text>
       </svg>
     `)
   },
@@ -716,7 +725,7 @@ export const PRESET_STICKERS: GalleryAsset[] = [
     url: svgToUri(`
       <svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80" fill="none">
         <rect x="5" y="5" width="150" height="70" rx="12" fill="#FAF6F0" stroke="#777D5E" stroke-width="2"/>
-        <text x="80" y="38" font-family="'Caveat', cursive" font-size="22" font-weight="bold" fill="#30312D" text-anchor="middle">made with love</text>
+        <text x="80" y="38" font-family="'Caveat', cursive, sans-serif" font-size="23" font-weight="bold" fill="#A32210" text-anchor="middle">made with love</text>
         <path d="M80 50 C75 45 68 50 68 55 C68 62 80 67 80 67 C80 67 92 62 92 55 C92 50 85 45 80 50 Z" fill="#D99379"/>
       </svg>
     `)

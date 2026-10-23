@@ -213,6 +213,12 @@ export function App() {
         : null;
 
     if (textTarget) {
+      if (props.fill !== undefined && activeObj.type === 'group') {
+        textTarget.set('fill', props.fill);
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ fill: props.fill });
+        }
+      }
       if (props.fontFamily !== undefined) {
         textTarget.set('fontFamily', props.fontFamily);
         if (textTarget.isEditing) {
