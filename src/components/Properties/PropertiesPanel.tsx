@@ -110,6 +110,19 @@ export const CURATED_SWATCHES = [
   { name: 'Deep Earth', hex: '#4A4B46', rgb: 'rgb(74, 75, 70)' }
 ];
 
+export const TEXT_QUICK_SWATCHES = [
+  { name: 'Charcoal', hex: '#2B2D2F' },
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Crimson', hex: '#D84C4C' },
+  { name: 'Botanical Green', hex: '#3D6B35' },
+  { name: 'Ocean Blue', hex: '#2B6CB0' },
+  { name: 'Terracotta', hex: '#CC7A60' },
+  { name: 'Royal Purple', hex: '#7E68AA' },
+  { name: 'Golden Amber', hex: '#D9822B' },
+  { name: 'Deep Forest', hex: '#1C402E' },
+  { name: 'Rose Pink', hex: '#D15876' }
+];
+
 export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   activeTool,
   settings,
@@ -127,6 +140,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [colorMode, setColorMode] = useState<'rgb' | 'hex'>('rgb');
   const [copiedRgb, setCopiedRgb] = useState(false);
   const [shapeTarget, setShapeTarget] = useState<'fill' | 'stroke'>('fill');
+  const [stickyColorTarget, setStickyColorTarget] = useState<'note' | 'text'>('note');
   const [selectedShapeCategory, setSelectedShapeCategory] = useState<ShapeCategory>('all');
 
   const isStickyContext =
@@ -160,9 +174,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           ? (selectedObject.fill || settings.color)
           : (selectedObject.stroke || settings.strokeColor || '#5E6547');
     } else if (isStickyContext) {
-      currentColor = selectedObject.backgroundColor || selectedObject.fill || settings.stickyColor || '#FAF0D7';
+      if (stickyColorTarget === 'text') {
+        currentColor = selectedObject.textColor || settings.color || '#30312D';
+      } else {
+        currentColor = selectedObject.backgroundColor || selectedObject.fill || settings.stickyColor || '#FAF0D7';
+      }
     } else if (isTextContext) {
-      currentColor = selectedObject.fill || settings.color;
+      currentColor = selectedObject.textColor || selectedObject.fill || settings.color;
     } else {
       currentColor = selectedObject.stroke || selectedObject.fill || settings.color;
     }
@@ -173,7 +191,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           ? (settings.fillColor || settings.color)
           : (settings.strokeColor || '#5E6547');
     } else if (isStickyContext) {
-      currentColor = settings.stickyColor || '#FAF0D7';
+      if (stickyColorTarget === 'text') {
+        currentColor = settings.color || '#30312D';
+      } else {
+        currentColor = settings.stickyColor || '#FAF0D7';
+      }
     } else {
       currentColor = settings.color;
     }
@@ -216,12 +238,19 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     } else if (isTextContext) {
       onUpdateSettings({ color: newColor });
       if (selectedObject) {
-        onUpdateSelectedObject({ fill: newColor });
+        onUpdateSelectedObject({ fill: newColor, textColor: newColor });
       }
     } else if (isStickyContext) {
-      onUpdateSettings({ stickyColor: newColor });
-      if (selectedObject) {
-        onUpdateSelectedObject({ fill: newColor, backgroundColor: newColor });
+      if (stickyColorTarget === 'text') {
+        onUpdateSettings({ color: newColor });
+        if (selectedObject) {
+          onUpdateSelectedObject({ textColor: newColor, fill: newColor });
+        }
+      } else {
+        onUpdateSettings({ stickyColor: newColor });
+        if (selectedObject) {
+          onUpdateSelectedObject({ backgroundColor: newColor });
+        }
       }
     } else {
       onUpdateSettings({ color: newColor, strokeColor: newColor });
@@ -237,6 +266,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           onUpdateSelectedObject({ stroke: newColor });
         }
       }
+    }
+  };
+
+  const handleTextColorChange = (newColor: string) => {
+    onUpdateSettings({ color: newColor });
+    if (selectedObject) {
+      onUpdateSelectedObject({ textColor: newColor, fill: newColor });
     }
   };
 
@@ -272,7 +308,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   const getItemBadgeLabel = () => {
     if (selectedObject) {
+      if (selectedObject.isStickyNote) return 'Sticky Note';
       const type = selectedObject.type || '';
+      if (type === 'group') return 'Sticker';
       if (type === 'i-text' || type === 'text' || type === 'textbox') return 'Text Object';
       if (selectedObject.shapeType) return getShapeName(selectedObject.shapeType);
       if (type === 'rect') return 'Rectangle';
@@ -282,7 +320,6 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       if (type === 'polygon') return 'Polygon';
       if (type === 'path') return 'Shape / Path';
       if (type === 'line') return 'Line Object';
-      if (type === 'group') return 'Sticky Note';
       return 'Selected Item';
     }
     if (activeTool === 'pen') return 'Smooth Pen';
@@ -468,6 +505,58 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 }}
               >
                 Border
+              </button>
+            </div>
+          )}
+
+          {/* Target Toggle for Sticky Notes & Stickers with text: Note/Base vs Text */}
+          {isStickyContext && (
+            <div
+              style={{
+                display: 'flex',
+                backgroundColor: '#F0EAE1',
+                borderRadius: 8,
+                padding: 2,
+                gap: 2
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setStickyColorTarget('note')}
+                style={{
+                  flex: 1,
+                  padding: '3px 0',
+                  borderRadius: 6,
+                  fontSize: 10.5,
+                  fontWeight: stickyColorTarget === 'note' ? 600 : 500,
+                  backgroundColor: stickyColorTarget === 'note' ? '#FFFFFF' : 'transparent',
+                  color: stickyColorTarget === 'note' ? '#30312D' : '#8A857A',
+                  border: 'none',
+                  boxShadow: stickyColorTarget === 'note' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {selectedObject?.type === 'group' ? 'Sticker Base' : 'Card Color'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStickyColorTarget('text')}
+                style={{
+                  flex: 1,
+                  padding: '3px 0',
+                  borderRadius: 6,
+                  fontSize: 10.5,
+                  fontWeight: stickyColorTarget === 'text' ? 600 : 500,
+                  backgroundColor: stickyColorTarget === 'text' ? '#FFFFFF' : 'transparent',
+                  color: stickyColorTarget === 'text' ? '#30312D' : '#8A857A',
+                  border: 'none',
+                  boxShadow: stickyColorTarget === 'text' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Text Color
               </button>
             </div>
           )}
@@ -998,6 +1087,106 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </button>
               );
             })}
+          </div>
+
+          {/* Dedicated Text Color Option */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 6, borderTop: '1px solid #F0EAE1' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 500, color: '#4E504A' }}>Text Color</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  fontWeight: 600,
+                  color: '#6E6B62',
+                  backgroundColor: '#F5EFE5',
+                  padding: '2px 5px',
+                  borderRadius: 4
+                }}
+              >
+                {(selectedObject?.textColor || (isTextContext ? selectedObject?.fill : undefined) || settings.color || '#30312D').toUpperCase()}
+              </span>
+            </div>
+
+            {/* Swatch row with custom color picker button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {/* Custom native color picker button */}
+              <label
+                title="Pick custom text color"
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  backgroundColor: selectedObject?.textColor || (isTextContext ? selectedObject?.fill : undefined) || settings.color || '#30312D',
+                  border: '2px solid #FFFFFF',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}
+              >
+                <input
+                  type="color"
+                  value={rgbToHex(
+                    parseToRgb(selectedObject?.textColor || (isTextContext ? selectedObject?.fill : undefined) || settings.color || '#30312D').r,
+                    parseToRgb(selectedObject?.textColor || (isTextContext ? selectedObject?.fill : undefined) || settings.color || '#30312D').g,
+                    parseToRgb(selectedObject?.textColor || (isTextContext ? selectedObject?.fill : undefined) || settings.color || '#30312D').b
+                  )}
+                  onChange={(e) => handleTextColorChange(e.target.value)}
+                  style={{
+                    position: 'absolute',
+                    opacity: 0,
+                    width: '100%',
+                    height: '100%',
+                    cursor: 'pointer'
+                  }}
+                />
+              </label>
+
+              {/* Quick swatches */}
+              {TEXT_QUICK_SWATCHES.map((swatch) => {
+                const currentActiveText = (
+                  selectedObject?.textColor ||
+                  (isTextContext ? selectedObject?.fill : undefined) ||
+                  settings.color ||
+                  '#30312D'
+                ).toLowerCase();
+                const isMatch = currentActiveText === swatch.hex.toLowerCase();
+
+                return (
+                  <button
+                    key={swatch.hex}
+                    type="button"
+                    title={swatch.name}
+                    onClick={() => handleTextColorChange(swatch.hex)}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      backgroundColor: swatch.hex,
+                      border: isMatch ? '2px solid #5E6547' : '1.5px solid #FFFFFF',
+                      boxShadow: isMatch ? '0 0 0 1.5px #5E6547, 0 1px 2px rgba(0,0,0,0.15)' : '0 1px 2px rgba(0,0,0,0.12)',
+                      cursor: 'pointer',
+                      padding: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transform: isMatch ? 'scale(1.15)' : 'scale(1)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {isMatch && (
+                      <Check
+                        size={10}
+                        color={['#FFFFFF', '#FAF0D7', '#F4EBD9'].includes(swatch.hex) ? '#30312D' : '#FFFFFF'}
+                        strokeWidth={3}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

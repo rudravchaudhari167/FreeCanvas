@@ -383,15 +383,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       const isSticky = !!(activeObj as any).isStickyNote;
       let fillVal = typeof activeObj.fill === 'string' ? activeObj.fill : undefined;
       let strokeVal = typeof activeObj.stroke === 'string' ? activeObj.stroke : undefined;
-      if (isSticky) {
-        fillVal = typeof activeObj.backgroundColor === 'string' ? activeObj.backgroundColor : (fillVal || '#FAF0D7');
-      } else if (activeObj.type === 'group') {
-        const groupObjects = (activeObj as Group).getObjects();
-        if (groupObjects[0]) {
-          if (typeof groupObjects[0].fill === 'string') fillVal = groupObjects[0].fill;
-          if (typeof groupObjects[0].stroke === 'string') strokeVal = groupObjects[0].stroke;
-        }
-      }
+      const bgVal = typeof activeObj.backgroundColor === 'string' ? activeObj.backgroundColor : undefined;
 
       let textObj: IText | null = null;
       if (activeObj.type === 'i-text' || activeObj.type === 'text' || activeObj.type === 'textbox') {
@@ -399,6 +391,21 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       } else if (activeObj.type === 'group') {
         const found = (activeObj as Group).getObjects().find((o) => o.type === 'i-text' || o.type === 'text' || o.type === 'textbox');
         if (found) textObj = found as IText;
+      }
+
+      let textColorVal: string | undefined = undefined;
+      if (textObj && typeof textObj.fill === 'string') {
+        textColorVal = textObj.fill;
+      }
+
+      if (isSticky) {
+        fillVal = bgVal || (typeof activeObj.fill === 'string' ? activeObj.fill : '#FAF0D7');
+      } else if (activeObj.type === 'group') {
+        const groupObjects = (activeObj as Group).getObjects();
+        if (groupObjects[0]) {
+          if (typeof groupObjects[0].fill === 'string') fillVal = groupObjects[0].fill;
+          if (typeof groupObjects[0].stroke === 'string') strokeVal = groupObjects[0].stroke;
+        }
       }
 
       let detectedShapeType: ShapeType | undefined = (activeObj as any).shapeType;
@@ -439,7 +446,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         textAlign: textObj ? textObj.textAlign : undefined,
         shapeType: detectedShapeType,
         isStickyNote: isSticky,
-        backgroundColor: typeof activeObj.backgroundColor === 'string' ? activeObj.backgroundColor : undefined
+        backgroundColor: isSticky ? (bgVal || fillVal) : bgVal,
+        textColor: textColorVal
       });
     };
 
@@ -449,7 +457,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.on('text:changed', updateSelectionProps);
     canvas.on('text:selection:changed', updateSelectionProps);
 
-    // Double-click to enter editing on text or group text (e.g. Sticky Notes)
+    // Double-click to enter editing on text or group text (e.g. Sticky Notes or Stickers)
     canvas.on('mouse:dblclick', (opt: any) => {
       const target = opt.target;
       if (!target) return;

@@ -108,6 +108,7 @@ export interface SelectedObjectProperties {
   shapeType?: ShapeType;
   isStickyNote?: boolean;
   backgroundColor?: string;
+  textColor?: string;
 }
 
 export interface LayerItem {

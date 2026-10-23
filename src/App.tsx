@@ -116,20 +116,96 @@ export function App() {
     const activeObj = canvas.getActiveObject();
     if (!activeObj) return;
 
-    if (props.fill !== undefined || props.backgroundColor !== undefined) {
-      const colorVal = props.backgroundColor || props.fill;
+    if (props.backgroundColor !== undefined) {
       if ((activeObj as any).isStickyNote) {
-        activeObj.set('backgroundColor', colorVal);
+        activeObj.set('backgroundColor', props.backgroundColor);
         activeObj.set('dirty', true);
-      } else if (props.fill !== undefined) {
-        activeObj.set('fill', props.fill);
-        if (activeObj.type === 'group') {
-          const groupObjects = (activeObj as Group).getObjects();
-          if (groupObjects[0]) {
-            groupObjects[0].set('fill', props.fill);
+      }
+    }
+
+    if (props.textColor !== undefined) {
+      const colorVal = props.textColor;
+      if ((activeObj as any).isStickyNote) {
+        activeObj.set('fill', colorVal);
+        if ((activeObj as any).isEditing) {
+          if ((activeObj as any).selectionStart !== (activeObj as any).selectionEnd) {
+            (activeObj as any).setSelectionStyles?.({ fill: colorVal });
+          } else {
+            (activeObj as any).set('fill', colorVal);
           }
+        }
+        if ((activeObj as any).styles) {
+          const styles = (activeObj as any).styles;
+          Object.keys(styles).forEach((lineKey) => {
+            if (styles[lineKey]) {
+              Object.keys(styles[lineKey]).forEach((charKey) => {
+                if (styles[lineKey][charKey]) styles[lineKey][charKey].fill = colorVal;
+              });
+            }
+          });
+        }
+        activeObj.set('dirty', true);
+      } else if (activeObj.type === 'i-text' || activeObj.type === 'text' || activeObj.type === 'textbox') {
+        activeObj.set('fill', colorVal);
+        if ((activeObj as any).isEditing) {
+          if ((activeObj as any).selectionStart !== (activeObj as any).selectionEnd) {
+            (activeObj as any).setSelectionStyles?.({ fill: colorVal });
+          } else {
+            (activeObj as any).set('fill', colorVal);
+          }
+        }
+        if ((activeObj as any).styles) {
+          const styles = (activeObj as any).styles;
+          Object.keys(styles).forEach((lineKey) => {
+            if (styles[lineKey]) {
+              Object.keys(styles[lineKey]).forEach((charKey) => {
+                if (styles[lineKey][charKey]) styles[lineKey][charKey].fill = colorVal;
+              });
+            }
+          });
+        }
+        activeObj.set('dirty', true);
+      } else if (activeObj.type === 'group') {
+        const textObjects = (activeObj as Group).getObjects().filter((o) => o.type === 'i-text' || o.type === 'text' || o.type === 'textbox');
+        textObjects.forEach((t) => {
+          t.set('fill', colorVal);
+          if ((t as any).isEditing) {
+            (t as any).setSelectionStyles?.({ fill: colorVal });
+          }
+          if ((t as any).styles) {
+            const styles = (t as any).styles;
+            Object.keys(styles).forEach((lineKey) => {
+              if (styles[lineKey]) {
+                Object.keys(styles[lineKey]).forEach((charKey) => {
+                  if (styles[lineKey][charKey]) styles[lineKey][charKey].fill = colorVal;
+                });
+              }
+            });
+          }
+          t.set('dirty', true);
+        });
+        activeObj.set('dirty', true);
+      }
+    }
+
+    if (props.fill !== undefined) {
+      if ((activeObj as any).isStickyNote) {
+        if (props.backgroundColor !== undefined) {
+          activeObj.set('backgroundColor', props.backgroundColor);
+          activeObj.set('dirty', true);
+        } else if (props.textColor === undefined) {
+          activeObj.set('backgroundColor', props.fill);
           activeObj.set('dirty', true);
         }
+      } else if (activeObj.type === 'group') {
+        const groupObjects = (activeObj as Group).getObjects();
+        const baseShape = groupObjects.find((o) => o.type !== 'i-text' && o.type !== 'text' && o.type !== 'textbox') || groupObjects[0];
+        if (baseShape) {
+          baseShape.set('fill', props.fill);
+        }
+        activeObj.set('dirty', true);
+      } else {
+        activeObj.set('fill', props.fill);
       }
     }
     if (props.stroke !== undefined) {
@@ -213,7 +289,12 @@ export function App() {
         : null;
 
     if (textTarget) {
-      if (props.fill !== undefined && activeObj.type === 'group') {
+      if (props.textColor !== undefined) {
+        textTarget.set('fill', props.textColor);
+        if (textTarget.isEditing) {
+          textTarget.setSelectionStyles?.({ fill: props.textColor });
+        }
+      } else if (props.fill !== undefined && !(activeObj as any).isStickyNote && activeObj.type !== 'group') {
         textTarget.set('fill', props.fill);
         if (textTarget.isEditing) {
           textTarget.setSelectionStyles?.({ fill: props.fill });
@@ -636,6 +717,8 @@ export function App() {
               );
               if (validObjects.length > 0) {
                 const group = util.groupSVGElements(validObjects, options);
+                (group as any).subTargetCheck = true;
+                (group as any).interactive = true;
                 objectToInsert = group;
               }
             } catch (svgErr) {
@@ -713,7 +796,7 @@ export function App() {
       width: noteWidth,
       fontFamily: settings.fontFamily || "'Caveat', cursive",
       fontSize: 22,
-      fill: '#30312D',
+      fill: settings.color || '#30312D',
       backgroundColor: initialNoteColor,
       stroke: '#E2D4B6',
       strokeWidth: 1.5,
@@ -832,7 +915,7 @@ export function App() {
         console.warn('Auto enter editing on sticky note:', err);
       }
     }, 60);
-  }, [settings.stickyColor, settings.fontFamily, settings.textAlign, showToast]);
+  }, [settings.stickyColor, settings.color, settings.fontFamily, settings.textAlign, showToast]);
 
   // Apply Workspace Templates
   const handleApplyTemplate = useCallback((type: 'blank' | 'dots' | 'grid' | 'warm') => {
