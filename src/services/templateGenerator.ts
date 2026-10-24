@@ -4,8 +4,7 @@ import {
   Textbox,
   Line,
   Polygon,
-  Circle,
-  Group
+  Circle
 } from 'fabric';
 
 /**
@@ -22,7 +21,8 @@ function createTitle(text: string, left: number, top: number, width = 700): Text
     fill: '#30312D',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 }
 
@@ -36,7 +36,8 @@ function createSubtitle(text: string, left: number, top: number, width = 850): T
     fill: '#79766F',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 }
 
@@ -84,7 +85,8 @@ function createSectionHeader(
     fill: color,
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 }
 
@@ -107,34 +109,23 @@ function createBodyText(
     lineHeight,
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 }
 
-function createGroupedNode(
-  shape: Rect | Polygon | Circle,
-  text: Textbox,
-  left: number,
-  top: number
-): Group {
-  return new Group([shape, text], {
-    left,
-    top,
-    originX: 'left',
-    originY: 'top',
-    subTargetCheck: true,
-    interactive: true
-  });
-}
-
-function createNodeRect(
+function createNodeShape(
   width: number,
   height: number,
+  left: number,
+  top: number,
   fill: string,
   stroke: string,
   rx = 8
 ): Rect {
   return new Rect({
+    left,
+    top,
     width,
     height,
     fill,
@@ -142,12 +133,16 @@ function createNodeRect(
     strokeWidth: 2,
     rx,
     ry: rx,
-    originX: 'center',
-    originY: 'center'
+    originX: 'left',
+    originY: 'top',
+    selectable: false,
+    evented: false
   });
 }
 
 function createDiamondShape(
+  left: number,
+  top: number,
   width: number,
   height: number,
   fill: string,
@@ -156,57 +151,74 @@ function createDiamondShape(
   const w = width;
   const h = height;
   return new Polygon([
-    { x: 0, y: -h / 2 },
     { x: w / 2, y: 0 },
-    { x: 0, y: h / 2 },
-    { x: -w / 2, y: 0 }
+    { x: w, y: h / 2 },
+    { x: w / 2, y: h },
+    { x: 0, y: h / 2 }
   ], {
+    left,
+    top,
     fill,
     stroke,
     strokeWidth: 2,
-    originX: 'center',
-    originY: 'center'
+    originX: 'left',
+    originY: 'top',
+    selectable: false,
+    evented: false
   });
 }
 
 function createParallelogramShape(
+  left: number,
+  top: number,
   width: number,
   height: number,
   fill: string,
   stroke: string,
-  skew = 20
+  skew = 18
 ): Polygon {
   const w = width;
   const h = height;
   return new Polygon([
-    { x: -w / 2 + skew, y: -h / 2 },
-    { x: w / 2, y: -h / 2 },
-    { x: w / 2 - skew, y: h / 2 },
-    { x: -w / 2, y: h / 2 }
+    { x: skew, y: 0 },
+    { x: w, y: 0 },
+    { x: w - skew, y: h },
+    { x: 0, y: h }
   ], {
+    left,
+    top,
     fill,
     stroke,
     strokeWidth: 2,
-    originX: 'center',
-    originY: 'center'
+    originX: 'left',
+    originY: 'top',
+    selectable: false,
+    evented: false
   });
 }
 
-function createNodeText(
+function createEditableNodeText(
   textStr: string,
+  left: number,
+  top: number,
   width: number,
   fontSize = 13,
-  color = '#30312D'
+  color = '#30312D',
+  align: 'center' | 'left' = 'center'
 ): Textbox {
   return new Textbox(textStr, {
-    width: Math.max(20, width - 20),
+    left,
+    top,
+    width,
     fontSize,
     fontFamily: 'Plus Jakarta Sans',
     fontWeight: '600',
     fill: color,
-    textAlign: 'center',
-    originX: 'center',
-    originY: 'center'
+    textAlign: align,
+    originX: 'left',
+    originY: 'top',
+    selectable: true,
+    evented: true
   });
 }
 
@@ -256,7 +268,8 @@ export function createWeeklyPlanner(canvas: FabricCanvas): void {
       textAlign: 'center',
       originX: 'left',
       originY: 'top',
-      selectable: true
+      selectable: true,
+      evented: true
     });
 
     // Task Items Textbox (editable)
@@ -343,7 +356,7 @@ export function createCornellNotes(canvas: FabricCanvas): void {
 }
 
 /**
- * 3. Algorithm & Logic Flowchart template
+ * 3. Algorithm & Logic Flowchart template (Clean direct textboxes, zero group bugs)
  */
 export function createFlowchart(canvas: FabricCanvas): void {
   const startX = 60;
@@ -355,63 +368,7 @@ export function createFlowchart(canvas: FabricCanvas): void {
 
   const centerX = 530;
 
-  // Node 1: Start Pill at (440, 110) [180x50]
-  const nodeStart = createGroupedNode(
-    createNodeRect(180, 50, '#FAF0D7', '#777D5E', 25),
-    createNodeText('START', 180, 13, '#30312D'),
-    440,
-    110
-  );
-
-  // Node 2: Input Parallelogram at (440, 190) [180x54]
-  const nodeInput = createGroupedNode(
-    createParallelogramShape(180, 54, '#EAEEDD', '#5E6547', 18),
-    createNodeText('Read Input Data', 180, 12.5, '#30312D'),
-    440,
-    190
-  );
-
-  // Node 3: Process Box at (440, 274) [180x56]
-  const nodeProcess = createGroupedNode(
-    createNodeRect(180, 56, '#FFFEFA', '#777D5E', 8),
-    createNodeText('Execute Computation\n& Validate State', 180, 12.5, '#30312D'),
-    440,
-    274
-  );
-
-  // Node 4: Decision Diamond at (430, 360) [200x90]
-  const nodeDecision = createGroupedNode(
-    createDiamondShape(200, 90, '#FCEEE7', '#D99379'),
-    createNodeText('Is Valid / Solved?', 200, 12.5, '#30312D'),
-    430,
-    360
-  );
-
-  // Node 5: Output Box at (440, 490) [180x54]
-  const nodeOutput = createGroupedNode(
-    createNodeRect(180, 54, '#EAEEDD', '#5E6547', 8),
-    createNodeText('Output Final Result', 180, 12.5, '#30312D'),
-    440,
-    490
-  );
-
-  // Node 6: Fallback Loop Step at (710, 377) [180x56]
-  const nodeFallback = createGroupedNode(
-    createNodeRect(180, 56, '#FAF5EE', '#D99379', 8),
-    createNodeText('Adjust Parameters\n& Retry Step', 180, 12.5, '#30312D'),
-    710,
-    377
-  );
-
-  // Node 7: End Pill at (440, 574) [180x50]
-  const nodeEnd = createGroupedNode(
-    createNodeRect(180, 50, '#FAF0D7', '#777D5E', 25),
-    createNodeText('END / RETURN', 180, 13, '#30312D'),
-    440,
-    574
-  );
-
-  // Connecting Lines & Labels
+  // Connecting Lines (added behind shapes)
   const lines = [
     // Start (bottom 160) -> Input (top 190)
     new Line([centerX, 160, centerX, 190], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
@@ -430,6 +387,35 @@ export function createFlowchart(canvas: FabricCanvas): void {
     // Output (bottom 544) -> End (top 574)
     new Line([centerX, 544, centerX, 574], { stroke: '#777D5E', strokeWidth: 2, selectable: false })
   ];
+  lines.forEach((l) => canvas.add(l));
+
+  // Node 1: Start Pill at (440, 110) [180x50]
+  const bgStart = createNodeShape(180, 50, 440, 110, '#FAF0D7', '#777D5E', 25);
+  const textStart = createEditableNodeText('START', 440, 126, 180, 13, '#30312D');
+
+  // Node 2: Input Parallelogram at (440, 190) [180x54]
+  const bgInput = createParallelogramShape(440, 190, 180, 54, '#EAEEDD', '#5E6547', 18);
+  const textInput = createEditableNodeText('Read Input Data', 440, 208, 180, 12.5, '#30312D');
+
+  // Node 3: Process Box at (440, 274) [180x56]
+  const bgProcess = createNodeShape(180, 56, 440, 274, '#FFFEFA', '#777D5E', 8);
+  const textProcess = createEditableNodeText('Execute Computation\n& Validate State', 440, 283, 180, 12.5, '#30312D');
+
+  // Node 4: Decision Diamond at (430, 360) [200x90]
+  const bgDecision = createDiamondShape(430, 360, 200, 90, '#FCEEE7', '#D99379');
+  const textDecision = createEditableNodeText('Is Valid / Solved?', 430, 396, 200, 12.5, '#30312D');
+
+  // Node 5: Output Box at (440, 490) [180x54]
+  const bgOutput = createNodeShape(180, 54, 440, 490, '#EAEEDD', '#5E6547', 8);
+  const textOutput = createEditableNodeText('Output Final Result', 440, 508, 180, 12.5, '#30312D');
+
+  // Node 6: Fallback Loop Step at (710, 377) [180x56]
+  const bgFallback = createNodeShape(180, 56, 710, 377, '#FAF5EE', '#D99379', 8);
+  const textFallback = createEditableNodeText('Adjust Parameters\n& Retry Step', 710, 386, 180, 12.5, '#30312D');
+
+  // Node 7: End Pill at (440, 574) [180x50]
+  const bgEnd = createNodeShape(180, 50, 440, 574, '#FAF0D7', '#777D5E', 25);
+  const textEnd = createEditableNodeText('END / RETURN', 440, 590, 180, 13, '#30312D');
 
   const yesLabel = new Textbox('YES', {
     left: centerX + 10,
@@ -439,7 +425,8 @@ export function createFlowchart(canvas: FabricCanvas): void {
     fill: '#5E6547',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 
   const noLabel = new Textbox('NO', {
@@ -450,12 +437,20 @@ export function createFlowchart(canvas: FabricCanvas): void {
     fill: '#D99379',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 
-  lines.forEach((l) => canvas.add(l));
-  canvas.add(yesLabel, noLabel);
-  canvas.add(nodeStart, nodeInput, nodeProcess, nodeDecision, nodeOutput, nodeFallback, nodeEnd);
+  canvas.add(
+    bgStart, textStart,
+    bgInput, textInput,
+    bgProcess, textProcess,
+    bgDecision, textDecision,
+    bgOutput, textOutput,
+    bgFallback, textFallback,
+    bgEnd, textEnd,
+    yesLabel, noLabel
+  );
 
   canvas.renderAll();
 }
@@ -624,7 +619,8 @@ export function createSwotMatrix(canvas: FabricCanvas): void {
       fill: '#79766F',
       originX: 'left',
       originY: 'top',
-      selectable: true
+      selectable: true,
+      evented: true
     });
     const bodyText = createBodyText(q.items, q.x + 20, q.y + 68, quadWidth - 40, '#30312D', 13, 1.4);
 
@@ -689,7 +685,8 @@ export function createVennDiagram(canvas: FabricCanvas): void {
     textAlign: 'center',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
   const notesA = createBodyText(
     '• Unique properties of A\n\n• Specific methodology\n\n• Advantages of Model A\n\n• Historical context',
@@ -712,7 +709,8 @@ export function createVennDiagram(canvas: FabricCanvas): void {
     textAlign: 'center',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
   const notesShared = new Textbox('★ Core overlapping principles\n\n★ Common assumptions\n\n★ Shared mathematical basis', {
     left: 455,
@@ -724,7 +722,8 @@ export function createVennDiagram(canvas: FabricCanvas): void {
     textAlign: 'center',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
 
   // Circle B Header & Notes
@@ -738,7 +737,8 @@ export function createVennDiagram(canvas: FabricCanvas): void {
     textAlign: 'center',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
   const notesB = createBodyText(
     '• Unique properties of B\n\n• Specific methodology\n\n• Advantages of Model B\n\n• Modern adaptations',
@@ -782,7 +782,8 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
     textAlign: 'center',
     originX: 'left',
     originY: 'top',
-    selectable: true
+    selectable: true,
+    evented: true
   });
   canvas.add(timeBar, timeText);
 
@@ -836,7 +837,8 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
       textAlign: 'right',
       originX: 'left',
       originY: 'top',
-      selectable: true
+      selectable: true,
+      evented: true
     });
     const tasks = createBodyText(p.tasks, startX + 20, y + 54, totalWidth - 40, '#30312D', 13);
 
@@ -847,7 +849,7 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
 }
 
 /**
- * 8. Concept Map & Entity Diagram template
+ * 8. Concept Map & Entity Diagram template (Clean direct textboxes, zero group bugs)
  */
 export function createConceptMap(canvas: FabricCanvas): void {
   const startX = 60;
@@ -860,7 +862,6 @@ export function createConceptMap(canvas: FabricCanvas): void {
   const centerX = 580;
   const centerY = 380;
 
-  // Connector lines added first (so they sit behind nodes)
   const satellites = [
     { title: 'Domain 1: Axioms & Laws', sub: '• Foundation principles\n• Fundamental equations', x: 120, y: 150, color: '#EAEEDD', border: '#777D5E' },
     { title: 'Domain 2: Methodology', sub: '• Empirical experiments\n• Quantitative tests', x: 820, y: 150, color: '#E4EFF0', border: '#5B8C94' },
@@ -868,6 +869,7 @@ export function createConceptMap(canvas: FabricCanvas): void {
     { title: 'Domain 4: Limitations', sub: '• Boundary conditions\n• Known anomalies', x: 820, y: 510, color: '#FAF0D7', border: '#C7A35F' }
   ];
 
+  // Connector lines added first (sitting behind cards)
   satellites.forEach((s) => {
     const line = new Line([centerX, centerY, s.x + 110, s.y + 45], {
       stroke: '#B8AFA2',
@@ -879,30 +881,22 @@ export function createConceptMap(canvas: FabricCanvas): void {
   });
 
   // Center Core Theory Node at (460, 335) [240x90]
-  const coreGroup = createGroupedNode(
-    createNodeRect(240, 90, '#FAF0D7', '#777D5E', 20),
-    createNodeText('CORE THEORY\nPrincipal Phenomenon', 240, 15, '#30312D'),
-    460,
-    335
-  );
-  canvas.add(coreGroup);
+  const coreBg = createNodeShape(240, 90, 460, 335, '#FAF0D7', '#777D5E', 20);
+  const coreText = createEditableNodeText('CORE THEORY\nPrincipal Phenomenon', 460, 356, 240, 15, '#30312D');
+  canvas.add(coreBg, coreText);
 
   // 4 Satellite Theoretical Domains
   satellites.forEach((s) => {
-    const sGroup = createGroupedNode(
-      createNodeRect(220, 90, s.color, s.border, 14),
-      createNodeText(`${s.title}\n${s.sub}`, 220, 12.5, '#30312D'),
-      s.x,
-      s.y
-    );
-    canvas.add(sGroup);
+    const sBg = createNodeShape(220, 90, s.x, s.y, s.color, s.border, 14);
+    const sText = createEditableNodeText(`${s.title}\n${s.sub}`, s.x + 12, s.y + 14, 196, 12.5, '#30312D', 'left');
+    canvas.add(sBg, sText);
   });
 
   canvas.renderAll();
 }
 
 /**
- * 9. Mind Map & Brainstorm template
+ * 9. Mind Map & Brainstorm template (Clean direct textboxes, zero group bugs)
  */
 export function createMindMap(canvas: FabricCanvas): void {
   const startX = 60;
@@ -915,7 +909,6 @@ export function createMindMap(canvas: FabricCanvas): void {
   const centerX = 580;
   const centerY = 380;
 
-  // 4 Branch Nodes
   const branches = [
     { label: 'Theme 1: Research', sub: '• Literature survey\n• Field interviews', x: 140, y: 160, color: '#EAEEDD', borderColor: '#777D5E' },
     { label: 'Theme 2: Design', sub: '• User journey maps\n• Wireframe models', x: 810, y: 160, color: '#FCEEE7', borderColor: '#D99379' },
@@ -935,22 +928,14 @@ export function createMindMap(canvas: FabricCanvas): void {
   });
 
   // Central Bubble at (470, 335) [220x90]
-  const centerGroup = createGroupedNode(
-    createNodeRect(220, 90, '#FAF0D7', '#777D5E', 24),
-    createNodeText('Central Idea / Thesis', 220, 16, '#30312D'),
-    470,
-    335
-  );
-  canvas.add(centerGroup);
+  const centerBg = createNodeShape(220, 90, 470, 335, '#FAF0D7', '#777D5E', 24);
+  const centerText = createEditableNodeText('Central Idea / Thesis', 470, 368, 220, 16, '#30312D');
+  canvas.add(centerBg, centerText);
 
   branches.forEach((b) => {
-    const bGroup = createGroupedNode(
-      createNodeRect(210, 86, b.color, b.borderColor, 16),
-      createNodeText(`${b.label}\n${b.sub}`, 210, 12.5, '#30312D'),
-      b.x,
-      b.y
-    );
-    canvas.add(bGroup);
+    const bBg = createNodeShape(210, 86, b.x, b.y, b.color, b.borderColor, 16);
+    const bText = createEditableNodeText(`${b.label}\n${b.sub}`, b.x + 12, b.y + 16, 186, 12.5, '#30312D', 'left');
+    canvas.add(bBg, bText);
   });
 
   canvas.renderAll();
@@ -1004,7 +989,7 @@ export function createStoryboard(canvas: FabricCanvas): void {
 }
 
 /**
- * 11. Project Kanban Board template
+ * 11. Project Kanban Board template (Clean direct textboxes, zero group bugs)
  */
 export function createKanbanBoard(canvas: FabricCanvas): void {
   const startX = 60;
@@ -1045,18 +1030,25 @@ export function createKanbanBoard(canvas: FabricCanvas): void {
       textAlign: 'center',
       originX: 'left',
       originY: 'top',
-      selectable: true
+      selectable: true,
+      evented: true
     });
 
-    // Sample Task Card (movable grouped card)
-    const taskGroup = createGroupedNode(
-      createNodeRect(colWidth - 36, 88, '#FFFEFA', '#E8DED2', 8),
-      createNodeText(col.sample, colWidth - 36, 13, '#4A4843'),
-      x + 18,
-      topContentY + 70
+    // Sample Task Card Background
+    const taskBg = createPanel(x + 16, topContentY + 70, colWidth - 32, 88, '#FFFEFA', '#E8DED2', 8);
+
+    // Sample Task Textbox (fully interactive and editable)
+    const taskText = createBodyText(
+      col.sample,
+      x + 28,
+      topContentY + 86,
+      colWidth - 56,
+      '#4A4843',
+      13,
+      1.4
     );
 
-    canvas.add(card, badge, headerText, taskGroup);
+    canvas.add(card, badge, headerText, taskBg, taskText);
   });
 
   canvas.renderAll();

@@ -470,10 +470,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     });
     canvas.on('text:selection:changed', updateSelectionProps);
 
-    // Double-click to enter editing on text or group text (e.g. Sticky Notes or Stickers)
+    // Double-click to enter editing on text or sticky notes
     canvas.on('mouse:dblclick', (opt: any) => {
       const target = opt.target;
       if (!target) return;
+
+      // Auto-switch to select tool so pencil/brush/shape doesn't interrupt text editing
+      if (activeToolRef.current !== 'select' && onToolChange) {
+        onToolChange('select');
+      }
+
       let textObj: Textbox | IText | null = null;
       if (target instanceof Textbox || target.type === 'textbox' || target instanceof IText || target.type === 'i-text') {
         textObj = target as Textbox | IText;
@@ -489,13 +495,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       if (textObj && typeof textObj.enterEditing === 'function') {
-        if (onToolChange) onToolChange('select');
-        try {
-          textObj.enterEditing(opt.e);
-          textObj.selectAll();
-          canvas.requestRenderAll();
-        } catch (err) {
-          console.warn('Error on dblclick enterEditing:', err);
+        if (!textObj.isEditing) {
+          try {
+            canvas.setActiveObject(textObj);
+            textObj.enterEditing(opt.e);
+            canvas.requestRenderAll();
+          } catch (err) {
+            console.warn('Error on dblclick enterEditing:', err);
+          }
         }
       }
     });
@@ -693,6 +700,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       // If user clicked on an existing object or control handle, and not erasing, let Fabric handle selection/transformation
       if (opt.target && activeTool !== 'eraser') {
+        if (
+          opt.target instanceof Textbox ||
+          opt.target.type === 'textbox' ||
+          opt.target instanceof IText ||
+          opt.target.type === 'i-text'
+        ) {
+          if (activeToolRef.current !== 'select' && onToolChange) {
+            onToolChange('select');
+          }
+        }
         return;
       }
 
