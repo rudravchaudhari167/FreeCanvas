@@ -1069,6 +1069,12 @@ export function App() {
         }
       }
 
+      // Reset viewport and zoom so template loads cleanly and prominently
+      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+      setZoom(1);
+      canvas.discardActiveObject();
+      canvas.backgroundColor = '#FAF6EE';
+
       // Configure clean paper background for structured template
       setBackgroundColor('#FAF6EE');
       setGridType('dots');

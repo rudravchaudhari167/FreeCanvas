@@ -9,26 +9,220 @@ import {
 } from 'fabric';
 
 /**
- * Creates a Weekly Planner template across Monday - Sunday with editable task lists
+ * Standard UI Layout Helpers ensuring exact 'left', 'top' positioning in Fabric 7
  */
-export function createWeeklyPlanner(canvas: FabricCanvas): void {
-  const startX = 60;
-  const startY = 60;
-  const colWidth = 150;
-  const colGap = 16;
-  const cardHeight = 540;
-
-  // Header Title
-  const title = new Textbox('Weekly Schedule & Study Planner', {
-    left: startX,
-    top: startY,
-    width: 600,
+function createTitle(text: string, left: number, top: number, width = 700): Textbox {
+  return new Textbox(text, {
+    left,
+    top,
+    width,
     fontSize: 26,
     fontFamily: 'Plus Jakarta Sans',
     fontWeight: 'bold',
-    fill: '#30312D'
+    fill: '#30312D',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
   });
-  canvas.add(title);
+}
+
+function createSubtitle(text: string, left: number, top: number, width = 850): Textbox {
+  return new Textbox(text, {
+    left,
+    top,
+    width,
+    fontSize: 13,
+    fontFamily: 'Plus Jakarta Sans',
+    fill: '#79766F',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
+  });
+}
+
+function createPanel(
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  fill: string,
+  stroke = '#E2D8CA',
+  rx = 12
+): Rect {
+  return new Rect({
+    left,
+    top,
+    width,
+    height,
+    fill,
+    stroke,
+    strokeWidth: 1.5,
+    rx,
+    ry: rx,
+    originX: 'left',
+    originY: 'top',
+    selectable: false,
+    evented: false
+  });
+}
+
+function createSectionHeader(
+  text: string,
+  left: number,
+  top: number,
+  width: number,
+  color = '#30312D',
+  fontSize = 14
+): Textbox {
+  return new Textbox(text, {
+    left,
+    top,
+    width,
+    fontSize,
+    fontFamily: 'Plus Jakarta Sans',
+    fontWeight: 'bold',
+    fill: color,
+    originX: 'left',
+    originY: 'top',
+    selectable: true
+  });
+}
+
+function createBodyText(
+  text: string,
+  left: number,
+  top: number,
+  width: number,
+  color = '#4A4843',
+  fontSize = 13,
+  lineHeight = 1.35
+): Textbox {
+  return new Textbox(text, {
+    left,
+    top,
+    width,
+    fontSize,
+    fontFamily: 'Plus Jakarta Sans',
+    fill: color,
+    lineHeight,
+    originX: 'left',
+    originY: 'top',
+    selectable: true
+  });
+}
+
+function createGroupedNode(
+  shape: Rect | Polygon | Circle,
+  text: Textbox,
+  left: number,
+  top: number
+): Group {
+  return new Group([shape, text], {
+    left,
+    top,
+    originX: 'left',
+    originY: 'top',
+    subTargetCheck: true,
+    interactive: true
+  });
+}
+
+function createNodeRect(
+  width: number,
+  height: number,
+  fill: string,
+  stroke: string,
+  rx = 8
+): Rect {
+  return new Rect({
+    width,
+    height,
+    fill,
+    stroke,
+    strokeWidth: 2,
+    rx,
+    ry: rx,
+    originX: 'center',
+    originY: 'center'
+  });
+}
+
+function createDiamondShape(
+  width: number,
+  height: number,
+  fill: string,
+  stroke: string
+): Polygon {
+  const w = width;
+  const h = height;
+  return new Polygon([
+    { x: 0, y: -h / 2 },
+    { x: w / 2, y: 0 },
+    { x: 0, y: h / 2 },
+    { x: -w / 2, y: 0 }
+  ], {
+    fill,
+    stroke,
+    strokeWidth: 2,
+    originX: 'center',
+    originY: 'center'
+  });
+}
+
+function createParallelogramShape(
+  width: number,
+  height: number,
+  fill: string,
+  stroke: string,
+  skew = 20
+): Polygon {
+  const w = width;
+  const h = height;
+  return new Polygon([
+    { x: -w / 2 + skew, y: -h / 2 },
+    { x: w / 2, y: -h / 2 },
+    { x: w / 2 - skew, y: h / 2 },
+    { x: -w / 2, y: h / 2 }
+  ], {
+    fill,
+    stroke,
+    strokeWidth: 2,
+    originX: 'center',
+    originY: 'center'
+  });
+}
+
+function createNodeText(
+  textStr: string,
+  width: number,
+  fontSize = 13,
+  color = '#30312D'
+): Textbox {
+  return new Textbox(textStr, {
+    width: Math.max(20, width - 20),
+    fontSize,
+    fontFamily: 'Plus Jakarta Sans',
+    fontWeight: '600',
+    fill: color,
+    textAlign: 'center',
+    originX: 'center',
+    originY: 'center'
+  });
+}
+
+/**
+ * 1. Weekly Schedule & Study Planner template
+ */
+export function createWeeklyPlanner(canvas: FabricCanvas): void {
+  const startX = 60;
+  const startY = 40;
+  const colWidth = 145;
+  const colGap = 14;
+  const cardHeight = 560;
+
+  const title = createTitle('Weekly Schedule & Study Planner', startX, startY, 650);
+  const subtitle = createSubtitle('Plan weekly focus, lectures, assignments, readings, and study habits across Monday – Sunday', startX, startY + 34, 800);
+  canvas.add(title, subtitle);
 
   const days = [
     { name: 'Monday', color: '#FAF0D7' },
@@ -42,60 +236,39 @@ export function createWeeklyPlanner(canvas: FabricCanvas): void {
 
   days.forEach((day, i) => {
     const colX = startX + i * (colWidth + colGap);
-    const colY = startY + 50;
+    const colY = startY + 70;
 
-    // Background Column Card (non-blocking layout guide)
-    const colCard = new Rect({
-      left: colX,
-      top: colY,
-      width: colWidth,
-      height: cardHeight,
-      fill: '#FFFEFA',
-      stroke: '#E8DED2',
-      strokeWidth: 1.5,
-      rx: 12,
-      ry: 12,
-      selectable: false,
-      evented: false
-    });
+    // Background Column Card (non-blocking)
+    const colCard = createPanel(colX, colY, colWidth, cardHeight, '#FFFEFA', '#E8DED2', 12);
 
     // Column Header Tag (non-blocking)
-    const headerRect = new Rect({
-      left: colX,
-      top: colY,
-      width: colWidth,
-      height: 42,
-      fill: day.color,
-      stroke: '#E8DED2',
-      strokeWidth: 1.5,
-      rx: 12,
-      ry: 12,
-      selectable: false,
-      evented: false
-    });
+    const headerRect = createPanel(colX, colY, colWidth, 42, day.color, '#E8DED2', 12);
 
-    // Day Name
+    // Day Name Text
     const dayText = new Textbox(day.name, {
-      left: colX + 10,
+      left: colX,
       top: colY + 12,
-      width: colWidth - 20,
+      width: colWidth,
       fontSize: 14,
       fontFamily: 'Plus Jakarta Sans',
       fontWeight: 'bold',
       fill: '#30312D',
-      textAlign: 'center'
+      textAlign: 'center',
+      originX: 'left',
+      originY: 'top',
+      selectable: true
     });
 
-    // Task Items Textbox (fully interactive and editable)
-    const taskText = new Textbox('☐ Lecture 1\n\n☐ Assignment\n\n☐ Reading\n\n☐ Study Group', {
-      left: colX + 14,
-      top: colY + 58,
-      width: colWidth - 28,
-      fontSize: 12.5,
-      fontFamily: 'Plus Jakarta Sans',
-      fill: '#4A4843',
-      lineHeight: 1.4
-    });
+    // Task Items Textbox (editable)
+    const taskText = createBodyText(
+      '☐ Lecture 1\n\n☐ Assignment\n\n☐ Lab Review\n\n☐ Reading Chapter\n\n☐ Problem Set',
+      colX + 12,
+      colY + 56,
+      colWidth - 24,
+      '#4A4843',
+      12.5,
+      1.4
+    );
 
     canvas.add(colCard, headerRect, dayText, taskText);
   });
@@ -104,145 +277,62 @@ export function createWeeklyPlanner(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Cornell Notes template (Cue Column, Main Notes Column, Summary Footer)
+ * 2. Cornell Lecture Notes template (Recall Cues, Main Notes, Summary)
  */
 export function createCornellNotes(canvas: FabricCanvas): void {
-  const startX = 70;
-  const startY = 60;
-  const totalWidth = 1060;
+  const startX = 60;
+  const startY = 40;
+  const totalWidth = 1080;
   const notesHeight = 440;
-  const cueWidth = 300;
+  const cueWidth = 310;
   const mainWidth = totalWidth - cueWidth - 18;
   const summaryHeight = 150;
 
-  // Header Title
-  const title = new Textbox('Lecture / Subject Title', {
-    left: startX,
-    top: startY,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-
-  const metaText = new Textbox('Course: ______________  |  Professor: ______________  |  Date: ______________', {
-    left: startX,
-    top: startY + 38,
-    width: 750,
-    fontSize: 13,
-    fontFamily: 'Plus Jakarta Sans',
-    fill: '#79766F'
-  });
-
+  const title = createTitle('Lecture & Research Cornell Notes', startX, startY, 650);
+  const metaText = createSubtitle('Course: ______________  |  Topic: ______________  |  Date: ______________  |  Professor: ______________', startX, startY + 34, 850);
   canvas.add(title, metaText);
 
-  // Cue Card Background (non-blocking layout panel)
-  const cueCard = new Rect({
-    left: startX,
-    top: startY + 75,
-    width: cueWidth,
-    height: notesHeight,
-    fill: '#FAF5EE',
-    stroke: '#E5DCD0',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
+  const topContentY = startY + 70;
 
-  const cueHeader = new Textbox('Cues & Key Questions', {
-    left: startX + 16,
-    top: startY + 90,
-    width: cueWidth - 32,
-    fontSize: 14,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#5E6547'
-  });
+  // Cue Card Background
+  const cueCard = createPanel(startX, topContentY, cueWidth, notesHeight, '#FAF5EE', '#E5DCD0', 10);
+  const cueHeader = createSectionHeader('Cues, Questions & Formulas', startX + 16, topContentY + 16, cueWidth - 32, '#5E6547', 14);
+  const cueContent = createBodyText(
+    '• What is the main thesis?\n\n• Key formulas or dates\n\n• Potential exam questions\n\n• Essential definitions\n\n• Link to prior chapter',
+    startX + 16,
+    topContentY + 50,
+    cueWidth - 32,
+    '#4A4843',
+    13,
+    1.4
+  );
 
-  // Editable cue content
-  const cueContent = new Textbox('• What is the main thesis?\n\n• Key formulas or dates\n\n• Potential exam questions\n\n• Definitions & terms\n\n• Connections to prior topic', {
-    left: startX + 16,
-    top: startY + 125,
-    width: cueWidth - 32,
-    fontSize: 13,
-    fontFamily: 'Plus Jakarta Sans',
-    fill: '#4A4843',
-    lineHeight: 1.35
-  });
+  // Main Notes Card Background
+  const mainCard = createPanel(startX + cueWidth + 18, topContentY, mainWidth, notesHeight, '#FFFEFA', '#E5DCD0', 10);
+  const mainHeader = createSectionHeader('Main Lecture Notes & Proofs', startX + cueWidth + 36, topContentY + 16, mainWidth - 36, '#30312D', 14);
+  const mainContent = createBodyText(
+    '1. Detailed lecture notes, theorem derivations, and algorithmic proofs go here.\n\n2. Draw diagrams or molecular/flowchart sketches beside steps.\n\n3. Use concise outlines, indentation, and numbered hierarchies.\n\n4. Write down references, citations, and instructor slide numbers.\n\n5. Star (*) key concepts emphasized during class.',
+    startX + cueWidth + 36,
+    topContentY + 50,
+    mainWidth - 52,
+    '#4A4843',
+    13,
+    1.4
+  );
 
-  // Main Notes Card Background (non-blocking layout panel)
-  const mainCard = new Rect({
-    left: startX + cueWidth + 18,
-    top: startY + 75,
-    width: mainWidth,
-    height: notesHeight,
-    fill: '#FFFEFA',
-    stroke: '#E5DCD0',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-
-  const mainHeader = new Textbox('Main Lecture Notes', {
-    left: startX + cueWidth + 36,
-    top: startY + 90,
-    width: mainWidth - 36,
-    fontSize: 14,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-
-  // Editable main lecture notes
-  const mainContent = new Textbox('1. Detailed lecture notes, formulas, and proofs go here.\n\n2. Draw diagrams or chemical/algorithm flowcharts beside steps.\n\n3. Use concise outlines and bulleted hierarchies.\n\n4. Write down references, citations, and slide numbers.\n\n5. Star (*) key concepts emphasized by the instructor.', {
-    left: startX + cueWidth + 36,
-    top: startY + 125,
-    width: mainWidth - 52,
-    fontSize: 13,
-    fontFamily: 'Plus Jakarta Sans',
-    fill: '#4A4843',
-    lineHeight: 1.35
-  });
-
-  // Summary Card Background (non-blocking layout panel)
-  const summaryCard = new Rect({
-    left: startX,
-    top: startY + 75 + notesHeight + 16,
-    width: totalWidth,
-    height: summaryHeight,
-    fill: '#F5EFE5',
-    stroke: '#E5DCD0',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-
-  const summaryHeader = new Textbox('Summary & Review Takeaways', {
-    left: startX + 18,
-    top: startY + 75 + notesHeight + 28,
-    width: totalWidth - 36,
-    fontSize: 14,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#777D5E'
-  });
-
-  const summaryContent = new Textbox('Condense the entire lecture into 2-3 core takeaway sentences. What are the fundamental principles and how do they apply to problem solving?', {
-    left: startX + 18,
-    top: startY + 75 + notesHeight + 58,
-    width: totalWidth - 36,
-    fontSize: 13,
-    fontFamily: 'Plus Jakarta Sans',
-    fill: '#4A4843',
-    lineHeight: 1.4
-  });
+  // Summary Card Background
+  const summaryY = topContentY + notesHeight + 16;
+  const summaryCard = createPanel(startX, summaryY, totalWidth, summaryHeight, '#F5EFE5', '#E5DCD0', 10);
+  const summaryHeader = createSectionHeader('Summary & Core Takeaways (Post-Lecture Review)', startX + 18, summaryY + 14, totalWidth - 36, '#777D5E', 14);
+  const summaryContent = createBodyText(
+    'Condense the entire lecture into 2-3 core takeaway sentences. What are the fundamental principles and how do they apply to problem solving on exams or project implementations?',
+    startX + 18,
+    summaryY + 44,
+    totalWidth - 36,
+    '#4A4843',
+    13,
+    1.45
+  );
 
   canvas.add(
     cueCard, cueHeader, cueContent,
@@ -253,152 +343,117 @@ export function createCornellNotes(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Flowchart & Algorithm Diagram template
+ * 3. Algorithm & Logic Flowchart template
  */
 export function createFlowchart(canvas: FabricCanvas): void {
-  const startX = 120;
-  const startY = 60;
+  const startX = 60;
+  const startY = 40;
 
-  const title = new Textbox('Algorithm & Logic Flowchart', {
-    left: startX,
-    top: startY,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('Algorithm & Logic Flowchart', startX, startY, 650);
+  const subtitle = createSubtitle('Visual procedure diagram: Start, Input, Process, Decision condition, and End terminal', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
 
-  // Helper to create grouped interactive flowchart node
-  const createNode = (shape: any, textStr: string, left: number, top: number) => {
-    const text = new Textbox(textStr, {
-      width: shape.width - 20,
-      left: 10,
-      top: Math.max(10, (shape.height - 30) / 2),
-      fontSize: 13,
-      fontFamily: 'Plus Jakarta Sans',
-      fontWeight: '600',
-      fill: '#30312D',
-      textAlign: 'center'
-    });
-    return new Group([shape, text], {
-      left,
-      top,
-      subTargetCheck: true,
-      interactive: true
-    });
-  };
+  const centerX = 530;
 
-  // Node 1: Start (Terminal Pill)
-  const startPill = new Rect({
-    width: 170,
-    height: 56,
-    fill: '#FAF0D7',
-    stroke: '#777D5E',
-    strokeWidth: 2,
-    rx: 28,
-    ry: 28
-  });
-  const nodeStart = createNode(startPill, 'START', startX + 380, startY + 60);
+  // Node 1: Start Pill at (440, 110) [180x50]
+  const nodeStart = createGroupedNode(
+    createNodeRect(180, 50, '#FAF0D7', '#777D5E', 25),
+    createNodeText('START', 180, 13, '#30312D'),
+    440,
+    110
+  );
 
-  // Node 2: Input / Read Parallelogram
-  const inputPoly = new Polygon([
-    { x: 24, y: 0 },
-    { x: 190, y: 0 },
-    { x: 166, y: 56 },
-    { x: 0, y: 56 }
-  ], {
-    fill: '#EAEEDD',
-    stroke: '#5E6547',
-    strokeWidth: 1.8
-  });
-  const nodeInput = createNode(inputPoly, 'Read Input Data', startX + 370, startY + 160);
+  // Node 2: Input Parallelogram at (440, 190) [180x54]
+  const nodeInput = createGroupedNode(
+    createParallelogramShape(180, 54, '#EAEEDD', '#5E6547', 18),
+    createNodeText('Read Input Data', 180, 12.5, '#30312D'),
+    440,
+    190
+  );
 
-  // Node 3: Process Box
-  const processRect = new Rect({
-    width: 180,
-    height: 60,
-    fill: '#FFFEFA',
-    stroke: '#777D5E',
-    strokeWidth: 2,
-    rx: 8,
-    ry: 8
-  });
-  const nodeProcess = createNode(processRect, 'Execute Computation\n& Validate', startX + 375, startY + 260);
+  // Node 3: Process Box at (440, 274) [180x56]
+  const nodeProcess = createGroupedNode(
+    createNodeRect(180, 56, '#FFFEFA', '#777D5E', 8),
+    createNodeText('Execute Computation\n& Validate State', 180, 12.5, '#30312D'),
+    440,
+    274
+  );
 
-  // Node 4: Decision Diamond
-  const decisionPoly = new Polygon([
-    { x: 95, y: 0 },
-    { x: 190, y: 55 },
-    { x: 95, y: 110 },
-    { x: 0, y: 55 }
-  ], {
-    fill: '#FCEEE7',
-    stroke: '#D99379',
-    strokeWidth: 2
-  });
-  const nodeDecision = createNode(decisionPoly, 'Is Valid / Solved?', startX + 370, startY + 360);
+  // Node 4: Decision Diamond at (430, 360) [200x90]
+  const nodeDecision = createGroupedNode(
+    createDiamondShape(200, 90, '#FCEEE7', '#D99379'),
+    createNodeText('Is Valid / Solved?', 200, 12.5, '#30312D'),
+    430,
+    360
+  );
 
-  // Node 5: Success / Result Process
-  const outputRect = new Rect({
-    width: 170,
-    height: 56,
-    fill: '#EAEEDD',
-    stroke: '#5E6547',
-    strokeWidth: 1.8,
-    rx: 8,
-    ry: 8
-  });
-  const nodeOutput = createNode(outputRect, 'Output Result', startX + 380, startY + 510);
+  // Node 5: Output Box at (440, 490) [180x54]
+  const nodeOutput = createGroupedNode(
+    createNodeRect(180, 54, '#EAEEDD', '#5E6547', 8),
+    createNodeText('Output Final Result', 180, 12.5, '#30312D'),
+    440,
+    490
+  );
 
-  // Node 6: Fallback Loop Step
-  const fallbackRect = new Rect({
-    width: 160,
-    height: 54,
-    fill: '#FAF5EE',
-    stroke: '#D99379',
-    strokeWidth: 1.8,
-    rx: 8,
-    ry: 8
-  });
-  const nodeFallback = createNode(fallbackRect, 'Adjust Parameters\n& Retry', startX + 680, startY + 385);
+  // Node 6: Fallback Loop Step at (710, 377) [180x56]
+  const nodeFallback = createGroupedNode(
+    createNodeRect(180, 56, '#FAF5EE', '#D99379', 8),
+    createNodeText('Adjust Parameters\n& Retry Step', 180, 12.5, '#30312D'),
+    710,
+    377
+  );
 
-  // Node 7: End (Terminal Pill)
-  const endPill = new Rect({
-    width: 170,
-    height: 56,
-    fill: '#FAF0D7',
-    stroke: '#777D5E',
-    strokeWidth: 2,
-    rx: 28,
-    ry: 28
-  });
-  const nodeEnd = createNode(endPill, 'END / RETURN', startX + 380, startY + 610);
+  // Node 7: End Pill at (440, 574) [180x50]
+  const nodeEnd = createGroupedNode(
+    createNodeRect(180, 50, '#FAF0D7', '#777D5E', 25),
+    createNodeText('END / RETURN', 180, 13, '#30312D'),
+    440,
+    574
+  );
 
-  // Connecting Lines & Arrows
+  // Connecting Lines & Labels
   const lines = [
-    // Start -> Input
-    new Line([startX + 465, startY + 116, startX + 465, startY + 160], { stroke: '#777D5E', strokeWidth: 2 }),
-    // Input -> Process
-    new Line([startX + 465, startY + 216, startX + 465, startY + 260], { stroke: '#777D5E', strokeWidth: 2 }),
-    // Process -> Decision
-    new Line([startX + 465, startY + 320, startX + 465, startY + 360], { stroke: '#777D5E', strokeWidth: 2 }),
-    // Decision -> Output (YES)
-    new Line([startX + 465, startY + 470, startX + 465, startY + 510], { stroke: '#5E6547', strokeWidth: 2 }),
-    // Decision -> Fallback (NO)
-    new Line([startX + 560, startY + 415, startX + 680, startY + 415], { stroke: '#D99379', strokeWidth: 2 }),
-    // Fallback back up to Process
-    new Line([startX + 760, startY + 385, startX + 760, startY + 290], { stroke: '#D99379', strokeWidth: 2 }),
-    new Line([startX + 760, startY + 290, startX + 555, startY + 290], { stroke: '#D99379', strokeWidth: 2 }),
-    // Output -> End
-    new Line([startX + 465, startY + 566, startX + 465, startY + 610], { stroke: '#777D5E', strokeWidth: 2 })
+    // Start (bottom 160) -> Input (top 190)
+    new Line([centerX, 160, centerX, 190], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
+    // Input (bottom 244) -> Process (top 274)
+    new Line([centerX, 244, centerX, 274], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
+    // Process (bottom 330) -> Decision (top 360)
+    new Line([centerX, 330, centerX, 360], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
+    // Decision (bottom 450) -> Output (top 490) (YES)
+    new Line([centerX, 450, centerX, 490], { stroke: '#5E6547', strokeWidth: 2, selectable: false }),
+    // Decision (right 630, 405) -> Fallback (left 710, 405) (NO)
+    new Line([630, 405, 710, 405], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
+    // Fallback Loop back to Process: (890, 405) -> (920, 405) -> (920, 302) -> (620, 302)
+    new Line([890, 405, 920, 405], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
+    new Line([920, 405, 920, 302], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
+    new Line([920, 302, 620, 302], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
+    // Output (bottom 544) -> End (top 574)
+    new Line([centerX, 544, centerX, 574], { stroke: '#777D5E', strokeWidth: 2, selectable: false })
   ];
 
-  const yesLabel = new Textbox('YES', { left: startX + 475, top: startY + 480, fontSize: 11, fontWeight: 'bold', fill: '#5E6547' });
-  const noLabel = new Textbox('NO', { left: startX + 580, top: startY + 395, fontSize: 11, fontWeight: 'bold', fill: '#D99379' });
+  const yesLabel = new Textbox('YES', {
+    left: centerX + 10,
+    top: 460,
+    fontSize: 11,
+    fontWeight: 'bold',
+    fill: '#5E6547',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
+  });
 
-  lines.forEach(l => canvas.add(l));
+  const noLabel = new Textbox('NO', {
+    left: 650,
+    top: 386,
+    fontSize: 11,
+    fontWeight: 'bold',
+    fill: '#D99379',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
+  });
+
+  lines.forEach((l) => canvas.add(l));
   canvas.add(yesLabel, noLabel);
   canvas.add(nodeStart, nodeInput, nodeProcess, nodeDecision, nodeOutput, nodeFallback, nodeEnd);
 
@@ -406,190 +461,87 @@ export function createFlowchart(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Lab Report & Scientific Experiment template
+ * 4. Lab Report & Scientific Protocol template
  */
 export function createLabReport(canvas: FabricCanvas): void {
-  const startX = 70;
-  const startY = 60;
-  const colWidth = 515;
+  const startX = 60;
+  const startY = 40;
+  const colWidth = 530;
   const gapX = 24;
+  const totalWidth = colWidth * 2 + gapX;
 
-  const title = new Textbox('Scientific Lab Report & Experiment Protocol', {
-    left: startX,
-    top: startY,
-    width: 700,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-
-  const metaText = new Textbox('Course: ______________  |  Experiment #: ______  |  Lab Partner: ______________  |  Date: ______________', {
-    left: startX,
-    top: startY + 38,
-    width: 850,
-    fontSize: 13,
-    fontFamily: 'Plus Jakarta Sans',
-    fill: '#79766F'
-  });
-
+  const title = createTitle('Scientific Lab Report & Experiment Protocol', startX, startY, 700);
+  const metaText = createSubtitle('Course: ______________  |  Experiment #: ______  |  Lab Partner: ______________  |  Date: ______________', startX, startY + 34, 850);
   canvas.add(title, metaText);
 
+  const topY = startY + 70;
+
   // Section 1: Objective & Hypothesis
-  const sec1Card = new Rect({
-    left: startX,
-    top: startY + 75,
-    width: colWidth,
-    height: 180,
-    fill: '#FAF5EE',
-    stroke: '#E2D8CA',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-  const sec1Header = new Textbox('1. Objective & Hypothesis', {
-    left: startX + 16,
-    top: startY + 90,
-    width: colWidth - 32,
-    fontSize: 14,
-    fontWeight: 'bold',
-    fill: '#5E6547'
-  });
-  const sec1Body = new Textbox('• Objective: Determine the rate constant and reaction kinetics.\n• Hypothesis: If the temperature increases by 10°C, the reaction rate will double as predicted by the Arrhenius equation.', {
-    left: startX + 16,
-    top: startY + 120,
-    width: colWidth - 32,
-    fontSize: 12.5,
-    fill: '#4A4843',
-    lineHeight: 1.35
-  });
+  const sec1Card = createPanel(startX, topY, colWidth, 180, '#FAF5EE', '#E2D8CA', 10);
+  const sec1Header = createSectionHeader('1. Objective & Hypothesis', startX + 16, topY + 16, colWidth - 32, '#5E6547');
+  const sec1Body = createBodyText(
+    '• Objective: Determine the reaction rate constant and kinetics order.\n\n• Hypothesis: If the temperature increases by 10°C, the reaction rate will double as predicted by the Arrhenius equation model.',
+    startX + 16,
+    topY + 46,
+    colWidth - 32,
+    '#4A4843',
+    12.5,
+    1.35
+  );
 
   // Section 2: Materials & Apparatus
-  const sec2Card = new Rect({
-    left: startX + colWidth + gapX,
-    top: startY + 75,
-    width: colWidth,
-    height: 180,
-    fill: '#FFFEFA',
-    stroke: '#E2D8CA',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-  const sec2Header = new Textbox('2. Apparatus & Chemical Reagents', {
-    left: startX + colWidth + gapX + 16,
-    top: startY + 90,
-    width: colWidth - 32,
-    fontSize: 14,
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  const sec2Body = new Textbox('• 50mL Burette & Magnetic Stirrer\n• 0.1M Sodium Hydroxide (NaOH)\n• Spectrophotometer (λ = 520nm)\n• Thermocouple Probe & Stopwatch', {
-    left: startX + colWidth + gapX + 16,
-    top: startY + 120,
-    width: colWidth - 32,
-    fontSize: 12.5,
-    fill: '#4A4843',
-    lineHeight: 1.35
-  });
+  const sec2Card = createPanel(startX + colWidth + gapX, topY, colWidth, 180, '#FFFEFA', '#E2D8CA', 10);
+  const sec2Header = createSectionHeader('2. Apparatus & Chemical Reagents', startX + colWidth + gapX + 16, topY + 16, colWidth - 32, '#30312D');
+  const sec2Body = createBodyText(
+    '• 50mL Precision Burette & Magnetic Stirrer\n• 0.1M Sodium Hydroxide (NaOH) & 0.1M HCl\n• Spectrophotometer (λ = 520nm) & Cuvettes\n• Digital Thermocouple Probe & Stopwatch',
+    startX + colWidth + gapX + 16,
+    topY + 46,
+    colWidth - 32,
+    '#4A4843',
+    12.5,
+    1.35
+  );
 
   // Section 3: Experimental Procedure
-  const sec3Card = new Rect({
-    left: startX,
-    top: startY + 275,
-    width: colWidth,
-    height: 200,
-    fill: '#FFFEFA',
-    stroke: '#E2D8CA',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-  const sec3Header = new Textbox('3. Methodology & Procedure Steps', {
-    left: startX + 16,
-    top: startY + 290,
-    width: colWidth - 32,
-    fontSize: 14,
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  const sec3Body = new Textbox('Step 1: Calibrate probe with standard buffer solution (pH 7.0).\nStep 2: Add 25mL reagent into water bath at 25°C.\nStep 3: Initiate reaction and record absorbance every 30 seconds.\nStep 4: Repeat 3 trials across 35°C, 45°C, and 55°C.', {
-    left: startX + 16,
-    top: startY + 320,
-    width: colWidth - 32,
-    fontSize: 12.5,
-    fill: '#4A4843',
-    lineHeight: 1.35
-  });
+  const midY = topY + 196;
+  const sec3Card = createPanel(startX, midY, colWidth, 196, '#FFFEFA', '#E2D8CA', 10);
+  const sec3Header = createSectionHeader('3. Methodology & Procedure Steps', startX + 16, midY + 16, colWidth - 32, '#30312D');
+  const sec3Body = createBodyText(
+    'Step 1: Calibrate pH probe with standard buffer solution (pH 7.0).\nStep 2: Add 25mL reactant into constant water bath at 25°C.\nStep 3: Initiate reaction and record optical density every 30 seconds.\nStep 4: Repeat 3 trials across 35°C, 45°C, and 55°C.',
+    startX + 16,
+    midY + 46,
+    colWidth - 32,
+    '#4A4843',
+    12.5,
+    1.35
+  );
 
   // Section 4: Data & Observation Table
-  const sec4Card = new Rect({
-    left: startX + colWidth + gapX,
-    top: startY + 275,
-    width: colWidth,
-    height: 200,
-    fill: '#FAF5EE',
-    stroke: '#E2D8CA',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-  const sec4Header = new Textbox('4. Data & Observation Table', {
-    left: startX + colWidth + gapX + 16,
-    top: startY + 290,
-    width: colWidth - 32,
-    fontSize: 14,
-    fontWeight: 'bold',
-    fill: '#5E6547'
-  });
-  const sec4Body = new Textbox('Trial | Temp (°C) | Initial Rate (M/s) | Final Abs\n----------------------------------------------------\n  1   |   25.0    |    1.42 × 10⁻³    |   0.824\n  2   |   35.2    |    2.86 × 10⁻³    |   0.819\n  3   |   45.1    |    5.71 × 10⁻³    |   0.828', {
-    left: startX + colWidth + gapX + 16,
-    top: startY + 320,
-    width: colWidth - 32,
-    fontSize: 12,
-    fontFamily: 'monospace',
-    fill: '#4A4843',
-    lineHeight: 1.4
-  });
+  const sec4Card = createPanel(startX + colWidth + gapX, midY, colWidth, 196, '#FAF5EE', '#E2D8CA', 10);
+  const sec4Header = createSectionHeader('4. Data & Observation Table', startX + colWidth + gapX + 16, midY + 16, colWidth - 32, '#5E6547');
+  const sec4Body = createBodyText(
+    'Trial | Temp (°C) | Initial Rate (M/s) | Final Abs\n----------------------------------------------------\n  1   |   25.0    |    1.42 × 10⁻³    |   0.824\n  2   |   35.2    |    2.86 × 10⁻³    |   0.819\n  3   |   45.1    |    5.71 × 10⁻³    |   0.828',
+    startX + colWidth + gapX + 16,
+    midY + 46,
+    colWidth - 32,
+    '#4A4843',
+    12,
+    1.35
+  );
 
   // Section 5: Conclusion & Discussion
-  const sec5Card = new Rect({
-    left: startX,
-    top: startY + 495,
-    width: colWidth * 2 + gapX,
-    height: 150,
-    fill: '#FAF0D7',
-    stroke: '#E2D8CA',
-    strokeWidth: 1.5,
-    rx: 10,
-    ry: 10,
-    selectable: false,
-    evented: false
-  });
-  const sec5Header = new Textbox('5. Discussion, Error Analysis & Conclusion', {
-    left: startX + 16,
-    top: startY + 510,
-    width: colWidth * 2,
-    fontSize: 14,
-    fontWeight: 'bold',
-    fill: '#5E6547'
-  });
-  const sec5Body = new Textbox('• Result: Activation energy (Ea) was calculated to be 52.4 kJ/mol, matching theoretical values within 3.2% error.\n• Sources of Error: Heat loss to surroundings during transfer; minor meniscus reading parallax in trial 2.\n• Conclusion: The experimental rate law confirmed first-order dependence on reactant concentration.', {
-    left: startX + 16,
-    top: startY + 538,
-    width: colWidth * 2 - 32,
-    fontSize: 12.5,
-    fill: '#4A4843',
-    lineHeight: 1.35
-  });
+  const bottomY = midY + 212;
+  const sec5Card = createPanel(startX, bottomY, totalWidth, 150, '#FAF0D7', '#E2D8CA', 10);
+  const sec5Header = createSectionHeader('5. Discussion, Error Analysis & Conclusion', startX + 16, bottomY + 16, totalWidth - 32, '#5E6547');
+  const sec5Body = createBodyText(
+    '• Result: Activation energy (Ea) was calculated to be 52.4 kJ/mol, matching theoretical values within 3.2% error margin.\n• Sources of Error: Heat loss to surroundings during liquid transfer; minor meniscus reading parallax in trial 2.\n• Conclusion: The experimental rate law confirmed first-order dependence on reactant concentration.',
+    startX + 16,
+    bottomY + 46,
+    totalWidth - 32,
+    '#4A4843',
+    12.5,
+    1.35
+  );
 
   canvas.add(
     sec1Card, sec1Header, sec1Body,
@@ -602,113 +554,79 @@ export function createLabReport(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates SWOT Analysis Matrix template
+ * 5. SWOT Analysis Matrix template
  */
 export function createSwotMatrix(canvas: FabricCanvas): void {
-  const startX = 100;
-  const startY = 60;
-  const quadWidth = 480;
-  const quadHeight = 270;
-  const gap = 20;
+  const startX = 60;
+  const startY = 40;
+  const quadWidth = 530;
+  const quadHeight = 260;
+  const gap = 24;
 
-  const title = new Textbox('SWOT Strategic Analysis Matrix', {
-    left: startX,
-    top: startY,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('SWOT Strategic Analysis Matrix', startX, startY, 650);
+  const subtitle = createSubtitle('Comprehensive 4-quadrant strategic matrix for business cases, project evaluations, and academic research', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
+
+  const topContentY = startY + 70;
 
   const quadrants = [
     {
       title: 'STRENGTHS (Internal)',
-      sub: 'Helpful attributes of the organization/project',
-      items: '• Proprietary technology & IP assets\n• High customer retention & brand loyalty\n• Experienced cross-functional team\n• Lean operational cost structure',
+      sub: 'Helpful internal attributes of the project / organization',
+      items: '• Proprietary technology & algorithmic IP assets\n• High customer retention & recognized brand reputation\n• Experienced cross-functional research team\n• Lean operational and infrastructure cost structure',
       color: '#EAEEDD',
       borderColor: '#777D5E',
       headerColor: '#5E6547',
       x: startX,
-      y: startY + 55
+      y: topContentY
     },
     {
       title: 'WEAKNESSES (Internal)',
-      sub: 'Harmful attributes or internal limitations',
-      items: '• Limited marketing budget & brand reach\n• Dependency on single supplier channel\n• Gaps in mobile user experience\n• Scalability bottlenecks during peak load',
+      sub: 'Internal limitations or resource vulnerabilities',
+      items: '• Limited initial marketing budget & brand awareness\n• Dependency on a single cloud supplier channel\n• Gaps in mobile responsive user experience\n• Scalability bottlenecks during peak transaction load',
       color: '#FCEEE7',
       borderColor: '#D99379',
       headerColor: '#B55A43',
       x: startX + quadWidth + gap,
-      y: startY + 55
+      y: topContentY
     },
     {
       title: 'OPPORTUNITIES (External)',
-      sub: 'Favorable external market trends to capture',
-      items: '• Emerging expansion in international markets\n• Shifting consumer demand towards sustainability\n• Strategic partnership with key ecosystem players\n• AI-driven workflow automation integrations',
+      sub: 'Favorable external market trends & growth vectors',
+      items: '• Emerging expansion in underserved international markets\n• Shifting user demand towards privacy and sustainability\n• Strategic partnerships with universities and ecosystems\n• AI-driven workflow automation integrations',
       color: '#E4EFF0',
       borderColor: '#5B8C94',
       headerColor: '#366970',
       x: startX,
-      y: startY + 55 + quadHeight + gap
+      y: topContentY + quadHeight + gap
     },
     {
       title: 'THREATS (External)',
-      sub: 'External risks and competitive obstacles',
-      items: '• Aggressive pricing from well-funded competitors\n• Impending regulatory compliance changes\n• Economic fluctuations impacting customer spend\n• Rapidly shifting technology standards',
+      sub: 'External risks, competitors, and regulatory hurdles',
+      items: '• Aggressive price cutting from well-funded competitors\n• Impending data compliance and regulatory policy changes\n• Macroeconomic fluctuations impacting discretionary budgets\n• Rapidly shifting technology standards and framework shifts',
       color: '#FAF0D7',
       borderColor: '#C7A35F',
       headerColor: '#8C6C26',
       x: startX + quadWidth + gap,
-      y: startY + 55 + quadHeight + gap
+      y: topContentY + quadHeight + gap
     }
   ];
 
   quadrants.forEach((q) => {
-    // Quadrant Card Background (non-blocking)
-    const card = new Rect({
-      left: q.x,
-      top: q.y,
-      width: quadWidth,
-      height: quadHeight,
-      fill: q.color,
-      stroke: q.borderColor,
-      strokeWidth: 2,
-      rx: 14,
-      ry: 14,
-      selectable: false,
-      evented: false
-    });
-
-    // Quadrant Title
-    const hText = new Textbox(q.title, {
-      left: q.x + 20,
-      top: q.y + 18,
-      width: quadWidth - 40,
-      fontSize: 15,
-      fontWeight: 'bold',
-      fill: q.headerColor
-    });
-
+    const card = createPanel(q.x, q.y, quadWidth, quadHeight, q.color, q.borderColor, 14);
+    const hText = createSectionHeader(q.title, q.x + 20, q.y + 16, quadWidth - 40, q.headerColor, 15);
     const subText = new Textbox(q.sub, {
       left: q.x + 20,
-      top: q.y + 40,
+      top: q.y + 38,
       width: quadWidth - 40,
       fontSize: 11.5,
       fontStyle: 'italic',
-      fill: '#79766F'
+      fill: '#79766F',
+      originX: 'left',
+      originY: 'top',
+      selectable: true
     });
-
-    // Editable Items
-    const bodyText = new Textbox(q.items, {
-      left: q.x + 20,
-      top: q.y + 74,
-      width: quadWidth - 40,
-      fontSize: 13,
-      fill: '#30312D',
-      lineHeight: 1.4
-    });
+    const bodyText = createBodyText(q.items, q.x + 20, q.y + 68, quadWidth - 40, '#30312D', 13, 1.4);
 
     canvas.add(card, hText, subText, bodyText);
   });
@@ -717,44 +635,43 @@ export function createSwotMatrix(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Venn Diagram Comparison template
+ * 6. Venn Diagram Comparison template
  */
 export function createVennDiagram(canvas: FabricCanvas): void {
-  const startX = 120;
-  const startY = 60;
+  const startX = 60;
+  const startY = 40;
   const radius = 210;
 
-  const title = new Textbox('Venn Diagram Comparative Analysis', {
-    left: startX,
-    top: startY,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('Venn Diagram Comparative Analysis', startX, startY, 650);
+  const subtitle = createSubtitle('Two-set comparative analysis comparing Concept A, Concept B, and shared intersecting principles', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
+
+  const circleTop = startY + 70;
 
   // Left Circle A (translucent)
   const circleA = new Circle({
-    left: startX + 100,
-    top: startY + 80,
+    left: 160,
+    top: circleTop,
     radius,
     fill: 'rgba(119, 125, 94, 0.22)',
     stroke: '#777D5E',
     strokeWidth: 2.5,
+    originX: 'left',
+    originY: 'top',
     selectable: false,
     evented: false
   });
 
   // Right Circle B (translucent)
   const circleB = new Circle({
-    left: startX + 380,
-    top: startY + 80,
+    left: 450,
+    top: circleTop,
     radius,
     fill: 'rgba(217, 147, 121, 0.22)',
     stroke: '#D99379',
     strokeWidth: 2.5,
+    originX: 'left',
+    originY: 'top',
     selectable: false,
     evented: false
   });
@@ -763,109 +680,109 @@ export function createVennDiagram(canvas: FabricCanvas): void {
 
   // Circle A Header & Notes
   const titleA = new Textbox('Concept / Theory A', {
-    left: startX + 140,
-    top: startY + 110,
-    width: 200,
+    left: 180,
+    top: circleTop + 40,
+    width: 220,
     fontSize: 16,
     fontWeight: 'bold',
     fill: '#5E6547',
-    textAlign: 'center'
+    textAlign: 'center',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
   });
-  const notesA = new Textbox('• Unique properties of A\n• Specific methodology\n• Advantages of Model A\n• Historical context', {
-    left: startX + 130,
-    top: startY + 160,
-    width: 210,
-    fontSize: 13,
-    fill: '#30312D',
-    lineHeight: 1.4
-  });
+  const notesA = createBodyText(
+    '• Unique properties of A\n\n• Specific methodology\n\n• Advantages of Model A\n\n• Historical context',
+    180,
+    circleTop + 85,
+    220,
+    '#30312D',
+    13,
+    1.4
+  );
 
   // Shared Intersection Notes
   const titleShared = new Textbox('Shared Commonalities', {
-    left: startX + 390,
-    top: startY + 140,
-    width: 180,
-    fontSize: 14,
+    left: 455,
+    top: circleTop + 70,
+    width: 120,
+    fontSize: 13.5,
     fontWeight: 'bold',
     fill: '#30312D',
-    textAlign: 'center'
+    textAlign: 'center',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
   });
-  const notesShared = new Textbox('★ Core overlapping principles\n★ Common assumptions\n★ Shared mathematical basis', {
-    left: startX + 375,
-    top: startY + 190,
-    width: 190,
-    fontSize: 12.5,
+  const notesShared = new Textbox('★ Core overlapping principles\n\n★ Common assumptions\n\n★ Shared mathematical basis', {
+    left: 455,
+    top: circleTop + 115,
+    width: 120,
+    fontSize: 12,
     fill: '#30312D',
-    lineHeight: 1.4,
-    textAlign: 'center'
+    lineHeight: 1.35,
+    textAlign: 'center',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
   });
 
   // Circle B Header & Notes
   const titleB = new Textbox('Concept / Theory B', {
-    left: startX + 620,
-    top: startY + 110,
-    width: 200,
+    left: 630,
+    top: circleTop + 40,
+    width: 220,
     fontSize: 16,
     fontWeight: 'bold',
     fill: '#B55A43',
-    textAlign: 'center'
+    textAlign: 'center',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
   });
-  const notesB = new Textbox('• Unique properties of B\n• Specific methodology\n• Advantages of Model B\n• Modern adaptations', {
-    left: startX + 620,
-    top: startY + 160,
-    width: 210,
-    fontSize: 13,
-    fill: '#30312D',
-    lineHeight: 1.4
-  });
+  const notesB = createBodyText(
+    '• Unique properties of B\n\n• Specific methodology\n\n• Advantages of Model B\n\n• Modern adaptations',
+    630,
+    circleTop + 85,
+    220,
+    '#30312D',
+    13,
+    1.4
+  );
 
   canvas.add(titleA, notesA, titleShared, notesShared, titleB, notesB);
   canvas.renderAll();
 }
 
 /**
- * Creates Project Roadmap & Semester Study Schedule template
+ * 7. Semester Study & Project Roadmap template
  */
 export function createProjectRoadmap(canvas: FabricCanvas): void {
-  const startX = 80;
-  const startY = 60;
-  const totalWidth = 1040;
+  const startX = 60;
+  const startY = 40;
+  const totalWidth = 1080;
   const phaseHeight = 110;
-  const gapY = 20;
+  const gapY = 16;
 
-  const title = new Textbox('Project Roadmap & Semester Study Milestones', {
-    left: startX,
-    top: startY,
-    width: 700,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('Project Roadmap & Semester Study Milestones', startX, startY, 700);
+  const subtitle = createSubtitle('Timeline and milestone tracker for semester thesis, software engineering sprints, or capstone deliverables', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
+
+  const topContentY = startY + 70;
 
   // Timeline Header Bar (Weeks 1-12)
-  const timeBar = new Rect({
-    left: startX,
-    top: startY + 50,
-    width: totalWidth,
-    height: 38,
-    fill: '#F5EFE5',
-    stroke: '#E2D8CA',
-    strokeWidth: 1.5,
-    rx: 8,
-    ry: 8,
-    selectable: false,
-    evented: false
-  });
+  const timeBar = createPanel(startX, topContentY, totalWidth, 38, '#F5EFE5', '#E2D8CA', 8);
   const timeText = new Textbox('WEEKS 1 – 3: Initiation     |     WEEKS 4 – 7: Execution     |     WEEKS 8 – 10: Testing     |     WEEKS 11 – 12: Defense', {
-    left: startX + 16,
-    top: startY + 62,
-    width: totalWidth - 32,
+    left: startX,
+    top: topContentY + 11,
+    width: totalWidth,
     fontSize: 12,
     fontWeight: 'bold',
     fill: '#79766F',
-    textAlign: 'center'
+    textAlign: 'center',
+    originX: 'left',
+    originY: 'top',
+    selectable: true
   });
   canvas.add(timeBar, timeText);
 
@@ -873,7 +790,7 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
     {
       title: 'Phase 1: Topic Selection & Literature Review',
       dates: 'Weeks 1 – 3 | Goal: Finalize Thesis Scope',
-      tasks: '• Survey 25+ academic research papers  |  • Submit draft research proposal  |  • Obtain faculty advisor approval',
+      tasks: '• Survey 25+ academic research papers  |  • Submit draft research proposal  |  • Obtain faculty advisor sign-off',
       color: '#FAF0D7',
       borderColor: '#D4BA82',
       badgeColor: '#5E6547'
@@ -905,31 +822,10 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
   ];
 
   phases.forEach((p, idx) => {
-    const y = startY + 105 + idx * (phaseHeight + gapY);
+    const y = topContentY + 50 + idx * (phaseHeight + gapY);
 
-    const card = new Rect({
-      left: startX,
-      top: y,
-      width: totalWidth,
-      height: phaseHeight,
-      fill: p.color,
-      stroke: p.borderColor,
-      strokeWidth: 1.5,
-      rx: 12,
-      ry: 12,
-      selectable: false,
-      evented: false
-    });
-
-    const hText = new Textbox(p.title, {
-      left: startX + 20,
-      top: y + 16,
-      width: 600,
-      fontSize: 15,
-      fontWeight: 'bold',
-      fill: p.badgeColor
-    });
-
+    const card = createPanel(startX, y, totalWidth, phaseHeight, p.color, p.borderColor, 12);
+    const hText = createSectionHeader(p.title, startX + 20, y + 16, 600, p.badgeColor, 15);
     const dText = new Textbox(p.dates, {
       left: startX + totalWidth - 320,
       top: y + 16,
@@ -937,16 +833,12 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
       fontSize: 12,
       fontStyle: 'italic',
       fill: '#79766F',
-      textAlign: 'right'
+      textAlign: 'right',
+      originX: 'left',
+      originY: 'top',
+      selectable: true
     });
-
-    const tasks = new Textbox(p.tasks, {
-      left: startX + 20,
-      top: y + 54,
-      width: totalWidth - 40,
-      fontSize: 13,
-      fill: '#30312D'
-    });
+    const tasks = createBodyText(p.tasks, startX + 20, y + 54, totalWidth - 40, '#30312D', 13);
 
     canvas.add(card, hText, dText, tasks);
   });
@@ -955,91 +847,54 @@ export function createProjectRoadmap(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates College Concept Map / Entity Diagram template
+ * 8. Concept Map & Entity Diagram template
  */
 export function createConceptMap(canvas: FabricCanvas): void {
-  const centerX = 560;
-  const centerY = 340;
+  const startX = 60;
+  const startY = 40;
 
-  const title = new Textbox('Concept Map & Theoretical Relationships', {
-    left: 80,
-    top: 60,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('Concept Map & Theoretical Relationships', startX, startY, 650);
+  const subtitle = createSubtitle('Hierarchical knowledge graph linking core principle to axioms, methodologies, applications, and limitations', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
 
-  // Center Core Theory Node
-  const coreRect = new Rect({
-    width: 240,
-    height: 90,
-    fill: '#FAF0D7',
-    stroke: '#777D5E',
-    strokeWidth: 2.5,
-    rx: 20,
-    ry: 20
-  });
-  const coreText = new Textbox('CORE THEORY\nPrincipal Phenomenon', {
-    width: 220,
-    left: 10,
-    top: 22,
-    fontSize: 16,
-    fontWeight: 'bold',
-    fill: '#30312D',
-    textAlign: 'center'
-  });
-  const coreGroup = new Group([coreRect, coreText], {
-    left: centerX - 120,
-    top: centerY - 45,
-    subTargetCheck: true,
-    interactive: true
-  });
-  canvas.add(coreGroup);
+  const centerX = 580;
+  const centerY = 380;
 
-  // 4 Satellite Theoretical Domains
+  // Connector lines added first (so they sit behind nodes)
   const satellites = [
-    { title: 'Domain 1: Axioms & Laws', sub: '• Foundation principles\n• Fundamental equations', x: centerX - 380, y: centerY - 180, color: '#EAEEDD', border: '#777D5E' },
-    { title: 'Domain 2: Methodology', sub: '• Empirical experiments\n• Quantitative tests', x: centerX + 180, y: centerY - 180, color: '#E4EFF0', border: '#5B8C94' },
-    { title: 'Domain 3: Applications', sub: '• Real-world systems\n• Engineering practice', x: centerX - 380, y: centerY + 130, color: '#FCEEE7', border: '#D99379' },
-    { title: 'Domain 4: Limitations', sub: '• Boundary conditions\n• Known anomalies', x: centerX + 180, y: centerY + 130, color: '#FAF0D7', border: '#C7A35F' }
+    { title: 'Domain 1: Axioms & Laws', sub: '• Foundation principles\n• Fundamental equations', x: 120, y: 150, color: '#EAEEDD', border: '#777D5E' },
+    { title: 'Domain 2: Methodology', sub: '• Empirical experiments\n• Quantitative tests', x: 820, y: 150, color: '#E4EFF0', border: '#5B8C94' },
+    { title: 'Domain 3: Applications', sub: '• Real-world systems\n• Engineering practice', x: 120, y: 510, color: '#FCEEE7', border: '#D99379' },
+    { title: 'Domain 4: Limitations', sub: '• Boundary conditions\n• Known anomalies', x: 820, y: 510, color: '#FAF0D7', border: '#C7A35F' }
   ];
 
   satellites.forEach((s) => {
-    // Connector line with dash
-    const line = new Line([centerX, centerY, s.x + 100, s.y + 40], {
+    const line = new Line([centerX, centerY, s.x + 110, s.y + 45], {
       stroke: '#B8AFA2',
       strokeWidth: 2,
-      strokeDashArray: [5, 5]
+      strokeDashArray: [5, 5],
+      selectable: false
     });
     canvas.add(line);
+  });
 
-    const sRect = new Rect({
-      width: 210,
-      height: 86,
-      fill: s.color,
-      stroke: s.border,
-      strokeWidth: 2,
-      rx: 14,
-      ry: 14
-    });
-    const sText = new Textbox(`${s.title}\n${s.sub}`, {
-      width: 190,
-      left: 10,
-      top: 14,
-      fontSize: 12.5,
-      fontWeight: '600',
-      fill: '#30312D',
-      lineHeight: 1.35
-    });
-    const sGroup = new Group([sRect, sText], {
-      left: s.x,
-      top: s.y,
-      subTargetCheck: true,
-      interactive: true
-    });
+  // Center Core Theory Node at (460, 335) [240x90]
+  const coreGroup = createGroupedNode(
+    createNodeRect(240, 90, '#FAF0D7', '#777D5E', 20),
+    createNodeText('CORE THEORY\nPrincipal Phenomenon', 240, 15, '#30312D'),
+    460,
+    335
+  );
+  canvas.add(coreGroup);
+
+  // 4 Satellite Theoretical Domains
+  satellites.forEach((s) => {
+    const sGroup = createGroupedNode(
+      createNodeRect(220, 90, s.color, s.border, 14),
+      createNodeText(`${s.title}\n${s.sub}`, 220, 12.5, '#30312D'),
+      s.x,
+      s.y
+    );
     canvas.add(sGroup);
   });
 
@@ -1047,85 +902,54 @@ export function createConceptMap(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Mind Map template with central concept and 4 branch clusters
+ * 9. Mind Map & Brainstorm template
  */
 export function createMindMap(canvas: FabricCanvas): void {
-  const centerX = 560;
-  const centerY = 340;
+  const startX = 60;
+  const startY = 40;
 
-  // Central Bubble
-  const centerRect = new Rect({
-    width: 220,
-    height: 90,
-    fill: '#FAF0D7',
-    stroke: '#777D5E',
-    strokeWidth: 2.5,
-    rx: 24,
-    ry: 24
-  });
+  const title = createTitle('Mind Map & Brainstorm Ideation', startX, startY, 650);
+  const subtitle = createSubtitle('Explore branching ideas, themes, and sub-points around a central core concept', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
 
-  const centerText = new Textbox('Central Idea / Thesis', {
-    width: 200,
-    left: 10,
-    top: 30,
-    fontSize: 16,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D',
-    textAlign: 'center'
-  });
-
-  const centerGroup = new Group([centerRect, centerText], {
-    left: centerX - 110,
-    top: centerY - 45,
-    subTargetCheck: true,
-    interactive: true
-  });
-  canvas.add(centerGroup);
+  const centerX = 580;
+  const centerY = 380;
 
   // 4 Branch Nodes
   const branches = [
-    { label: 'Theme 1: Research', x: centerX - 360, y: centerY - 170, color: '#EAEEDD', borderColor: '#777D5E' },
-    { label: 'Theme 2: Design', x: centerX + 180, y: centerY - 170, color: '#FCEEE7', borderColor: '#D99379' },
-    { label: 'Theme 3: Strategy', x: centerX - 360, y: centerY + 120, color: '#FCEEE7', borderColor: '#D99379' },
-    { label: 'Theme 4: Execution', x: centerX + 180, y: centerY + 120, color: '#EAEEDD', borderColor: '#777D5E' }
+    { label: 'Theme 1: Research', sub: '• Literature survey\n• Field interviews', x: 140, y: 160, color: '#EAEEDD', borderColor: '#777D5E' },
+    { label: 'Theme 2: Design', sub: '• User journey maps\n• Wireframe models', x: 810, y: 160, color: '#FCEEE7', borderColor: '#D99379' },
+    { label: 'Theme 3: Strategy', sub: '• Value proposition\n• Market validation', x: 140, y: 500, color: '#FCEEE7', borderColor: '#D99379' },
+    { label: 'Theme 4: Execution', sub: '• Milestones plan\n• Deliverables audit', x: 810, y: 500, color: '#EAEEDD', borderColor: '#777D5E' }
   ];
 
+  // Connector lines added first (behind bubbles)
   branches.forEach((b) => {
-    // Connector Line
-    const line = new Line([centerX, centerY, b.x + 90, b.y + 40], {
+    const line = new Line([centerX, centerY, b.x + 105, b.y + 43], {
       stroke: '#C2B8A8',
       strokeWidth: 2,
-      strokeDashArray: [4, 4]
+      strokeDashArray: [4, 4],
+      selectable: false
     });
     canvas.add(line);
+  });
 
-    const bCard = new Rect({
-      width: 180,
-      height: 80,
-      fill: b.color,
-      stroke: b.borderColor,
-      strokeWidth: 1.5,
-      rx: 16,
-      ry: 16
-    });
+  // Central Bubble at (470, 335) [220x90]
+  const centerGroup = createGroupedNode(
+    createNodeRect(220, 90, '#FAF0D7', '#777D5E', 24),
+    createNodeText('Central Idea / Thesis', 220, 16, '#30312D'),
+    470,
+    335
+  );
+  canvas.add(centerGroup);
 
-    const bText = new Textbox(`${b.label}\n• Key sub-point`, {
-      width: 160,
-      left: 10,
-      top: 18,
-      fontSize: 13,
-      fontFamily: 'Plus Jakarta Sans',
-      fontWeight: '600',
-      fill: '#30312D'
-    });
-
-    const bGroup = new Group([bCard, bText], {
-      left: b.x,
-      top: b.y,
-      subTargetCheck: true,
-      interactive: true
-    });
+  branches.forEach((b) => {
+    const bGroup = createGroupedNode(
+      createNodeRect(210, 86, b.color, b.borderColor, 16),
+      createNodeText(`${b.label}\n${b.sub}`, 210, 12.5, '#30312D'),
+      b.x,
+      b.y
+    );
     canvas.add(bGroup);
   });
 
@@ -1133,72 +957,44 @@ export function createMindMap(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Storyboard / Moodboard template with 6 grid visual frames
+ * 10. Storyboard & Visual Scene Frames template
  */
 export function createStoryboard(canvas: FabricCanvas): void {
-  const startX = 70;
-  const startY = 60;
-  const frameWidth = 320;
-  const frameHeight = 250;
-  const gapX = 35;
-  const gapY = 35;
+  const startX = 60;
+  const startY = 40;
+  const frameWidth = 340;
+  const frameHeight = 260;
+  const gapX = 30;
+  const gapY = 30;
 
-  const title = new Textbox('Storyboard & Visual Scene Frames', {
-    left: startX,
-    top: startY,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('Storyboard & Visual Scene Frames', startX, startY, 650);
+  const subtitle = createSubtitle('6 structured frames for camera shots, sequence illustrations, and narrative descriptions', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
+
+  const topContentY = startY + 70;
 
   for (let row = 0; row < 2; row++) {
     for (let col = 0; col < 3; col++) {
       const idx = row * 3 + col + 1;
       const x = startX + col * (frameWidth + gapX);
-      const y = startY + 50 + row * (frameHeight + gapY);
+      const y = topContentY + row * (frameHeight + gapY);
 
       // Outer Frame (non-blocking)
-      const frameRect = new Rect({
-        left: x,
-        top: y,
-        width: frameWidth,
-        height: frameHeight,
-        fill: '#FFFEFA',
-        stroke: '#E2D8CA',
-        strokeWidth: 1.5,
-        rx: 10,
-        ry: 10,
-        selectable: false,
-        evented: false
-      });
+      const frameRect = createPanel(x, y, frameWidth, frameHeight, '#FFFEFA', '#E2D8CA', 10);
 
       // Drawing sketch box inside
-      const sketchBox = new Rect({
-        left: x + 12,
-        top: y + 12,
-        width: frameWidth - 24,
-        height: frameHeight - 80,
-        fill: '#FAF6EE',
-        stroke: '#EBE2D5',
-        strokeWidth: 1,
-        rx: 6,
-        ry: 6,
-        selectable: false,
-        evented: false
-      });
+      const sketchBox = createPanel(x + 14, y + 14, frameWidth - 28, frameHeight - 88, '#FAF6EE', '#EBE2D5', 6);
 
-      // Scene caption label (fully editable)
-      const caption = new Textbox(`Scene ${idx}: Action Description\nCamera angle / timing / dialogue notes`, {
-        left: x + 14,
-        top: y + frameHeight - 60,
-        width: frameWidth - 28,
-        fontSize: 12,
-        fontFamily: 'Plus Jakarta Sans',
-        fill: '#4A4843'
-      });
+      // Scene caption label (editable)
+      const caption = createBodyText(
+        `Scene ${idx}: Action Description\nCamera angle / timing / dialogue notes`,
+        x + 14,
+        y + frameHeight - 64,
+        frameWidth - 28,
+        '#4A4843',
+        12,
+        1.35
+      );
 
       canvas.add(frameRect, sketchBox, caption);
     }
@@ -1208,25 +1004,20 @@ export function createStoryboard(canvas: FabricCanvas): void {
 }
 
 /**
- * Creates Kanban Board template (To Do, In Progress, Done)
+ * 11. Project Kanban Board template
  */
 export function createKanbanBoard(canvas: FabricCanvas): void {
-  const startX = 80;
-  const startY = 60;
-  const colWidth = 330;
-  const colGap = 28;
-  const colHeight = 580;
+  const startX = 60;
+  const startY = 40;
+  const colWidth = 340;
+  const colGap = 30;
+  const colHeight = 600;
 
-  const title = new Textbox('Project Kanban Board', {
-    left: startX,
-    top: startY,
-    width: 600,
-    fontSize: 26,
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: 'bold',
-    fill: '#30312D'
-  });
-  canvas.add(title);
+  const title = createTitle('Project Kanban Board', startX, startY, 650);
+  const subtitle = createSubtitle('Agile task columns: To Do, In Progress, and Completed Deliverables', startX, startY + 34, 850);
+  canvas.add(title, subtitle);
+
+  const topContentY = startY + 70;
 
   const columns = [
     { title: 'To Do', color: '#FAF0D7', sample: 'Literature survey\nResearch proposal draft' },
@@ -1236,78 +1027,34 @@ export function createKanbanBoard(canvas: FabricCanvas): void {
 
   columns.forEach((col, idx) => {
     const x = startX + idx * (colWidth + colGap);
-    const y = startY + 50;
 
     // Column container (non-blocking)
-    const card = new Rect({
-      left: x,
-      top: y,
-      width: colWidth,
-      height: colHeight,
-      fill: '#FAF6EE',
-      stroke: '#E2D8CA',
-      strokeWidth: 1.5,
-      rx: 14,
-      ry: 14,
-      selectable: false,
-      evented: false
-    });
+    const card = createPanel(x, topContentY, colWidth, colHeight, '#FAF6EE', '#E2D8CA', 14);
 
     // Header badge (non-blocking)
-    const badge = new Rect({
-      left: x + 16,
-      top: y + 16,
-      width: colWidth - 32,
-      height: 38,
-      fill: col.color,
-      stroke: '#DCD1C2',
-      strokeWidth: 1.5,
-      rx: 8,
-      ry: 8,
-      selectable: false,
-      evented: false
-    });
+    const badge = createPanel(x + 16, topContentY + 16, colWidth - 32, 38, col.color, '#DCD1C2', 8);
 
     const headerText = new Textbox(col.title, {
-      left: x + 24,
-      top: y + 25,
-      width: colWidth - 48,
+      left: x + 16,
+      top: topContentY + 25,
+      width: colWidth - 32,
       fontSize: 14,
       fontFamily: 'Plus Jakarta Sans',
       fontWeight: 'bold',
       fill: '#30312D',
       textAlign: 'center',
-      selectable: false,
-      evented: false
+      originX: 'left',
+      originY: 'top',
+      selectable: true
     });
 
-    // Sample Task Card (grouped and movable)
-    const taskCardRect = new Rect({
-      width: colWidth - 36,
-      height: 90,
-      fill: '#FFFEFA',
-      stroke: '#E8DED2',
-      strokeWidth: 1.5,
-      rx: 8,
-      ry: 8
-    });
-
-    const taskText = new Textbox(col.sample, {
-      width: colWidth - 56,
-      left: 10,
-      top: 18,
-      fontSize: 13,
-      fontFamily: 'Plus Jakarta Sans',
-      fill: '#4A4843',
-      lineHeight: 1.4
-    });
-
-    const taskGroup = new Group([taskCardRect, taskText], {
-      left: x + 18,
-      top: y + 74,
-      subTargetCheck: true,
-      interactive: true
-    });
+    // Sample Task Card (movable grouped card)
+    const taskGroup = createGroupedNode(
+      createNodeRect(colWidth - 36, 88, '#FFFEFA', '#E8DED2', 8),
+      createNodeText(col.sample, colWidth - 36, 13, '#4A4843'),
+      x + 18,
+      topContentY + 70
+    );
 
     canvas.add(card, badge, headerText, taskGroup);
   });
