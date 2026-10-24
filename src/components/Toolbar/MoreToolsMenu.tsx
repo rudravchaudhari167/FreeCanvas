@@ -3,9 +3,11 @@ import {
   Image as ImageIcon,
   StickyNote,
   ArrowUpRight,
+  LayoutTemplate,
   HelpCircle,
   RotateCcw
 } from 'lucide-react';
+import type { TemplateType } from '../../types/canvas';
 
 interface MoreToolsMenuProps {
   isOpen: boolean;
@@ -13,9 +15,11 @@ interface MoreToolsMenuProps {
   onOpenGallery: () => void;
   onAddStickyNote: () => void;
   onSelectArrowTool: () => void;
+  onOpenTemplates: () => void;
   onOpenShortcuts: () => void;
   onClearCanvas: () => void;
-  onApplyTemplate: (type: 'blank' | 'dots' | 'grid' | 'warm') => void;
+  onApplyTemplate: (type: TemplateType) => void;
+  currentTemplate?: TemplateType;
 }
 
 export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
@@ -24,9 +28,11 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
   onOpenGallery,
   onAddStickyNote,
   onSelectArrowTool,
+  onOpenTemplates,
   onOpenShortcuts,
   onClearCanvas,
-  onApplyTemplate
+  onApplyTemplate,
+  currentTemplate = 'warm'
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +60,7 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
         top: 360,
         left: 84,
         zIndex: 50,
-        width: 220,
+        width: 240,
         backgroundColor: '#FFFEFA',
         border: '1px solid #E8DED2',
         borderRadius: 16,
@@ -81,6 +87,7 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
           onOpenGallery();
           onClose();
         }}
+        onMouseDown={(e) => e.stopPropagation()}
         style={menuItemStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -109,12 +116,28 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
           onSelectArrowTool();
           onClose();
         }}
+        onMouseDown={(e) => e.stopPropagation()}
         style={menuItemStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <ArrowUpRight size={16} color="#5E6547" />
         <span>Arrow Connector</span>
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenTemplates();
+          onClose();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        style={menuItemStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <LayoutTemplate size={16} color="#777D5E" />
+        <span>Browse All Templates...</span>
       </button>
 
       <div style={{ height: 1, backgroundColor: '#EFE8DE', margin: '6px 0' }} />
@@ -126,49 +149,46 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
           fontWeight: 600,
           textTransform: 'uppercase',
           letterSpacing: '0.8px',
-          color: '#8A857A'
+          color: '#8A857A',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}
       >
-        Templates
+        <span>Quick Paper Styles</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: '4px 12px 6px' }}>
-        <button
-          onClick={() => {
-            onApplyTemplate('blank');
-            onClose();
-          }}
-          style={templateBtnStyle}
-        >
-          Blank
-        </button>
-        <button
-          onClick={() => {
-            onApplyTemplate('warm');
-            onClose();
-          }}
-          style={templateBtnStyle}
-        >
-          Warm Ivory
-        </button>
-        <button
-          onClick={() => {
-            onApplyTemplate('dots');
-            onClose();
-          }}
-          style={templateBtnStyle}
-        >
-          Dot Grid
-        </button>
-        <button
-          onClick={() => {
-            onApplyTemplate('grid');
-            onClose();
-          }}
-          style={templateBtnStyle}
-        >
-          Graph Paper
-        </button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, padding: '4px 12px 6px' }}>
+        {[
+          { id: 'blank' as TemplateType, label: 'Blank' },
+          { id: 'warm' as TemplateType, label: 'Warm' },
+          { id: 'dots' as TemplateType, label: 'Dot Grid' },
+          { id: 'grid' as TemplateType, label: 'Graph' },
+          { id: 'lined' as TemplateType, label: 'Lined' },
+          { id: 'dark' as TemplateType, label: 'Dark' }
+        ].map((item) => {
+          const isActive = currentTemplate === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onApplyTemplate(item.id);
+                onClose();
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                ...templateBtnStyle,
+                backgroundColor: isActive ? '#EAEEDD' : '#F8F4ED',
+                borderColor: isActive ? '#777D5E' : '#E8DFD3',
+                color: isActive ? '#2F3622' : '#4F4D47',
+                fontWeight: isActive ? 600 : 500
+              }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
       <div style={{ height: 1, backgroundColor: '#EFE8DE', margin: '4px 0' }} />

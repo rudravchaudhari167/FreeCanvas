@@ -14,11 +14,20 @@ import {
 import type {
   ToolType,
   ToolSettings,
-  SelectedObjectProperties
+  SelectedObjectProperties,
+  GridType,
+  TemplateType
 } from './types/canvas';
 import type { CanvasProject } from './types/project';
 import { saveProject } from './services/db';
 import { createFabricShape } from './constants/shapes';
+import {
+  createWeeklyPlanner,
+  createCornellNotes,
+  createMindMap,
+  createStoryboard,
+  createKanbanBoard
+} from './services/templateGenerator';
 
 import { EditorHeader } from './components/Header/EditorHeader';
 import { LeftToolbar } from './components/Toolbar/LeftToolbar';
@@ -30,6 +39,7 @@ import { CanvasWorkspace } from './components/Canvas/CanvasWorkspace';
 import { GalleryModal } from './components/Modals/GalleryModal';
 import { ExportModal } from './components/Modals/ExportModal';
 import { ProjectsModal } from './components/Modals/ProjectsModal';
+import { TemplatesModal } from './components/Modals/TemplatesModal';
 import { ShortcutsModal } from './components/Modals/ShortcutsModal';
 import { Toast } from './components/Modals/Toast';
 
@@ -66,6 +76,8 @@ export function App() {
   // View Settings
   const [backgroundColor, setBackgroundColor] = useState<string>('#FFFEFA');
   const [showGrid, setShowGrid] = useState<boolean>(false);
+  const [gridType, setGridType] = useState<GridType>('none');
+  const [currentTemplate, setCurrentTemplate] = useState<TemplateType>('warm');
   const [showProperties, setShowProperties] = useState<boolean>(true);
   const [showToolbar, setShowToolbar] = useState<boolean>(true);
   const [zoom, setZoom] = useState<number>(1);
@@ -78,6 +90,7 @@ export function App() {
   const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isProjectsOpen, setIsProjectsOpen] = useState<boolean>(false);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [isMoreToolsOpen, setIsMoreToolsOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -936,21 +949,78 @@ export function App() {
   }, [settings.stickyColor, settings.color, settings.fontFamily, settings.textAlign, showToast]);
 
   // Apply Workspace Templates
-  const handleApplyTemplate = useCallback((type: 'blank' | 'dots' | 'grid' | 'warm') => {
+  const handleApplyTemplate = useCallback((type: TemplateType) => {
+    const canvas = fabricCanvasRef.current;
+    setCurrentTemplate(type);
+
     if (type === 'blank') {
       setBackgroundColor('#FFFFFF');
+      setGridType('none');
       setShowGrid(false);
+      showToast('Applied Blank White template');
     } else if (type === 'warm') {
       setBackgroundColor('#FFFEFA');
+      setGridType('none');
       setShowGrid(false);
+      showToast('Applied Warm Botanical Ivory template');
     } else if (type === 'dots') {
       setBackgroundColor('#FAF6EE');
+      setGridType('dots');
       setShowGrid(true);
+      showToast('Applied Dot Grid template');
     } else if (type === 'grid') {
       setBackgroundColor('#F7F3EB');
+      setGridType('grid');
       setShowGrid(true);
+      showToast('Applied Graph Paper template');
+    } else if (type === 'lined') {
+      setBackgroundColor('#FAF7F0');
+      setGridType('lined');
+      setShowGrid(true);
+      showToast('Applied Lined Notebook template');
+    } else if (type === 'dark') {
+      setBackgroundColor('#1F221E');
+      setGridType('dark-grid');
+      setShowGrid(true);
+      showToast('Applied Dark Slate template');
+    } else if (['planner', 'cornell', 'mindmap', 'storyboard', 'kanban'].includes(type)) {
+      if (!canvas) return;
+
+      const existingCount = canvas.getObjects().length;
+      if (existingCount > 0) {
+        const replace = window.confirm(
+          'Do you want to clear existing drawings before loading this template?\n\nClick "OK" to start fresh with the template, or "Cancel" to add it alongside your current work.'
+        );
+        if (replace) {
+          canvas.clear();
+        }
+      }
+
+      // Configure background for structured template
+      setBackgroundColor('#FAF6EE');
+      setGridType('dots');
+      setShowGrid(false);
+
+      if (type === 'planner') {
+        createWeeklyPlanner(canvas);
+        showToast('Applied Weekly Focus Planner template');
+      } else if (type === 'cornell') {
+        createCornellNotes(canvas);
+        showToast('Applied Cornell Notes template');
+      } else if (type === 'mindmap') {
+        createMindMap(canvas);
+        showToast('Applied Mind Map template');
+      } else if (type === 'storyboard') {
+        createStoryboard(canvas);
+        showToast('Applied Storyboard template');
+      } else if (type === 'kanban') {
+        createKanbanBoard(canvas);
+        showToast('Applied Kanban Board template');
+      }
+
+      handleCanvasChangeTrigger(JSON.stringify(canvas.toJSON()));
     }
-  }, []);
+  }, [showToast, handleCanvasChangeTrigger]);
 
   // Clear Canvas
   const handleClearCanvas = useCallback(() => {
@@ -1172,6 +1242,7 @@ export function App() {
         showToolbar={showToolbar}
         onToggleToolbar={() => setShowToolbar(!showToolbar)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onOpenTemplates={() => setIsTemplatesOpen(true)}
       />
 
       {/* 2. LEFT TOOLBAR matching Reference Image 1 */}
@@ -1191,9 +1262,11 @@ export function App() {
         onOpenGallery={() => setIsGalleryOpen(true)}
         onAddStickyNote={handleAddStickyNote}
         onSelectArrowTool={() => setActiveTool('arrow')}
+        onOpenTemplates={() => setIsTemplatesOpen(true)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onClearCanvas={handleClearCanvas}
         onApplyTemplate={handleApplyTemplate}
+        currentTemplate={currentTemplate}
       />
 
       {/* 4. CENTRAL CANVAS WORKSPACE matching Reference Image 1 */}
@@ -1202,6 +1275,7 @@ export function App() {
         settings={settings}
         backgroundColor={backgroundColor}
         showGrid={showGrid}
+        gridType={gridType}
         zoom={zoom}
         onZoomChange={setZoom}
         onSelectionChange={setSelectedObject}
@@ -1268,6 +1342,13 @@ export function App() {
         onSelectProject={handleSelectProject}
         onNewProject={handleNewProject}
         onToast={showToast}
+      />
+
+      <TemplatesModal
+        isOpen={isTemplatesOpen}
+        onClose={() => setIsTemplatesOpen(false)}
+        onApplyTemplate={handleApplyTemplate}
+        currentTemplate={currentTemplate}
       />
 
       <ShortcutsModal

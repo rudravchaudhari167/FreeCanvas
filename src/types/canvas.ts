@@ -56,6 +56,21 @@ export type EraserMode = 'stroke' | 'object';
 
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
+export type GridType = 'none' | 'grid' | 'dots' | 'lined' | 'dark-grid';
+
+export type TemplateType =
+  | 'blank'
+  | 'warm'
+  | 'dots'
+  | 'grid'
+  | 'lined'
+  | 'dark'
+  | 'planner'
+  | 'cornell'
+  | 'mindmap'
+  | 'storyboard'
+  | 'kanban';
+
 export type BackgroundPreset =
   | '#FFFEFA' // Warm white
   | '#FFFFFF' // Pure white

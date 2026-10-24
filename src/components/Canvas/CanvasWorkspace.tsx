@@ -22,7 +22,8 @@ import type {
   ToolSettings,
   SelectedObjectProperties,
   LayerItem,
-  ShapeType
+  ShapeType,
+  GridType
 } from '../../types/canvas';
 import {
   createFabricShape,
@@ -59,6 +60,7 @@ interface CanvasWorkspaceProps {
   settings: ToolSettings;
   backgroundColor: string;
   showGrid: boolean;
+  gridType?: GridType;
   zoom: number;
   onZoomChange: (zoom: number) => void;
   onSelectionChange: (props: SelectedObjectProperties | null) => void;
@@ -75,6 +77,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   settings,
   backgroundColor,
   showGrid,
+  gridType = 'grid',
   zoom,
   onZoomChange,
   onSelectionChange,
@@ -1010,11 +1013,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             inset: 0,
             pointerEvents: 'none',
             zIndex: 5,
-            backgroundImage: `
-              linear-gradient(to right, rgba(119, 125, 94, 0.14) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(119, 125, 94, 0.14) 1px, transparent 1px)
-            `,
-            backgroundSize: '24px 24px'
+            ...getGridStyle(gridType)
           }}
           aria-hidden="true"
         />
@@ -1022,3 +1021,32 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     </main>
   );
 };
+
+function getGridStyle(gridType: GridType): React.CSSProperties {
+  if (gridType === 'dots') {
+    return {
+      backgroundImage: 'radial-gradient(circle, rgba(119, 125, 94, 0.35) 1.5px, transparent 1.5px)',
+      backgroundSize: '24px 24px'
+    };
+  }
+  if (gridType === 'lined') {
+    return {
+      backgroundImage: 'linear-gradient(to bottom, transparent 27px, rgba(119, 125, 94, 0.24) 28px)',
+      backgroundSize: '100% 28px'
+    };
+  }
+  if (gridType === 'dark-grid') {
+    return {
+      backgroundImage: 'radial-gradient(circle, rgba(240, 245, 230, 0.32) 1.5px, transparent 1.5px)',
+      backgroundSize: '24px 24px'
+    };
+  }
+  // Standard coordinate graph paper
+  return {
+    backgroundImage: `
+      linear-gradient(to right, rgba(119, 125, 94, 0.16) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(119, 125, 94, 0.16) 1px, transparent 1px)
+    `,
+    backgroundSize: '24px 24px'
+  };
+}
