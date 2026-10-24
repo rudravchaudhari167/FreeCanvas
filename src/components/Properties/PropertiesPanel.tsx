@@ -310,6 +310,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     if (selectedObject) {
       if (selectedObject.isStickyNote) return 'Sticky Note';
       const type = selectedObject.type || '';
+      if (type === 'activeselection') return 'All Selected Items';
       if (type === 'group') return 'Sticker';
       if (type === 'i-text' || type === 'text' || type === 'textbox') return 'Text';
       if (selectedObject.shapeType) return getShapeName(selectedObject.shapeType);

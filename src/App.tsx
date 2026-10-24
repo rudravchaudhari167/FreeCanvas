@@ -6,6 +6,7 @@ import {
   Textbox,
   Group,
   FabricObject,
+  ActiveSelection,
   Shadow,
   Control,
   loadSVGFromString,
@@ -506,7 +507,7 @@ export function App() {
     }
   }, []);
 
-  // Duplicate selected object
+  // Duplicate selected object or selection
   const handleDuplicateSelected = useCallback(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -515,31 +516,56 @@ export function App() {
     if (!activeObj) return;
 
     activeObj.clone().then((cloned: FabricObject) => {
-      cloned.set({
-        left: (cloned.left || 0) + 24,
-        top: (cloned.top || 0) + 24,
-        evented: true
-      });
-      canvas.add(cloned);
-      canvas.setActiveObject(cloned);
+      canvas.discardActiveObject();
+      if (cloned.type === 'activeselection') {
+        const sel = cloned as any;
+        sel.canvas = canvas;
+        sel.forEachObject((obj: any) => {
+          obj.set({
+            left: (obj.left || 0) + 24,
+            top: (obj.top || 0) + 24,
+            evented: true
+          });
+          canvas.add(obj);
+        });
+        sel.setCoords();
+        canvas.setActiveObject(sel);
+        showToast(`Duplicated ${sel._objects ? sel._objects.length : 'all'} items`);
+      } else {
+        cloned.set({
+          left: (cloned.left || 0) + 24,
+          top: (cloned.top || 0) + 24,
+          evented: true
+        });
+        canvas.add(cloned);
+        canvas.setActiveObject(cloned);
+        showToast('Item duplicated');
+      }
       canvas.renderAll();
-      showToast('Object duplicated');
     });
   }, [showToast]);
 
-  // Delete selected object
+  // Delete selected object or selection
   const handleDeleteSelected = useCallback(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
     const activeObj = canvas.getActiveObject();
     if (activeObj) {
-      canvas.remove(activeObj);
-      canvas.discardActiveObject();
+      if (activeObj.type === 'activeselection') {
+        const objects = ((activeObj as any)._objects || []).slice();
+        canvas.discardActiveObject();
+        objects.forEach((obj: any) => canvas.remove(obj));
+        showToast(`Deleted ${objects.length} items`);
+      } else {
+        canvas.remove(activeObj);
+        canvas.discardActiveObject();
+        showToast('Item deleted');
+      }
       canvas.renderAll();
       setSelectedObject(null);
     }
-  }, []);
+  }, [showToast]);
 
   // Lock / Unlock selected object
   const handleToggleLock = useCallback(() => {
@@ -604,8 +630,14 @@ export function App() {
     if (activeObj) {
       activeObj.clone().then((cloned: FabricObject) => {
         clipboardRef.current = cloned;
-        canvas.remove(activeObj);
-        canvas.discardActiveObject();
+        if (activeObj.type === 'activeselection') {
+          const objects = ((activeObj as any)._objects || []).slice();
+          canvas.discardActiveObject();
+          objects.forEach((obj: any) => canvas.remove(obj));
+        } else {
+          canvas.remove(activeObj);
+          canvas.discardActiveObject();
+        }
         canvas.renderAll();
         showToast('Cut to clipboard');
       });
@@ -633,13 +665,34 @@ export function App() {
   const handleSelectAll = useCallback(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
+
+    // Discard any existing active selection first
     canvas.discardActiveObject();
-    const objs = canvas.getObjects();
-    if (objs.length > 0) {
-      canvas.setActiveObject(objs[0]); // Select first or group
+
+    // Select all valid canvas objects (shapes, textboxes, sticky notes, paths, images, etc.)
+    const selectableObjects = canvas
+      .getObjects()
+      .filter((obj) => obj.selectable !== false && obj.evented !== false);
+
+    if (selectableObjects.length === 0) {
       canvas.renderAll();
+      showToast('No items on canvas to select');
+      return;
     }
-  }, []);
+
+    // Switch tool to 'select' so handles, bounding boxes, and drag work immediately
+    setActiveTool('select');
+
+    if (selectableObjects.length === 1) {
+      canvas.setActiveObject(selectableObjects[0]);
+    } else {
+      const selection = new ActiveSelection(selectableObjects, { canvas });
+      canvas.setActiveObject(selection);
+    }
+
+    canvas.renderAll();
+    showToast(`Selected all items (${selectableObjects.length})`);
+  }, [showToast]);
 
   // Zoom controls
   const handleZoomIn = useCallback(() => {
