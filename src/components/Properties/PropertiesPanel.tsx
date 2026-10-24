@@ -890,35 +890,43 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </div>
 
           {/* Font Family selector */}
-          <select
-            value={selectedObject?.fontFamily || settings.fontFamily}
-            onChange={(e) => {
-              const font = e.target.value;
-              onUpdateSettings({ fontFamily: font });
-              if (selectedObject) onUpdateSelectedObject({ fontFamily: font });
-            }}
-            style={{
-              padding: '6px 9px',
-              borderRadius: 8,
-              border: '1px solid #E8DFD3',
-              backgroundColor: '#FAF5EE',
-              fontSize: 12,
-              color: '#30312D',
-              outline: 'none',
-              cursor: 'pointer',
-              fontFamily: selectedObject?.fontFamily || settings.fontFamily
-            }}
-          >
-            {FONT_CATEGORIES.map((cat) => (
-              <optgroup key={cat} label={cat}>
-                {TEXT_STYLES.filter((f) => f.category === cat).map((f) => (
-                  <option key={f.family} value={f.family} style={{ fontFamily: f.family }}>
-                    {f.name}
-                  </option>
+          {(() => {
+            const rawFont = (selectedObject?.fontFamily || settings.fontFamily || 'Plus Jakarta Sans').replace(/['"]/g, '').split(',')[0].trim();
+            const matchedFont = TEXT_STYLES.find((f) => f.family.toLowerCase() === rawFont.toLowerCase())?.family || 'Plus Jakarta Sans';
+
+            return (
+              <select
+                value={matchedFont}
+                onMouseDown={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const font = e.target.value;
+                  onUpdateSettings({ fontFamily: font });
+                  onUpdateSelectedObject({ fontFamily: font });
+                }}
+                style={{
+                  padding: '6px 9px',
+                  borderRadius: 8,
+                  border: '1px solid #E8DFD3',
+                  backgroundColor: '#FAF5EE',
+                  fontSize: 12,
+                  color: '#30312D',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  fontFamily: matchedFont
+                }}
+              >
+                {FONT_CATEGORIES.map((cat) => (
+                  <optgroup key={cat} label={cat}>
+                    {TEXT_STYLES.filter((f) => f.category === cat).map((f) => (
+                      <option key={f.family} value={f.family} style={{ fontFamily: f.family }}>
+                        {f.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
-              </optgroup>
-            ))}
-          </select>
+              </select>
+            );
+          })()}
 
           {/* Bold, Italic, Underline buttons */}
           <div style={{ display: 'flex', gap: 6 }}>

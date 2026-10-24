@@ -336,10 +336,25 @@ export function App() {
         if (textTarget.isEditing) {
           textTarget.setSelectionStyles?.({ fontFamily: props.fontFamily });
         }
+        if (textTarget.styles) {
+          const styles = textTarget.styles;
+          Object.keys(styles).forEach((lineKey) => {
+            const line = styles[lineKey];
+            if (line) {
+              Object.keys(line).forEach((charKey: string) => {
+                if (line[charKey]) {
+                  line[charKey].fontFamily = props.fontFamily;
+                }
+              });
+            }
+          });
+        }
+        const cleanFont = props.fontFamily.replace(/['"]/g, '').split(',')[0].trim();
         if (typeof document !== 'undefined' && document.fonts?.load) {
-          document.fonts.load(`16px "${props.fontFamily}"`).then(() => {
+          document.fonts.load(`16px "${cleanFont}"`).then(() => {
             if (textTarget) {
               textTarget.initDimensions?.();
+              textTarget.setCoords?.();
               textTarget.set('dirty', true);
               canvas.requestRenderAll();
             }
@@ -434,10 +449,18 @@ export function App() {
       }
 
       textTarget.initDimensions?.();
+      textTarget.setCoords?.();
+      if (textTarget.isEditing) {
+        textTarget.updateTextareaPosition?.();
+      }
       textTarget.set('dirty', true);
       activeObj.set('dirty', true);
     }
 
+    if (activeObj && canvas.getActiveObject() !== activeObj) {
+      canvas.setActiveObject(activeObj);
+    }
+    activeObj.setCoords?.();
     canvas.requestRenderAll();
     setSelectedObject((prev) => (prev ? { ...prev, ...props } : null));
   };
@@ -1198,10 +1221,11 @@ export function App() {
   // Keyboard Shortcuts Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is typing in an input
+      // Don't intercept if user is typing in an input or select
       if (
         document.activeElement?.tagName === 'INPUT' ||
-        document.activeElement?.tagName === 'TEXTAREA'
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        document.activeElement?.tagName === 'SELECT'
       ) {
         return;
       }

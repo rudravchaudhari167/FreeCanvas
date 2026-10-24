@@ -606,7 +606,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   }, [zoom]);
 
   // Configure tool mode on the canvas
+  const prevToolRef = useRef<ToolType>(activeTool);
   useEffect(() => {
+    const prevTool = prevToolRef.current;
+    prevToolRef.current = activeTool;
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
@@ -615,7 +618,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     canvas.selection = activeTool === 'select';
     canvas.defaultCursor = 'default';
 
-    if (activeTool !== 'select') {
+    // Only discard active object when user explicitly switches to eraser or drawing tools, NEVER on settings updates!
+    if (prevTool !== activeTool && !['select', 'text'].includes(activeTool)) {
       canvas.discardActiveObject();
       canvas.renderAll();
     }
@@ -969,7 +973,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
     // Keyboard space bar listener for panning
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !isSpacePressedRef.current && (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA')) {
+      if (
+        e.code === 'Space' &&
+        !isSpacePressedRef.current &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA' &&
+        document.activeElement?.tagName !== 'SELECT'
+      ) {
         isSpacePressedRef.current = true;
         canvas.defaultCursor = 'grab';
       }
