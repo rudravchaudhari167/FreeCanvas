@@ -704,16 +704,43 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       // If user clicked on an existing object or control handle, and not erasing, let Fabric handle selection/transformation
       if (opt.target && activeTool !== 'eraser') {
-        if (
+        const isText =
           opt.target instanceof Textbox ||
           opt.target.type === 'textbox' ||
           opt.target instanceof IText ||
-          opt.target.type === 'i-text'
-        ) {
+          opt.target.type === 'i-text';
+
+        if (isText) {
+          const textTarget = opt.target as Textbox | IText;
+          const wasAlreadyActive = canvas.getActiveObject() === textTarget;
+
+          // Exit editing on any other text object so cursor never leaks or ghost-edits
+          canvas.getObjects().forEach((o: any) => {
+            if (o !== textTarget && o.isEditing && typeof o.exitEditing === 'function') {
+              o.exitEditing();
+            }
+          });
+
+          // Always ensure the clicked text is set as active
+          canvas.setActiveObject(textTarget);
+
+          // If text tool is active, or if user clicked on an already selected text, enter editing immediately!
+          if (activeToolRef.current === 'text' || wasAlreadyActive) {
+            if (!textTarget.isEditing && typeof textTarget.enterEditing === 'function') {
+              textTarget.enterEditing(opt.e);
+              if (textTarget.hiddenTextarea) {
+                textTarget.hiddenTextarea.focus();
+              }
+            }
+          }
+
           if (activeToolRef.current !== 'select' && onToolChange) {
             onToolChange('select');
           }
+          canvas.requestRenderAll();
+          return;
         }
+
         return;
       }
 

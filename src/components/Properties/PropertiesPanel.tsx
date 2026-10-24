@@ -902,6 +902,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   const font = e.target.value;
                   onUpdateSettings({ fontFamily: font });
                   onUpdateSelectedObject({ fontFamily: font });
+                  e.target.blur();
                 }}
                 style={{
                   padding: '6px 9px',

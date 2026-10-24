@@ -452,6 +452,9 @@ export function App() {
       textTarget.setCoords?.();
       if (textTarget.isEditing) {
         textTarget.updateTextareaPosition?.();
+        if (textTarget.hiddenTextarea) {
+          textTarget.hiddenTextarea.focus();
+        }
       }
       textTarget.set('dirty', true);
       activeObj.set('dirty', true);
@@ -1230,8 +1233,29 @@ export function App() {
         return;
       }
 
+      const canvas = fabricCanvasRef.current;
+      const activeObj = canvas?.getActiveObject() as any;
+      const isText = activeObj && (
+        activeObj instanceof Textbox ||
+        activeObj.type === 'textbox' ||
+        activeObj instanceof IText ||
+        activeObj.type === 'i-text'
+      );
+
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      // If user starts typing characters while a text element is selected, enter editing so they can write!
+      if (isText && !activeObj.isEditing) {
+        const isPrintable = !cmdOrCtrl && !e.altKey && (e.key.length === 1 || e.key === 'Enter');
+        if (isPrintable && typeof activeObj.enterEditing === 'function') {
+          activeObj.enterEditing();
+          if (activeObj.hiddenTextarea) {
+            activeObj.hiddenTextarea.focus();
+          }
+          return;
+        }
+      }
 
       if (cmdOrCtrl && e.key.toLowerCase() === 'z') {
         e.preventDefault();

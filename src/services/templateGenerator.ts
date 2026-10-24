@@ -371,21 +371,21 @@ export function createFlowchart(canvas: FabricCanvas): void {
   // Connecting Lines (added behind shapes)
   const lines = [
     // Start (bottom 160) -> Input (top 190)
-    new Line([centerX, 160, centerX, 190], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
+    new Line([centerX, 160, centerX, 190], { stroke: '#777D5E', strokeWidth: 2, selectable: false, evented: false }),
     // Input (bottom 244) -> Process (top 274)
-    new Line([centerX, 244, centerX, 274], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
+    new Line([centerX, 244, centerX, 274], { stroke: '#777D5E', strokeWidth: 2, selectable: false, evented: false }),
     // Process (bottom 330) -> Decision (top 360)
-    new Line([centerX, 330, centerX, 360], { stroke: '#777D5E', strokeWidth: 2, selectable: false }),
+    new Line([centerX, 330, centerX, 360], { stroke: '#777D5E', strokeWidth: 2, selectable: false, evented: false }),
     // Decision (bottom 450) -> Output (top 490) (YES)
-    new Line([centerX, 450, centerX, 490], { stroke: '#5E6547', strokeWidth: 2, selectable: false }),
+    new Line([centerX, 450, centerX, 490], { stroke: '#5E6547', strokeWidth: 2, selectable: false, evented: false }),
     // Decision (right 630, 405) -> Fallback (left 710, 405) (NO)
-    new Line([630, 405, 710, 405], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
+    new Line([630, 405, 710, 405], { stroke: '#D99379', strokeWidth: 2, selectable: false, evented: false }),
     // Fallback Loop back to Process: (890, 405) -> (920, 405) -> (920, 302) -> (620, 302)
-    new Line([890, 405, 920, 405], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
-    new Line([920, 405, 920, 302], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
-    new Line([920, 302, 620, 302], { stroke: '#D99379', strokeWidth: 2, selectable: false }),
+    new Line([890, 405, 920, 405], { stroke: '#D99379', strokeWidth: 2, selectable: false, evented: false }),
+    new Line([920, 405, 920, 302], { stroke: '#D99379', strokeWidth: 2, selectable: false, evented: false }),
+    new Line([920, 302, 620, 302], { stroke: '#D99379', strokeWidth: 2, selectable: false, evented: false }),
     // Output (bottom 544) -> End (top 574)
-    new Line([centerX, 544, centerX, 574], { stroke: '#777D5E', strokeWidth: 2, selectable: false })
+    new Line([centerX, 544, centerX, 574], { stroke: '#777D5E', strokeWidth: 2, selectable: false, evented: false })
   ];
   lines.forEach((l) => canvas.add(l));
 
@@ -884,7 +884,8 @@ export function createConceptMap(canvas: FabricCanvas): void {
       stroke: '#B8AFA2',
       strokeWidth: 2,
       strokeDashArray: [5, 5],
-      selectable: false
+      selectable: false,
+      evented: false
     });
     canvas.add(line);
   });
@@ -931,7 +932,8 @@ export function createMindMap(canvas: FabricCanvas): void {
       stroke: '#C2B8A8',
       strokeWidth: 2,
       strokeDashArray: [4, 4],
-      selectable: false
+      selectable: false,
+      evented: false
     });
     canvas.add(line);
   });
