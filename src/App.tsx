@@ -221,6 +221,17 @@ export function App() {
           baseShape.set('fill', props.fill);
         }
         activeObj.set('dirty', true);
+      } else if (activeObj.type === 'activeSelection') {
+        const subObjects = (activeObj as any).getObjects ? (activeObj as any).getObjects() : [];
+        subObjects.forEach((sub: any) => {
+          if ((sub as any).isStickyNote) {
+            sub.set('backgroundColor', props.fill);
+          } else if (sub.type !== 'i-text' && sub.type !== 'text' && sub.type !== 'textbox') {
+            sub.set('fill', props.fill);
+          }
+          sub.set('dirty', true);
+        });
+        activeObj.set('dirty', true);
       } else {
         activeObj.set('fill', props.fill);
       }
@@ -230,6 +241,17 @@ export function App() {
         (activeObj as any).cardStroke = props.stroke;
         activeObj.set('stroke', null);
         activeObj.set('strokeWidth', 0);
+        activeObj.set('dirty', true);
+      } else if (activeObj.type === 'activeSelection') {
+        const subObjects = (activeObj as any).getObjects ? (activeObj as any).getObjects() : [];
+        subObjects.forEach((sub: any) => {
+          if ((sub as any).isStickyNote) {
+            (sub as any).cardStroke = props.stroke;
+          } else {
+            sub.set('stroke', props.stroke);
+          }
+          sub.set('dirty', true);
+        });
         activeObj.set('dirty', true);
       } else {
         activeObj.set('stroke', props.stroke);
@@ -247,6 +269,17 @@ export function App() {
         activeObj.set('stroke', null);
         activeObj.set('strokeWidth', 0);
         activeObj.set('dirty', true);
+      } else if (activeObj.type === 'activeSelection') {
+        const subObjects = (activeObj as any).getObjects ? (activeObj as any).getObjects() : [];
+        subObjects.forEach((sub: any) => {
+          if ((sub as any).isStickyNote) {
+            (sub as any).cardStrokeWidth = props.strokeWidth;
+          } else {
+            sub.set('strokeWidth', props.strokeWidth);
+          }
+          sub.set('dirty', true);
+        });
+        activeObj.set('dirty', true);
       } else {
         activeObj.set('strokeWidth', props.strokeWidth);
         if (activeObj.type === 'group') {
@@ -257,7 +290,16 @@ export function App() {
         }
       }
     }
-    if (props.opacity !== undefined) activeObj.set('opacity', props.opacity);
+    if (props.opacity !== undefined) {
+      activeObj.set('opacity', props.opacity);
+      if (activeObj.type === 'activeSelection') {
+        const subObjects = (activeObj as any).getObjects ? (activeObj as any).getObjects() : [];
+        subObjects.forEach((sub: any) => {
+          sub.set('opacity', props.opacity);
+          sub.set('dirty', true);
+        });
+      }
+    }
 
     // Shape Morphing / Changing
     if (props.shapeType !== undefined) {

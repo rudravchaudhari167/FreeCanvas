@@ -62,8 +62,8 @@ function createPanel(
     ry: rx,
     originX: 'left',
     originY: 'top',
-    selectable: false,
-    evented: false
+    selectable: true,
+    evented: true
   });
 }
 
@@ -135,8 +135,8 @@ function createNodeShape(
     ry: rx,
     originX: 'left',
     originY: 'top',
-    selectable: false,
-    evented: false
+    selectable: true,
+    evented: true
   });
 }
 
@@ -163,8 +163,8 @@ function createDiamondShape(
     strokeWidth: 2,
     originX: 'left',
     originY: 'top',
-    selectable: false,
-    evented: false
+    selectable: true,
+    evented: true
   });
 }
 
@@ -192,8 +192,8 @@ function createParallelogramShape(
     strokeWidth: 2,
     originX: 'left',
     originY: 'top',
-    selectable: false,
-    evented: false
+    selectable: true,
+    evented: true
   });
 }
 
@@ -657,8 +657,8 @@ export function createVennDiagram(canvas: FabricCanvas): void {
     strokeWidth: 2.5,
     originX: 'left',
     originY: 'top',
-    selectable: false,
-    evented: false
+    selectable: true,
+    evented: true
   });
 
   // Right Circle B (translucent)
@@ -671,8 +671,8 @@ export function createVennDiagram(canvas: FabricCanvas): void {
     strokeWidth: 2.5,
     originX: 'left',
     originY: 'top',
-    selectable: false,
-    evented: false
+    selectable: true,
+    evented: true
   });
 
   canvas.add(circleA, circleB);
