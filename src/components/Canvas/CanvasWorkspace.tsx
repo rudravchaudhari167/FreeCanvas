@@ -489,6 +489,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       if (textObj && typeof textObj.enterEditing === 'function') {
+        if (onToolChange) onToolChange('select');
         try {
           textObj.enterEditing(opt.e);
           textObj.selectAll();

@@ -27,7 +27,13 @@ import {
   createCornellNotes,
   createMindMap,
   createStoryboard,
-  createKanbanBoard
+  createKanbanBoard,
+  createFlowchart,
+  createLabReport,
+  createSwotMatrix,
+  createVennDiagram,
+  createProjectRoadmap,
+  createConceptMap
 } from './services/templateGenerator';
 
 import { EditorHeader } from './components/Header/EditorHeader';
@@ -1036,7 +1042,21 @@ export function App() {
       setGridType('dark-grid');
       setShowGrid(true);
       showToast('Applied Dark Slate template');
-    } else if (['planner', 'cornell', 'mindmap', 'storyboard', 'kanban'].includes(type)) {
+    } else if (
+      [
+        'planner',
+        'cornell',
+        'mindmap',
+        'storyboard',
+        'kanban',
+        'flowchart',
+        'lab-report',
+        'swot',
+        'venn',
+        'roadmap',
+        'concept-map'
+      ].includes(type)
+    ) {
       if (!canvas) return;
 
       const existingCount = canvas.getObjects().length;
@@ -1049,17 +1069,36 @@ export function App() {
         }
       }
 
-      // Configure background for structured template
+      // Configure clean paper background for structured template
       setBackgroundColor('#FAF6EE');
       setGridType('dots');
       setShowGrid(false);
+      setActiveTool('select');
 
       if (type === 'planner') {
         createWeeklyPlanner(canvas);
-        showToast('Applied Weekly Focus Planner template');
+        showToast('Applied Weekly Schedule Planner template');
       } else if (type === 'cornell') {
         createCornellNotes(canvas);
-        showToast('Applied Cornell Notes template');
+        showToast('Applied Cornell Lecture Notes template');
+      } else if (type === 'flowchart') {
+        createFlowchart(canvas);
+        showToast('Applied Algorithm & Logic Flowchart template');
+      } else if (type === 'lab-report') {
+        createLabReport(canvas);
+        showToast('Applied Scientific Lab Report template');
+      } else if (type === 'swot') {
+        createSwotMatrix(canvas);
+        showToast('Applied SWOT Strategic Matrix template');
+      } else if (type === 'venn') {
+        createVennDiagram(canvas);
+        showToast('Applied Venn Diagram Comparison template');
+      } else if (type === 'roadmap') {
+        createProjectRoadmap(canvas);
+        showToast('Applied Semester Project Roadmap template');
+      } else if (type === 'concept-map') {
+        createConceptMap(canvas);
+        showToast('Applied Concept Map & Entity Relations template');
       } else if (type === 'mindmap') {
         createMindMap(canvas);
         showToast('Applied Mind Map template');

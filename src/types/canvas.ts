@@ -69,7 +69,13 @@ export type TemplateType =
   | 'cornell'
   | 'mindmap'
   | 'storyboard'
-  | 'kanban';
+  | 'kanban'
+  | 'flowchart'
+  | 'lab-report'
+  | 'swot'
+  | 'venn'
+  | 'roadmap'
+  | 'concept-map';
 
 export type BackgroundPreset =
   | '#FFFEFA' // Warm white

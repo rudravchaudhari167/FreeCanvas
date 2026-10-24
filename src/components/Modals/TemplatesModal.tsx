@@ -10,7 +10,14 @@ import {
   GitBranch,
   Film,
   Kanban,
-  Sparkles
+  Sparkles,
+  Workflow,
+  FlaskConical,
+  Target,
+  CircleDot,
+  Milestone,
+  Network,
+  GraduationCap
 } from 'lucide-react';
 import type { TemplateType } from '../../types/canvas';
 
@@ -23,7 +30,7 @@ interface TemplatesModalProps {
 
 interface TemplateItem {
   id: TemplateType;
-  category: 'paper' | 'productivity' | 'creative';
+  category: 'college' | 'paper' | 'productivity' | 'creative';
   title: string;
   badge: string;
   description: string;
@@ -38,17 +45,73 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
   onApplyTemplate,
   currentTemplate = 'warm'
 }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'paper' | 'productivity' | 'creative'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'college' | 'paper' | 'productivity' | 'creative'>('all');
 
   if (!isOpen) return null;
 
   const templates: TemplateItem[] = [
-    // Paper Styles
+    // College & Academic Templates
+    {
+      id: 'flowchart',
+      category: 'college',
+      title: 'Algorithm & Logic Flowchart',
+      badge: 'Computer Science',
+      description: 'Start/End pills, Input parallelograms, Decision diamonds, and connected arrows for algorithm logic.',
+      icon: <Workflow size={18} color="#5E6547" />,
+      previewBg: '#FAF5EE'
+    },
+    {
+      id: 'lab-report',
+      category: 'college',
+      title: 'Lab Report & Scientific Protocol',
+      badge: 'STEM & Labs',
+      description: 'Structured sections: Objective, Apparatus, Procedure steps, Data table, and Error analysis.',
+      icon: <FlaskConical size={18} color="#D99379" />,
+      previewBg: '#FAF5EE'
+    },
+    {
+      id: 'swot',
+      category: 'college',
+      title: 'SWOT Strategic Matrix',
+      badge: 'Business & Econ',
+      description: '4-quadrant strategic grid: Strengths, Weaknesses, Opportunities, and Threats for case studies.',
+      icon: <Target size={18} color="#5E6547" />,
+      previewBg: '#FFFEFA'
+    },
+    {
+      id: 'venn',
+      category: 'college',
+      title: 'Venn Diagram Comparison',
+      badge: 'Comparative Theory',
+      description: 'Two translucent overlapping circles comparing Model A, Model B, and shared intersecting traits.',
+      icon: <CircleDot size={18} color="#777D5E" />,
+      previewBg: '#FAF6EE'
+    },
+    {
+      id: 'roadmap',
+      category: 'college',
+      title: 'Semester Study & Project Roadmap',
+      badge: 'Academic Timeline',
+      description: 'Timeline across Weeks 1–12: Literature review, prototyping, analysis, and final thesis defense.',
+      icon: <Milestone size={18} color="#366970" />,
+      previewBg: '#FAF5EE'
+    },
+    {
+      id: 'concept-map',
+      category: 'college',
+      title: 'Concept Map & Entity Relations',
+      badge: 'Engineering & Theory',
+      description: 'Core theoretical principle linked to 4 conceptual domains, equations, and systemic boundary conditions.',
+      icon: <Network size={18} color="#B55A43" />,
+      previewBg: '#FAF5EE'
+    },
+
+    // Paper & Grids
     {
       id: 'blank',
       category: 'paper',
       title: 'Blank Pure White',
-      badge: 'Paper',
+      badge: 'Clean Paper',
       description: 'Clean, distraction-free pure white surface for freehand drawing & art.',
       icon: <FileText size={18} color="#777D5E" />,
       previewBg: '#FFFFFF'
@@ -66,7 +129,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
       id: 'dots',
       category: 'paper',
       title: 'Dot Grid (Bullet Journal)',
-      badge: 'Grid',
+      badge: 'Dot Grid',
       description: 'Precision 24px dot matrix for bullet journaling, sketching, and icons.',
       icon: <Grid size={18} color="#5E6547" />,
       previewBg: '#FAF6EE'
@@ -75,7 +138,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
       id: 'grid',
       category: 'paper',
       title: 'Graph Paper (Math / Engineering)',
-      badge: 'Grid',
+      badge: 'Coordinate Grid',
       description: 'Crisp coordinate grid lines for geometric precision, charts, and math.',
       icon: <Grid size={18} color="#5E6547" />,
       previewBg: '#F7F3EB'
@@ -84,7 +147,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
       id: 'lined',
       category: 'paper',
       title: 'Lined Notebook Paper',
-      badge: 'Writing',
+      badge: 'Ruled Lines',
       description: 'Classic 28px ruled notebook lines with margin for neat writing and notes.',
       icon: <FileText size={18} color="#777D5E" />,
       previewBg: '#FAF7F0'
@@ -113,8 +176,8 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
     {
       id: 'cornell',
       category: 'productivity',
-      title: 'Cornell Notes System',
-      badge: 'Study & Work',
+      title: 'Cornell Lecture Notes',
+      badge: 'Study Method',
       description: 'Structured 3-section layout: Recall cues, Detailed notes, and Summary.',
       icon: <BookOpen size={18} color="#5E6547" />,
       previewBg: '#FAF5EE'
@@ -123,7 +186,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
       id: 'kanban',
       category: 'productivity',
       title: 'Kanban Project Board',
-      badge: 'Agile',
+      badge: 'Agile Workflow',
       description: '3 clear workflow columns: To Do, In Progress, and Done with task cards.',
       icon: <Kanban size={18} color="#777D5E" />,
       previewBg: '#FAF6EE'
@@ -159,9 +222,9 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
       <div
         className="modal-content"
         style={{
-          width: 780,
-          maxWidth: '92vw',
-          maxHeight: '88vh',
+          width: 820,
+          maxWidth: '94vw',
+          maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#FFFEFA',
@@ -185,8 +248,8 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 borderRadius: 10,
                 backgroundColor: '#EAEEDD',
                 display: 'flex',
@@ -195,14 +258,14 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 color: '#5E6547'
               }}
             >
-              <LayoutTemplate size={20} />
+              <LayoutTemplate size={22} />
             </div>
             <div>
               <h2 style={{ fontSize: 17, fontWeight: 600, color: '#30312D', margin: 0 }}>
                 Canvas Templates & Paper Styles
               </h2>
               <p style={{ fontSize: 12, color: '#79766F', margin: '2px 0 0' }}>
-                Select a paper background or ready-to-use vector layout for your workspace.
+                Explore student flowcharts, lab reports, SWOT analysis, paper grids, and study layouts.
               </p>
             </div>
           </div>
@@ -233,11 +296,13 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             borderBottom: '1px solid #EFE8DE',
             display: 'flex',
             gap: 8,
-            backgroundColor: '#FDFAF5'
+            backgroundColor: '#FDFAF5',
+            overflowX: 'auto'
           }}
         >
           {[
             { id: 'all', label: 'All Templates' },
+            { id: 'college', label: 'College & Academic 🎓', icon: <GraduationCap size={14} /> },
             { id: 'paper', label: 'Paper & Grids' },
             { id: 'productivity', label: 'Planners & Notes' },
             { id: 'creative', label: 'Brainstorm & Creative' }
@@ -248,6 +313,9 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   padding: '6px 14px',
                   borderRadius: 20,
                   fontSize: 12.5,
@@ -256,10 +324,12 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   color: isActive ? '#FFFFFF' : '#4E504A',
                   border: 'none',
                   cursor: 'pointer',
+                  whiteSpace: 'nowrap',
                   transition: 'all 0.15s ease'
                 }}
               >
-                {tab.label}
+                {tab.icon}
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -271,7 +341,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             padding: '20px 24px',
             overflowY: 'auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
             gap: 14,
             maxHeight: 520
           }}
