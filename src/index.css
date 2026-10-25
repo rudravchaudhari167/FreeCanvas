@@ -310,6 +310,20 @@ button {
   scrollbar-width: none;
 }
 
+/* Gallery modal scrollable tabs on mobile */
+.gallery-tabs-scroll-container {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.gallery-tabs-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .modal-content {
     border-radius: 18px;
@@ -317,4 +331,5 @@ button {
     max-height: 88vh;
   }
 }
+
 

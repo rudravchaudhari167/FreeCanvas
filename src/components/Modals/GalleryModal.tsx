@@ -14,6 +14,7 @@ import {
   deleteGalleryAsset
 } from '../../services/db';
 import { PRESET_ILLUSTRATIONS, PRESET_STICKERS } from '../../services/sampleAssets';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface GalleryModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
   onClose,
   onInsertImage
 }) => {
+  const isMobile = useIsMobile(640);
   const [activeTab, setActiveTab] = useState<TabType>('illustrations');
   const [searchQuery, setSearchQuery] = useState('');
   const [userUploads, setUserUploads] = useState<GalleryAsset[]>([]);
@@ -95,13 +97,18 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ width: 680, maxWidth: '94vw', height: 560, maxHeight: '90vh' }}
+        style={{
+          width: 680,
+          maxWidth: isMobile ? '95vw' : '94vw',
+          height: isMobile ? '86vh' : 560,
+          maxHeight: '90vh'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div
           style={{
-            padding: '18px 24px',
+            padding: isMobile ? '12px 16px' : '18px 24px',
             borderBottom: '1px solid #E8DED2',
             display: 'flex',
             alignItems: 'center',
@@ -119,27 +126,33 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#5E6547'
+                color: '#5E6547',
+                flexShrink: 0
               }}
             >
               <Sparkles size={18} />
             </div>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#30312D' }}>
+              <h2 style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#30312D' }}>
                 Creative Botanical Gallery
               </h2>
-              <p style={{ fontSize: 12, color: '#79766F' }}>
-                Browse curated botanical art, stickers, or upload your own images
-              </p>
+              {!isMobile && (
+                <p style={{ fontSize: 12, color: '#79766F' }}>
+                  Browse curated botanical art, stickers, or upload your own images
+                </p>
+              )}
             </div>
           </div>
 
           <button
             onClick={onClose}
+            aria-label="Close gallery"
             style={{
               width: 32,
               height: 32,
               borderRadius: 8,
+              border: 'none',
+              backgroundColor: 'transparent',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -156,16 +169,34 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
         {/* Search and Tabs Bar */}
         <div
           style={{
-            padding: '12px 24px',
+            padding: isMobile ? '10px 14px' : '12px 24px',
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
             justifyContent: 'space-between',
-            gap: 16,
-            borderBottom: '1px solid #F0E8DD'
+            gap: isMobile ? 10 : 16,
+            borderBottom: '1px solid #F0E8DD',
+            minWidth: 0
           }}
         >
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: 6 }}>
+          {/* Tabs with smooth horizontal scroll effect */}
+          <div
+            className="gallery-tabs-scroll-container hide-scrollbar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              whiteSpace: 'nowrap',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x',
+              flex: 1,
+              minWidth: 0,
+              maxWidth: '100%',
+              paddingBottom: isMobile ? 2 : 0
+            }}
+          >
             {[
               { id: 'illustrations' as TabType, label: 'Illustrations' },
               { id: 'stickers' as TabType, label: 'Stickers' },
@@ -176,14 +207,19 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  padding: '6px 14px',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                  padding: isMobile ? '7px 14px' : '6px 14px',
                   borderRadius: 8,
                   fontSize: 13,
                   fontWeight: 500,
+                  border: 'none',
                   backgroundColor: activeTab === tab.id ? '#5E6547' : '#F5EFE5',
                   color: activeTab === tab.id ? '#FFFEFA' : '#4A4843',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                  boxShadow: activeTab === tab.id ? '0 1px 3px rgba(94, 101, 71, 0.25)' : 'none'
                 }}
               >
                 {tab.label}
@@ -195,9 +231,10 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
           <div
             style={{
               position: 'relative',
-              width: 180,
+              width: isMobile ? '100%' : 180,
               display: 'flex',
-              alignItems: 'center'
+              alignItems: 'center',
+              flexShrink: 0
             }}
           >
             <Search
@@ -225,7 +262,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px' : '20px 24px' }}>
           {/* Upload Button & Dropzone when in 'uploads' tab */}
           {activeTab === 'uploads' && (
             <div
@@ -316,8 +353,8 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-                gap: 16
+                gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100px' : '130px'}, 1fr))`,
+                gap: isMobile ? 10 : 16
               }}
             >
               {currentList.map((asset) => (
