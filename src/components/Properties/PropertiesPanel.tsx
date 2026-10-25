@@ -12,8 +12,6 @@ import {
   Unlock,
   Copy,
   Trash2,
-  ArrowUp,
-  ArrowDown,
   Check
 } from 'lucide-react';
 import type {
@@ -38,8 +36,8 @@ interface PropertiesPanelProps {
   onUpdateSelectedObject: (props: Partial<SelectedObjectProperties>) => void;
   onDuplicateSelected: () => void;
   onDeleteSelected: () => void;
-  onBringForward: () => void;
-  onSendBackward: () => void;
+  onBringForward?: () => void;
+  onSendBackward?: () => void;
   onToggleLock: () => void;
 }
 
@@ -131,8 +129,6 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onUpdateSelectedObject,
   onDuplicateSelected,
   onDeleteSelected,
-  onBringForward,
-  onSendBackward,
   onToggleLock
 }) => {
   const [showHexInput, setShowHexInput] = useState(false);
@@ -1299,42 +1295,6 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               }}
             >
               {selectedObject.isLocked ? <Lock size={14} color="#D99379" /> : <Unlock size={14} />}
-            </button>
-
-            <button
-              onClick={onBringForward}
-              title="Bring Forward"
-              style={{
-                flex: 1,
-                padding: '6px',
-                borderRadius: 7,
-                border: 'none',
-                backgroundColor: '#F5EFE5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              <ArrowUp size={14} />
-            </button>
-
-            <button
-              onClick={onSendBackward}
-              title="Send Backward"
-              style={{
-                flex: 1,
-                padding: '6px',
-                borderRadius: 7,
-                border: 'none',
-                backgroundColor: '#F5EFE5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              <ArrowDown size={14} />
             </button>
 
             <button
