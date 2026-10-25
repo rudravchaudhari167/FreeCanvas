@@ -7,8 +7,6 @@ import {
   Group,
   FabricObject,
   ActiveSelection,
-  Shadow,
-  Control,
   loadSVGFromString,
   util
 } from 'fabric';
@@ -22,6 +20,7 @@ import type {
 import type { CanvasProject } from './types/project';
 import { saveProject } from './services/db';
 import { createFabricShape } from './constants/shapes';
+import { createStickyNote } from './services/stickyNoteService';
 import {
   createWeeklyPlanner,
   createCornellNotes,
@@ -129,6 +128,32 @@ export function App() {
 
     const activeObj = canvas.getActiveObject();
     if (!activeObj) return;
+
+    if (props.width !== undefined) {
+      if ((activeObj as any).isStickyNote) {
+        activeObj.set('width', Math.max(80, props.width));
+        (activeObj as any).initDimensions?.();
+        activeObj.setCoords?.();
+        activeObj.set('dirty', true);
+      } else {
+        activeObj.set('width', props.width);
+        activeObj.setCoords?.();
+        activeObj.set('dirty', true);
+      }
+    }
+
+    if (props.height !== undefined) {
+      if ((activeObj as any).isStickyNote) {
+        (activeObj as any).cardHeight = Math.max(50, props.height);
+        (activeObj as any).initDimensions?.();
+        activeObj.setCoords?.();
+        activeObj.set('dirty', true);
+      } else {
+        activeObj.set('height', props.height);
+        activeObj.setCoords?.();
+        activeObj.set('dirty', true);
+      }
+    }
 
     if (props.backgroundColor !== undefined) {
       if ((activeObj as any).isStickyNote) {
@@ -966,114 +991,21 @@ export function App() {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    const noteWidth = 200;
-    const minNoteHeight = 170;
     const initialNoteColor = settings.stickyColor || '#FAF0D7';
-
     const initialTextColor =
       settings.color && settings.color.toLowerCase() !== initialNoteColor.toLowerCase()
         ? settings.color
         : '#2B2D2F';
 
-    const stickyNote = new Textbox('Type a thought...', {
-      width: noteWidth,
+    const stickyNote = createStickyNote({
+      width: 200,
+      height: 170,
       fontFamily: settings.fontFamily || "'Caveat', cursive",
       fontSize: 22,
-      fill: initialTextColor,
+      color: initialTextColor,
       backgroundColor: initialNoteColor,
-      stroke: null,
-      strokeWidth: 0,
-      padding: 18,
-      textAlign: settings.textAlign || 'left',
-      shadow: new Shadow({
-        color: 'rgba(80, 70, 50, 0.16)',
-        blur: 12,
-        offsetX: 3,
-        offsetY: 6
-      }),
-      editable: true,
-      splitByGrapheme: true
+      textAlign: (settings.textAlign as any) || 'left'
     });
-
-    (stickyNote as any).isStickyNote = true;
-    (stickyNote as any).cardStroke = '#E2D4B6';
-    (stickyNote as any).cardStrokeWidth = 1.5;
-
-    // Enforce minimum card height so note looks like a classic sticky note card
-    (stickyNote as any).calcTextHeight = function () {
-      const natural = Textbox.prototype.calcTextHeight.call(this);
-      return Math.max(minNoteHeight, natural);
-    };
-
-    // Custom rounded background renderer for sticky note
-    (stickyNote as any)._renderBackground = function (ctx: CanvasRenderingContext2D) {
-      if (!this.backgroundColor) return;
-      const dim = this._getNonTransformedDimensions();
-      const w = dim.x;
-      const h = Math.max(minNoteHeight, dim.y);
-      const r = 10;
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.strokeStyle = (this as any).cardStroke || '#E2D4B6';
-      ctx.lineWidth = (this as any).cardStrokeWidth || 1.5;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(-w / 2, -h / 2, w, h, r);
-      } else {
-        ctx.rect(-w / 2, -h / 2, w, h);
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-      this._removeShadow(ctx);
-    };
-
-    // Add visible Delete control button directly on the top-right corner of the note!
-    stickyNote.controls.deleteControl = new Control({
-      x: 0.5,
-      y: -0.5,
-      offsetY: -12,
-      offsetX: 12,
-      cursorStyle: 'pointer',
-      mouseUpHandler: (_eventData, transformData) => {
-        const target = transformData.target;
-        const c = target.canvas;
-        if (c) {
-          c.remove(target);
-          c.discardActiveObject();
-          c.requestRenderAll();
-          setSelectedObject(null);
-        }
-        return true;
-      },
-      render: (ctx, left, top) => {
-        const size = 22;
-        ctx.save();
-        ctx.translate(left, top);
-        // Button circle
-        ctx.beginPath();
-        ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#FDF2F0';
-        ctx.fill();
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = '#D99379';
-        ctx.stroke();
-
-        // X / Trash icon
-        ctx.beginPath();
-        const s = 4.5;
-        ctx.moveTo(-s, -s);
-        ctx.lineTo(s, s);
-        ctx.moveTo(s, -s);
-        ctx.lineTo(-s, s);
-        ctx.lineWidth = 1.8;
-        ctx.strokeStyle = '#C24D3E';
-        ctx.stroke();
-        ctx.restore();
-      }
-    });
-
-    stickyNote.initDimensions();
 
     canvas.add(stickyNote);
 

@@ -30,6 +30,7 @@ import {
   resizeShapeObject,
   applyDefaultShapeDimensions
 } from '../../constants/shapes';
+import { configureStickyNoteObject } from '../../services/stickyNoteService';
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { BotanicalBackground } from './BotanicalBackground';
 
@@ -430,13 +431,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
       }
 
+      const stickyH = (activeObj as any).cardHeight || activeObj.height || 160;
+      const actualHeight = Math.round(isSticky ? stickyH * (activeObj.scaleY || 1) : (activeObj.height || 0) * (activeObj.scaleY || 1));
+
       onSelectionChange({
         id: (activeObj as any).id,
         type: activeObj.type,
         left: Math.round(activeObj.left || 0),
         top: Math.round(activeObj.top || 0),
         width: Math.round((activeObj.width || 0) * (activeObj.scaleX || 1)),
-        height: Math.round((activeObj.height || 0) * (activeObj.scaleY || 1)),
+        height: actualHeight,
         angle: Math.round(activeObj.angle || 0),
         fill: fillVal,
         stroke: strokeVal,
@@ -523,13 +527,59 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     });
 
-    // History trigger events
-    canvas.on('object:added', () => {
+    // History trigger events & sticky note scale/size normalization
+    canvas.on('object:added', (opt: any) => {
+      const target = opt?.target;
+      if (target && (target as any).isStickyNote && !(target as any)._configuredSticky) {
+        configureStickyNoteObject(target as Textbox, (target as any).cardHeight || 170);
+        (target as any)._configuredSticky = true;
+      }
       if (!isHistoryActionRef.current) saveStateToHistory();
     });
-    canvas.on('object:modified', () => {
+
+    canvas.on('object:modified', (opt: any) => {
+      const target = opt?.target || canvas.getActiveObject();
+      if (target && (target as any).isStickyNote) {
+        const s = target.scaleX || 1;
+        if (Math.abs(s - 1) > 0.01) {
+          const newWidth = Math.max(80, Math.round((target.width || 200) * s));
+          const curH = (target as any).cardHeight || 160;
+          const newH = Math.max(50, Math.round(curH * s));
+          const curFont = (target as any).fontSize || 22;
+          const newFont = Math.max(12, Math.min(64, Math.round(curFont * s)));
+
+          target.set({
+            width: newWidth,
+            fontSize: newFont,
+            scaleX: 1,
+            scaleY: 1
+          });
+          (target as any).cardHeight = newH;
+          target.initDimensions();
+          target.setCoords();
+          canvas.requestRenderAll();
+        }
+      }
+      updateSelectionProps();
       if (!isHistoryActionRef.current) saveStateToHistory();
     });
+
+    canvas.on('object:scaling', (opt: any) => {
+      const target = opt?.target;
+      if (target && (target as any).isStickyNote) {
+        updateSelectionProps();
+      }
+    });
+
+    canvas.on('object:resizing', (opt: any) => {
+      const target = opt?.target;
+      if (target && (target as any).isStickyNote) {
+        target.initDimensions();
+        target.setCoords();
+        updateSelectionProps();
+      }
+    });
+
     canvas.on('object:removed', () => {
       if (!isHistoryActionRef.current) saveStateToHistory();
     });

@@ -12,7 +12,9 @@ import {
   Unlock,
   Copy,
   Trash2,
-  Check
+  Check,
+  Minimize2,
+  Maximize2
 } from 'lucide-react';
 import type {
   ToolType,
@@ -21,6 +23,7 @@ import type {
   LineStyle
 } from '../../types/canvas';
 import { TEXT_STYLES, FONT_CATEGORIES } from '../../constants/fonts';
+import { STICKY_SIZE_PRESETS } from '../../services/stickyNoteService';
 import {
   SHAPE_DEFINITIONS,
   SHAPE_CATEGORIES,
@@ -820,8 +823,143 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
       )}
 
-      {/* SIZE / STROKE WIDTH SECTION */}
-      {!isEraserContext && (
+      {/* STICKY NOTE SIZE & SCALE SECTION */}
+      {selectedObject?.isStickyNote && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            padding: '10px 12px',
+            backgroundColor: '#F8F4EC',
+            borderRadius: 14,
+            border: '1px solid #E6DCCD'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12, fontWeight: 650, color: '#3E403B' }}>Sticky Note Size</span>
+            <span
+              style={{
+                fontSize: 10.5,
+                fontWeight: 600,
+                color: '#676C4F',
+                backgroundColor: '#EEF0E5',
+                padding: '2px 7px',
+                borderRadius: 6
+              }}
+            >
+              {Math.round(selectedObject.width || 200)} × {Math.round(selectedObject.height || 170)} px
+            </span>
+          </div>
+
+          {/* Quick Preset Buttons (Minimize, Normal, Maximize, XL) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
+            {STICKY_SIZE_PRESETS.map((preset) => {
+              const currentW = selectedObject.width || 200;
+              const isSelected =
+                preset.id === 'mini'
+                  ? currentW <= 160
+                  : preset.id === 'normal'
+                  ? currentW > 160 && currentW <= 250
+                  : preset.id === 'large'
+                  ? currentW > 250 && currentW <= 360
+                  : currentW > 360;
+
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  title={`${preset.name} (${preset.width}×${preset.height}px, ${preset.fontSize}px text)`}
+                  onClick={() =>
+                    onUpdateSelectedObject({
+                      width: preset.width,
+                      height: preset.height,
+                      fontSize: preset.fontSize
+                    })
+                  }
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '6px 3px',
+                    borderRadius: 8,
+                    border: isSelected ? '1.5px solid #737B5D' : '1px solid #DFD5C6',
+                    backgroundColor: isSelected ? '#E2E8D5' : '#FFFDF9',
+                    cursor: 'pointer',
+                    gap: 2,
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {preset.id === 'mini' && <Minimize2 size={13} color="#55584D" />}
+                  {preset.id === 'normal' && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#55584D', lineHeight: 1 }}>M</span>
+                  )}
+                  {preset.id === 'large' && <Maximize2 size={13} color="#55584D" />}
+                  {preset.id === 'xl' && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#55584D', lineHeight: 1 }}>XL</span>
+                  )}
+                  <span style={{ fontSize: 9.5, fontWeight: 600, color: '#4A4C44' }}>{preset.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Width Slider */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, fontWeight: 550, color: '#5C5E57' }}>Card Width</span>
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: '#7E8076' }}>
+                {Math.round(selectedObject.width || 200)} px
+              </span>
+            </div>
+            <input
+              type="range"
+              min="100"
+              max="500"
+              value={Math.round(selectedObject.width || 200)}
+              onChange={(e) => onUpdateSelectedObject({ width: Number(e.target.value) })}
+            />
+          </div>
+
+          {/* Height Slider */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, fontWeight: 550, color: '#5C5E57' }}>Card Height</span>
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: '#7E8076' }}>
+                {Math.round(selectedObject.height || 170)} px
+              </span>
+            </div>
+            <input
+              type="range"
+              min="60"
+              max="450"
+              value={Math.round(selectedObject.height || 170)}
+              onChange={(e) => onUpdateSelectedObject({ height: Number(e.target.value) })}
+            />
+          </div>
+
+          {/* Font Size Slider */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, fontWeight: 550, color: '#5C5E57' }}>Text Size</span>
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: '#7E8076' }}>
+                {Math.round(selectedObject.fontSize || 22)} px
+              </span>
+            </div>
+            <input
+              type="range"
+              min="12"
+              max="48"
+              value={Math.round(selectedObject.fontSize || 22)}
+              onChange={(e) => onUpdateSelectedObject({ fontSize: Number(e.target.value) })}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* SIZE / STROKE WIDTH SECTION (For tools & non-sticky items) */}
+      {!isEraserContext && !selectedObject?.isStickyNote && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Size</span>
