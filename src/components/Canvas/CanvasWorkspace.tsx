@@ -119,6 +119,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const isErasingRef = useRef<boolean>(false);
   const hasErasedRef = useRef<boolean>(false);
 
+  // Text drag tracking state (guarantees dragging across mobile touch, templates, and standalone text)
+  const isDraggingTextRef = useRef<boolean>(false);
+  const textDragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const textDragStartObjectPosRef = useRef<{ left: number; top: number } | null>(null);
+  const textDragTargetRef = useRef<FabricObject | null>(null);
+  const textDragMovedRef = useRef<boolean>(false);
+
   // Active tool and settings live references for canvas events
   const activeToolRef = useRef<ToolType>(activeTool);
   activeToolRef.current = activeTool;
@@ -706,6 +713,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
+        isDraggingTextRef.current = false;
+        textDragTargetRef.current = null;
+        textDragStartPointerRef.current = null;
+        textDragStartObjectPosRef.current = null;
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -727,6 +739,32 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     };
 
     const onTouchMove = (e: TouchEvent) => {
+      // Direct 1-finger mobile text dragging
+      if (
+        e.touches.length === 1 &&
+        isDraggingTextRef.current &&
+        textDragTargetRef.current &&
+        textDragStartPointerRef.current &&
+        textDragStartObjectPosRef.current
+      ) {
+        e.preventDefault();
+        const pointer = canvas.getScenePoint(e as any);
+        const dx = pointer.x - textDragStartPointerRef.current.x;
+        const dy = pointer.y - textDragStartPointerRef.current.y;
+
+        if (Math.hypot(dx, dy) > 2) {
+          textDragMovedRef.current = true;
+          const target = textDragTargetRef.current;
+          target.set({
+            left: textDragStartObjectPosRef.current.left + dx,
+            top: textDragStartObjectPosRef.current.top + dy
+          });
+          target.setCoords();
+          canvas.requestRenderAll();
+        }
+        return;
+      }
+
       if (e.touches.length === 2 && initialMidpoint && lastMidpoint && upperCanvas) {
         e.preventDefault();
         e.stopPropagation();
@@ -762,6 +800,25 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     };
 
     const onTouchEnd = (e: TouchEvent) => {
+      if (isDraggingTextRef.current) {
+        isDraggingTextRef.current = false;
+        const wasMoved = textDragMovedRef.current;
+        const target = textDragTargetRef.current;
+        textDragStartPointerRef.current = null;
+        textDragStartObjectPosRef.current = null;
+        textDragTargetRef.current = null;
+        textDragMovedRef.current = false;
+
+        if (target && wasMoved) {
+          target.setCoords();
+          canvas.requestRenderAll();
+          saveStateToHistory();
+          updateLayers();
+          updateSelectionProps();
+          canvas.fire('object:modified', { target });
+        }
+      }
+
       if (e.touches.length < 2) {
         initialMidpoint = null;
         lastMidpoint = null;
@@ -958,7 +1015,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           const now = Date.now();
           const lastTap = lastTapRef.current;
           const isDoubleTap = !!(lastTap && lastTap.target === textTarget && now - lastTap.time < 380);
-          const wasAlreadyActive = canvas.getActiveObject() === textTarget;
 
           lastTapRef.current = { time: now, target: textTarget };
 
@@ -972,12 +1028,36 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           // Always ensure the clicked text is set as active
           canvas.setActiveObject(textTarget);
 
-          // If double tap, or text tool active, or tapped on already active text on mobile/touch -> enter editing!
-          if (isDoubleTap || activeToolRef.current === 'text' || (wasAlreadyActive && !textTarget.isEditing)) {
+          // If double tap, or text tool active -> enter editing!
+          if (isDoubleTap || activeToolRef.current === 'text') {
             triggerTextEditing(textTarget, opt.e);
-          } else if (!textTarget.isEditing && typeof (canvas as any)._setupCurrentTransform === 'function') {
-            // In select mode: arm Fabric's drag transform on textTarget so dragging moves the text!
-            (canvas as any)._setupCurrentTransform(opt.e, textTarget, false);
+          } else {
+            // Select mode or mobile drag:
+            // If the text was editing, exit editing so it is completely draggable
+            if (textTarget.isEditing && typeof textTarget.exitEditing === 'function') {
+              textTarget.exitEditing();
+            }
+
+            const isControlClicked =
+              typeof (textTarget as any).findControl === 'function' &&
+              (textTarget as any).findControl(canvas.getViewportPoint(opt.e), true);
+
+            if (!isControlClicked) {
+              const dragItem =
+                textTarget.group && !(textTarget.group as any).interactive
+                  ? (textTarget.group as any)
+                  : textTarget;
+
+              isDraggingTextRef.current = true;
+              textDragStartPointerRef.current = { x: pointer.x, y: pointer.y };
+              textDragStartObjectPosRef.current = { left: dragItem.left || 0, top: dragItem.top || 0 };
+              textDragTargetRef.current = dragItem;
+              textDragMovedRef.current = false;
+            }
+
+            if (typeof (canvas as any)._setupCurrentTransform === 'function') {
+              (canvas as any)._setupCurrentTransform(opt.e, textTarget, false);
+            }
           }
 
           if (activeToolRef.current !== 'select' && onToolChange) {
@@ -1096,6 +1176,30 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     };
 
     const handleMouseMove = (opt: any) => {
+      // Direct Text Drag tracking (guarantees seamless drag across mobile touch, templates, sticky notes)
+      if (
+        isDraggingTextRef.current &&
+        textDragTargetRef.current &&
+        textDragStartPointerRef.current &&
+        textDragStartObjectPosRef.current
+      ) {
+        const pointer = canvas.getScenePoint(opt.e);
+        const dx = pointer.x - textDragStartPointerRef.current.x;
+        const dy = pointer.y - textDragStartPointerRef.current.y;
+
+        if (Math.hypot(dx, dy) > 2) {
+          textDragMovedRef.current = true;
+          const target = textDragTargetRef.current;
+          target.set({
+            left: textDragStartObjectPosRef.current.left + dx,
+            top: textDragStartObjectPosRef.current.top + dy
+          });
+          target.setCoords();
+          canvas.requestRenderAll();
+        }
+        return;
+      }
+
       // Pan movement
       if (isPanningRef.current && lastPanPosRef.current) {
         const evt = opt.e as MouseEvent;
@@ -1142,6 +1246,25 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     };
 
     const handleMouseUp = () => {
+      if (isDraggingTextRef.current) {
+        isDraggingTextRef.current = false;
+        const wasMoved = textDragMovedRef.current;
+        const target = textDragTargetRef.current;
+        textDragStartPointerRef.current = null;
+        textDragStartObjectPosRef.current = null;
+        textDragTargetRef.current = null;
+        textDragMovedRef.current = false;
+
+        if (target && wasMoved) {
+          target.setCoords();
+          canvas.requestRenderAll();
+          saveStateToHistory();
+          updateLayers();
+          canvas.fire('object:modified', { target });
+          return;
+        }
+      }
+
       if (isPanningRef.current) {
         isPanningRef.current = false;
         lastPanPosRef.current = null;
