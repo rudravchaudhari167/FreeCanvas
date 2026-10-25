@@ -33,6 +33,8 @@ import {
 import { configureStickyNoteObject } from '../../services/stickyNoteService';
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { BotanicalBackground } from './BotanicalBackground';
+import { Edit3 } from 'lucide-react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export function colorToRgba(color: string, alpha: number): string {
   if (!color) return `rgba(74, 75, 70, ${alpha})`;
@@ -59,6 +61,7 @@ const hexToRgba = colorToRgba;
 interface CanvasWorkspaceProps {
   activeTool: ToolType;
   settings: ToolSettings;
+  selectedObject?: SelectedObjectProperties | null;
   backgroundColor: string;
   showGrid: boolean;
   gridType?: GridType;
@@ -76,6 +79,7 @@ interface CanvasWorkspaceProps {
 export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   activeTool,
   settings,
+  selectedObject,
   backgroundColor,
   showGrid,
   gridType = 'grid',
@@ -91,6 +95,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
+
+  const isMobile = useIsMobile(768);
+  const lastTapRef = useRef<{ time: number; target: any } | null>(null);
 
   // History state
   const undoStackRef = useRef<string[]>([]);
@@ -152,6 +159,52 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       onLayersUpdate(layerItems);
     }
   }, [onLayersUpdate]);
+
+  // Helper to reliably trigger text editing across touch/mobile and desktop devices
+  const triggerTextEditing = useCallback((target: Textbox | IText, event?: any) => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !target || typeof target.enterEditing !== 'function') return;
+
+    if (activeToolRef.current !== 'select' && onToolChange) {
+      onToolChange('select');
+    }
+
+    // Exit editing on any other text object
+    canvas.getObjects().forEach((o: any) => {
+      if (o !== target && o.isEditing && typeof o.exitEditing === 'function') {
+        o.exitEditing();
+      }
+    });
+
+    try {
+      canvas.setActiveObject(target);
+      if (!target.isEditing) {
+        target.enterEditing(event);
+      }
+    } catch (err) {
+      console.warn('Error on enterEditing:', err);
+    }
+
+    // Mobile Virtual Keyboard optimization:
+    // Fabric 6's hiddenTextarea has font-size: 1px and z-index: -999, which breaks mobile keyboards.
+    // Setting font-size: 18px and positioning it in viewport ensures mobile Safari / Chrome show keyboard without jumping.
+    const textarea = (target as any).hiddenTextarea as HTMLTextAreaElement | null;
+    if (textarea) {
+      textarea.style.fontSize = '18px';
+      textarea.style.position = 'fixed';
+      textarea.style.top = '50%';
+      textarea.style.left = '50%';
+      textarea.style.transform = 'translate(-50%, -50%)';
+      textarea.style.width = '30px';
+      textarea.style.height = '30px';
+      textarea.style.opacity = '0.01';
+      textarea.style.zIndex = '99999';
+      textarea.style.pointerEvents = 'auto';
+      textarea.focus();
+    }
+
+    canvas.requestRenderAll();
+  }, [onToolChange]);
 
   // Push state to undo stack
   const saveStateToHistory = useCallback(() => {
@@ -521,16 +574,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
       }
 
-      if (textObj && typeof textObj.enterEditing === 'function') {
-        if (!textObj.isEditing) {
-          try {
-            canvas.setActiveObject(textObj);
-            textObj.enterEditing(opt.e);
-            canvas.requestRenderAll();
-          } catch (err) {
-            console.warn('Error on dblclick enterEditing:', err);
-          }
-        }
+      if (textObj) {
+        triggerTextEditing(textObj, opt.e);
       }
     });
 
@@ -886,6 +931,14 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             opt.target.type === 'i-text')
         ) {
           textTarget = opt.target as Textbox | IText;
+        } else if (opt.target && (opt.target.type === 'group' || (opt.target as any).isStickyNote)) {
+          const subTargets = opt.subTargets || [];
+          const subText = subTargets.find((o: any) => o.type === 'textbox' || o.type === 'i-text');
+          if (subText) {
+            textTarget = subText as Textbox | IText;
+          } else if (typeof (opt.target as Group).getObjects === 'function') {
+            textTarget = ((opt.target as Group).getObjects().find((o) => o.type === 'textbox' || o.type === 'i-text') as Textbox | IText) || null;
+          }
         } else {
           const allObjects = canvas.getObjects();
           for (let i = allObjects.length - 1; i >= 0; i--) {
@@ -902,6 +955,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
 
         if (textTarget) {
+          const now = Date.now();
+          const lastTap = lastTapRef.current;
+          const isDoubleTap = !!(lastTap && lastTap.target === textTarget && now - lastTap.time < 380);
+          const wasAlreadyActive = canvas.getActiveObject() === textTarget;
+
+          lastTapRef.current = { time: now, target: textTarget };
+
           // Exit editing on any other text object so cursor never leaks or ghost-edits
           canvas.getObjects().forEach((o: any) => {
             if (o !== textTarget && o.isEditing && typeof o.exitEditing === 'function') {
@@ -912,14 +972,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           // Always ensure the clicked text is set as active
           canvas.setActiveObject(textTarget);
 
-          // If text tool is active, enter editing immediately
-          if (activeToolRef.current === 'text') {
-            if (!textTarget.isEditing && typeof textTarget.enterEditing === 'function') {
-              textTarget.enterEditing(opt.e);
-              if (textTarget.hiddenTextarea) {
-                textTarget.hiddenTextarea.focus();
-              }
-            }
+          // If double tap, or text tool active, or tapped on already active text on mobile/touch -> enter editing!
+          if (isDoubleTap || activeToolRef.current === 'text' || (wasAlreadyActive && !textTarget.isEditing)) {
+            triggerTextEditing(textTarget, opt.e);
           } else if (!textTarget.isEditing && typeof (canvas as any)._setupCurrentTransform === 'function') {
             // In select mode: arm Fabric's drag transform on textTarget so dragging moves the text!
             (canvas as any)._setupCurrentTransform(opt.e, textTarget, false);
@@ -1221,7 +1276,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeTool, settings, saveStateToHistory, eraseAtPoint, updateLayers, onToolChange]);
+  }, [activeTool, settings, saveStateToHistory, eraseAtPoint, updateLayers, onToolChange, triggerTextEditing]);
 
   return (
     <main
@@ -1254,6 +1309,54 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       >
         <canvas ref={canvasElRef} />
       </div>
+
+      {/* Mobile Floating Text Edit Trigger Button */}
+      {isMobile && selectedObject && (selectedObject.text !== undefined || selectedObject.isStickyNote || selectedObject.type === 'textbox' || selectedObject.type === 'i-text') && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const canvas = fabricCanvasRef.current;
+            if (!canvas) return;
+            const activeObj = canvas.getActiveObject();
+            if (!activeObj) return;
+            let textObj: Textbox | IText | null = null;
+            if (activeObj instanceof Textbox || activeObj.type === 'textbox' || activeObj instanceof IText || activeObj.type === 'i-text') {
+              textObj = activeObj as Textbox | IText;
+            } else if (activeObj.type === 'group') {
+              textObj = ((activeObj as Group).getObjects().find((o) => o.type === 'textbox' || o.type === 'i-text') as Textbox | IText) || null;
+            }
+            if (textObj) {
+              triggerTextEditing(textObj);
+            }
+          }}
+          className="mobile-edit-text-pill"
+          style={{
+            position: 'absolute',
+            bottom: '76px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 30,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            backgroundColor: '#4A503D',
+            color: '#FFFFFF',
+            fontSize: '13.5px',
+            fontWeight: 600,
+            borderRadius: '9999px',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
+            border: '1.5px solid rgba(255,255,255,0.3)',
+            cursor: 'pointer',
+            touchAction: 'manipulation'
+          }}
+        >
+          <Edit3 size={16} />
+          <span>Tap to Edit Text</span>
+        </button>
+      )}
 
       {/* Grid Guide Overlay - placed directly above canvas with pointer-events: none */}
       {showGrid && (

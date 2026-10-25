@@ -419,6 +419,20 @@ export function App() {
         : null;
 
     if (textTarget) {
+      if (props.text !== undefined) {
+        textTarget.set('text', props.text);
+        textTarget.initDimensions?.();
+        textTarget.setCoords?.();
+        textTarget.set('dirty', true);
+        if ((activeObj as any).isStickyNote) {
+          (activeObj as any).initDimensions?.();
+          activeObj.setCoords?.();
+          activeObj.set('dirty', true);
+        }
+        setSelectedObject((prev) => (prev ? { ...prev, text: props.text } : null));
+        canvas.requestRenderAll();
+      }
+
       if (props.textColor !== undefined) {
         textTarget.set('fill', props.textColor);
         if (textTarget.isEditing) {
@@ -1425,6 +1439,7 @@ export function App() {
       <CanvasWorkspace
         activeTool={activeTool}
         settings={settings}
+        selectedObject={selectedObject}
         backgroundColor={backgroundColor}
         showGrid={showGrid}
         gridType={gridType}

@@ -1065,6 +1065,38 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       {/* TEXT SPECIFIC SETTINGS */}
       {hasTextProperties && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 6, borderTop: '1px solid #EBE2D5' }}>
+          {/* Direct Text Editor (Mobile-friendly & quick edits) */}
+          {selectedObject && (selectedObject.text !== undefined || selectedObject.type === 'textbox' || selectedObject.type === 'i-text' || selectedObject.isStickyNote) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: '#4E504A' }}>Text Content</span>
+                <span style={{ fontSize: 10, color: '#8F8B81' }}>Direct Edit</span>
+              </div>
+              <textarea
+                value={selectedObject.text || ''}
+                rows={3}
+                placeholder="Type your text here..."
+                onChange={(e) => onUpdateSelectedObject({ text: e.target.value })}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  border: '1px solid #E2D7C8',
+                  backgroundColor: '#FAF5EE',
+                  fontSize: 13,
+                  color: '#30312D',
+                  outline: 'none',
+                  resize: 'vertical',
+                  fontFamily: (selectedObject.fontFamily || 'Plus Jakarta Sans'),
+                  lineHeight: 1.4,
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#4E504A' }}>Typography</span>
             <span style={{ fontSize: 10, fontWeight: 500, color: '#8F8B81' }}>50 Styles</span>
