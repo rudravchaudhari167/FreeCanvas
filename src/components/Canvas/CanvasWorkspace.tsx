@@ -494,6 +494,22 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
       }
 
+      if (!textObj) {
+        const pointer = canvas.getScenePoint(opt.e);
+        const allObjects = canvas.getObjects();
+        for (let i = allObjects.length - 1; i >= 0; i--) {
+          const obj = allObjects[i];
+          if (
+            (obj instanceof Textbox || obj.type === 'textbox' || obj instanceof IText || obj.type === 'i-text') &&
+            typeof obj.containsPoint === 'function' &&
+            obj.containsPoint(pointer)
+          ) {
+            textObj = obj as Textbox | IText;
+            break;
+          }
+        }
+      }
+
       if (textObj && typeof textObj.enterEditing === 'function') {
         if (!textObj.isEditing) {
           try {
@@ -702,16 +718,36 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         return;
       }
 
-      // If user clicked on an existing object or control handle, and not erasing, let Fabric handle selection/transformation
-      if (opt.target && activeTool !== 'eraser') {
-        const isText =
-          opt.target instanceof Textbox ||
-          opt.target.type === 'textbox' ||
-          opt.target instanceof IText ||
-          opt.target.type === 'i-text';
+      const pointer = canvas.getScenePoint(opt.e);
 
-        if (isText) {
-          const textTarget = opt.target as Textbox | IText;
+      // Prioritize text selection: if the user clicked on or inside any text object,
+      // select/edit the text and do not let the underlying or surrounding shape hijack the selection.
+      if (activeTool !== 'eraser') {
+        let textTarget: Textbox | IText | null = null;
+        if (
+          opt.target &&
+          (opt.target instanceof Textbox ||
+            opt.target.type === 'textbox' ||
+            opt.target instanceof IText ||
+            opt.target.type === 'i-text')
+        ) {
+          textTarget = opt.target as Textbox | IText;
+        } else {
+          const allObjects = canvas.getObjects();
+          for (let i = allObjects.length - 1; i >= 0; i--) {
+            const obj = allObjects[i];
+            if (
+              (obj instanceof Textbox || obj.type === 'textbox' || obj instanceof IText || obj.type === 'i-text') &&
+              typeof obj.containsPoint === 'function' &&
+              obj.containsPoint(pointer)
+            ) {
+              textTarget = obj as Textbox | IText;
+              break;
+            }
+          }
+        }
+
+        if (textTarget) {
           const wasAlreadyActive = canvas.getActiveObject() === textTarget;
 
           // Exit editing on any other text object so cursor never leaks or ghost-edits
@@ -740,11 +776,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           canvas.requestRenderAll();
           return;
         }
-
-        return;
       }
 
-      const pointer = canvas.getScenePoint(opt.e);
+      // If user clicked on an existing object (shape, card, etc.) outside of text, let Fabric handle selection/transformation
+      if (opt.target && activeTool !== 'eraser') {
+        return;
+      }
 
       // Eraser Mode
       if (activeTool === 'eraser') {

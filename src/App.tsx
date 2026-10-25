@@ -329,8 +329,35 @@ export function App() {
         const newObj = createFabricShape(props.shapeType, commonProps, curWidth, curHeight);
 
         (newObj as any).shapeType = props.shapeType;
+        const oldIndex = canvas.getObjects().indexOf(activeObj);
         canvas.remove(activeObj);
-        canvas.add(newObj);
+        if (oldIndex >= 0) {
+          canvas.insertAt(oldIndex, newObj);
+        } else {
+          canvas.add(newObj);
+        }
+
+        // Ensure any text objects overlapping with the shape stay in front
+        const allObjects = canvas.getObjects();
+        const newShapeBbox = newObj.getBoundingRect();
+        allObjects.forEach((obj) => {
+          if (
+            obj !== newObj &&
+            (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text')
+          ) {
+            const textBbox = obj.getBoundingRect();
+            const overlaps = !(
+              textBbox.left > newShapeBbox.left + newShapeBbox.width ||
+              textBbox.left + textBbox.width < newShapeBbox.left ||
+              textBbox.top > newShapeBbox.top + newShapeBbox.height ||
+              textBbox.top + textBbox.height < newShapeBbox.top
+            );
+            if (overlaps) {
+              canvas.bringObjectToFront(obj);
+            }
+          }
+        });
+
         canvas.setActiveObject(newObj);
         newObj.setCoords();
         canvas.requestRenderAll();
