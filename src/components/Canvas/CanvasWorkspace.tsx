@@ -748,8 +748,6 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
 
         if (textTarget) {
-          const wasAlreadyActive = canvas.getActiveObject() === textTarget;
-
           // Exit editing on any other text object so cursor never leaks or ghost-edits
           canvas.getObjects().forEach((o: any) => {
             if (o !== textTarget && o.isEditing && typeof o.exitEditing === 'function') {
@@ -760,14 +758,17 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           // Always ensure the clicked text is set as active
           canvas.setActiveObject(textTarget);
 
-          // If text tool is active, or if user clicked on an already selected text, enter editing immediately!
-          if (activeToolRef.current === 'text' || wasAlreadyActive) {
+          // If text tool is active, enter editing immediately
+          if (activeToolRef.current === 'text') {
             if (!textTarget.isEditing && typeof textTarget.enterEditing === 'function') {
               textTarget.enterEditing(opt.e);
               if (textTarget.hiddenTextarea) {
                 textTarget.hiddenTextarea.focus();
               }
             }
+          } else if (!textTarget.isEditing && typeof (canvas as any)._setupCurrentTransform === 'function') {
+            // In select mode: arm Fabric's drag transform on textTarget so dragging moves the text!
+            (canvas as any)._setupCurrentTransform(opt.e, textTarget, false);
           }
 
           if (activeToolRef.current !== 'select' && onToolChange) {
