@@ -8,6 +8,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import type { TemplateType } from '../../types/canvas';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface MoreToolsMenuProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
   onApplyTemplate,
   currentTemplate = 'warm'
 }) => {
+  const isMobile = useIsMobile(768);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,11 +58,14 @@ export const MoreToolsMenu: React.FC<MoreToolsMenuProps> = ({
     <div
       ref={menuRef}
       style={{
-        position: 'absolute',
-        top: 360,
-        left: 84,
-        zIndex: 50,
-        width: 240,
+        position: isMobile ? 'fixed' : 'absolute',
+        top: isMobile ? 'auto' : 360,
+        bottom: isMobile ? 74 : 'auto',
+        left: isMobile ? '50%' : 84,
+        transform: isMobile ? 'translateX(-50%)' : 'none',
+        zIndex: 55,
+        width: isMobile ? 260 : 240,
+        maxWidth: 'calc(100vw - 32px)',
         backgroundColor: '#FFFEFA',
         border: '1px solid #E8DED2',
         borderRadius: 16,

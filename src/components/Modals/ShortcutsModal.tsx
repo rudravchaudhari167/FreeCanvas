@@ -38,7 +38,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ width: 560 }}
+        style={{ width: 560, maxWidth: '94vw', maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

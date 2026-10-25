@@ -89,7 +89,7 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ width: 680, height: 540 }}
+        style={{ width: 680, maxWidth: '94vw', height: 540, maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

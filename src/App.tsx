@@ -84,7 +84,12 @@ export function App() {
   const [showGrid, setShowGrid] = useState<boolean>(false);
   const [gridType, setGridType] = useState<GridType>('none');
   const [currentTemplate, setCurrentTemplate] = useState<TemplateType>('warm');
-  const [showProperties, setShowProperties] = useState<boolean>(true);
+  const [showProperties, setShowProperties] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
   const [showToolbar, setShowToolbar] = useState<boolean>(true);
   const [zoom, setZoom] = useState<number>(1);
 
@@ -1342,7 +1347,7 @@ export function App() {
   ]);
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {/* 1. TOP HEADER matching Reference Image 1 */}
       <EditorHeader
         projectName={projectName}
@@ -1451,6 +1456,7 @@ export function App() {
           onBringForward={handleBringForward}
           onSendBackward={handleSendBackward}
           onToggleLock={handleToggleLock}
+          onClose={() => setShowProperties(false)}
         />
       )}
 

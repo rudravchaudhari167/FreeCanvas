@@ -8,6 +8,7 @@ import {
   Check
 } from 'lucide-react';
 import type { BackgroundPreset } from '../../types/canvas';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface BottomFloatingBarProps {
   zoom: number;
@@ -41,6 +42,7 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
   backgroundColor,
   onChangeBackgroundColor
 }) => {
+  const isMobile = useIsMobile(768);
   const [showBgDropdown, setShowBgDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -63,22 +65,22 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
   return (
     <nav
       style={{
-        position: 'absolute',
-        bottom: 24,
+        position: isMobile ? 'fixed' : 'absolute',
+        bottom: isMobile ? 68 : 24,
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 40,
+        zIndex: 35,
         backgroundColor: 'rgba(253, 251, 247, 0.94)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid #E8DED2',
         borderRadius: 9999,
-        padding: '6px 14px',
+        padding: isMobile ? '3px 8px' : '6px 14px',
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: isMobile ? 6 : 12,
         boxShadow: '0 8px 30px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
-        height: 48
+        height: isMobile ? 38 : 48
       }}
       aria-label="Canvas View Controls"
     >
@@ -151,63 +153,66 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
 
       <div style={dividerStyle} />
 
-      {/* Grid Switch matching Reference Image 1 */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onToggleGrid();
-        }}
-        title={showGrid ? 'Hide Grid Guide' : 'Show Grid Guide'}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'none',
-          border: 'none',
-          padding: '4px 6px',
-          borderRadius: 8,
-          cursor: 'pointer',
-          outline: 'none',
-          transition: 'background-color 0.15s ease'
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFE9DE')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-      >
-        <div
-          className={`switch-track ${showGrid ? 'active' : ''}`}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="switch-thumb" />
-        </div>
-        <span style={{ fontSize: 12.5, fontWeight: 500, color: '#30312D' }}>Grid</span>
-      </button>
+      {!isMobile && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleGrid();
+            }}
+            title={showGrid ? 'Hide Grid Guide' : 'Show Grid Guide'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'none',
+              border: 'none',
+              padding: '4px 6px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              outline: 'none',
+              transition: 'background-color 0.15s ease'
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFE9DE')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            <div
+              className={`switch-track ${showGrid ? 'active' : ''}`}
+              style={{ pointerEvents: 'none' }}
+            >
+              <div className="switch-thumb" />
+            </div>
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: '#30312D' }}>Grid</span>
+          </button>
 
-      <div style={dividerStyle} />
+          <div style={dividerStyle} />
+        </>
+      )}
 
       {/* Background Dropdown matching Reference Image 1 */}
       <div ref={dropdownRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button
-          onClick={() => setShowBgDropdown(!showBgDropdown)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '4px 8px',
-            borderRadius: 8,
-            fontSize: 12.5,
-            fontWeight: 500,
-            color: '#30312D',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFE9DE')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          <ImageIcon size={15} color="#676B55" />
-          <span>Background</span>
-          <ChevronDown size={13} color="#79766F" style={{ transform: showBgDropdown ? 'rotate(180deg)' : 'none' }} />
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => setShowBgDropdown(!showBgDropdown)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 8px',
+              borderRadius: 8,
+              fontSize: 12.5,
+              fontWeight: 500,
+              color: '#30312D',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFE9DE')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            <ImageIcon size={15} color="#676B55" />
+            <span>Background</span>
+            <ChevronDown size={13} color="#79766F" style={{ transform: showBgDropdown ? 'rotate(180deg)' : 'none' }} />
+          </button>
+        )}
 
         {/* Selected background color preview swatch with dropdown arrow */}
         <button

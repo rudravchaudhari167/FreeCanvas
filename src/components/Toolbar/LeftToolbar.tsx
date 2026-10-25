@@ -12,6 +12,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import type { ToolType } from '../../types/canvas';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface LeftToolbarProps {
   activeTool: ToolType;
@@ -33,6 +34,8 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   onOpenMoreTools,
   onOpenGallery
 }) => {
+  const isMobile = useIsMobile(768);
+
   const tools: ToolDefinition[] = [
     { id: 'select', name: 'Select / Move', shortcut: 'V', icon: <MousePointer2 size={19} /> },
     { id: 'pen', name: 'Smooth Pen', shortcut: 'P', icon: <PenTool size={19} /> },
@@ -47,23 +50,31 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
 
   return (
     <aside
+      className={isMobile ? 'hide-scrollbar' : undefined}
       style={{
-        position: 'absolute',
-        top: 96,
-        left: 24,
+        position: isMobile ? 'fixed' : 'absolute',
+        top: isMobile ? 'auto' : 96,
+        bottom: isMobile ? 14 : 'auto',
+        left: isMobile ? '50%' : 24,
+        transform: isMobile ? 'translateX(-50%)' : 'none',
         zIndex: 40,
-        backgroundColor: 'rgba(253, 251, 247, 0.94)',
+        backgroundColor: 'rgba(253, 251, 247, 0.95)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid #E8DED2',
         borderRadius: 24,
-        padding: '10px 8px',
+        padding: isMobile ? '6px 8px' : '10px 8px',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: isMobile ? 'row' : 'column',
         alignItems: 'center',
         gap: 6,
-        boxShadow: '0 8px 30px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
-        width: 52
+        boxShadow: isMobile
+          ? '0 10px 32px -4px rgba(70, 60, 45, 0.18), 0 2px 8px rgba(70, 60, 45, 0.08)'
+          : '0 8px 30px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
+        width: isMobile ? 'auto' : 52,
+        maxWidth: isMobile ? 'calc(100vw - 20px)' : undefined,
+        overflowX: isMobile ? 'auto' : 'visible',
+        WebkitOverflowScrolling: 'touch'
       }}
       aria-label="Drawing Tools"
     >
@@ -117,10 +128,10 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
       {/* Divider */}
       <div
         style={{
-          width: 28,
-          height: 1,
+          width: isMobile ? 1 : 28,
+          height: isMobile ? 24 : 1,
           backgroundColor: '#EBE2D5',
-          margin: '2px 0'
+          margin: isMobile ? '0 2px' : '2px 0'
         }}
       />
 

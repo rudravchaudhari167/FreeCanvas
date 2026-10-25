@@ -117,6 +117,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   activeToolRef.current = activeTool;
   const settingsRef = useRef<ToolSettings>(settings);
   settingsRef.current = settings;
+  const onZoomChangeRef = useRef(onZoomChange);
+  onZoomChangeRef.current = onZoomChange;
 
   // Update layer list for Layers panel
   const updateLayers = useCallback(() => {
@@ -304,6 +306,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       preserveObjectStacking: true,
       stopContextMenu: true
     });
+
+    // Configure touch handling and control handles
+    FabricObject.prototype.cornerSize = 12;
+    FabricObject.prototype.touchCornerSize = 28;
+    FabricObject.prototype.transparentCorners = false;
 
     fabricCanvasRef.current = canvas;
     if (canvasRefCallback) canvasRefCallback(canvas);
@@ -641,10 +648,107 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       canvas.zoomToPoint(new Point(opt.e.offsetX, opt.e.offsetY), currentZoom);
       opt.e.preventDefault();
       opt.e.stopPropagation();
-      onZoomChange(currentZoom);
+      onZoomChangeRef.current(currentZoom);
     });
 
+    // Touch gesture handling: two-finger pinch-to-zoom and two-finger pan
+    const upperCanvas = canvas.upperCanvasEl;
+    let initialTouchDist = 0;
+    let initialZoom = 1;
+    let initialMidpoint: { x: number; y: number } | null = null;
+    let lastMidpoint: { x: number; y: number } | null = null;
+    let wasDrawingBeforeTouch = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (canvas.isDrawingMode) {
+          wasDrawingBeforeTouch = true;
+          canvas.isDrawingMode = false;
+        }
+
+        const t0 = e.touches[0];
+        const t1 = e.touches[1];
+        initialTouchDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        initialZoom = canvas.getZoom();
+        initialMidpoint = {
+          x: (t0.clientX + t1.clientX) / 2,
+          y: (t0.clientY + t1.clientY) / 2
+        };
+        lastMidpoint = { ...initialMidpoint };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialMidpoint && lastMidpoint && upperCanvas) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const t0 = e.touches[0];
+        const t1 = e.touches[1];
+        const currentDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        const currentMidpoint = {
+          x: (t0.clientX + t1.clientX) / 2,
+          y: (t0.clientY + t1.clientY) / 2
+        };
+
+        // Relative Pan
+        const deltaX = currentMidpoint.x - lastMidpoint.x;
+        const deltaY = currentMidpoint.y - lastMidpoint.y;
+        lastMidpoint = currentMidpoint;
+        canvas.relativePan(new Point(deltaX, deltaY));
+
+        // Pinch Zoom
+        if (initialTouchDist > 0) {
+          const scale = currentDist / initialTouchDist;
+          let targetZoom = initialZoom * scale;
+          targetZoom = Math.max(0.2, Math.min(5, targetZoom));
+
+          const rect = upperCanvas.getBoundingClientRect();
+          const zoomPoint = new Point(currentMidpoint.x - rect.left, currentMidpoint.y - rect.top);
+          canvas.zoomToPoint(zoomPoint, targetZoom);
+          onZoomChangeRef.current(targetZoom);
+        }
+
+        canvas.requestRenderAll();
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        initialMidpoint = null;
+        lastMidpoint = null;
+        initialTouchDist = 0;
+
+        if (wasDrawingBeforeTouch) {
+          setTimeout(() => {
+            const curTool = activeToolRef.current;
+            if (curTool === 'pen' || curTool === 'pencil' || curTool === 'marker') {
+              canvas.isDrawingMode = true;
+            }
+            wasDrawingBeforeTouch = false;
+          }, 60);
+        }
+      }
+    };
+
+    if (upperCanvas) {
+      upperCanvas.style.touchAction = 'none';
+      upperCanvas.addEventListener('touchstart', onTouchStart, { passive: false });
+      upperCanvas.addEventListener('touchmove', onTouchMove, { passive: false });
+      upperCanvas.addEventListener('touchend', onTouchEnd, { passive: false });
+      upperCanvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    }
+
     return () => {
+      if (upperCanvas) {
+        upperCanvas.removeEventListener('touchstart', onTouchStart);
+        upperCanvas.removeEventListener('touchmove', onTouchMove);
+        upperCanvas.removeEventListener('touchend', onTouchEnd);
+        upperCanvas.removeEventListener('touchcancel', onTouchEnd);
+      }
       window.removeEventListener('resize', handleResize);
       canvas.dispose();
       fabricCanvasRef.current = null;
@@ -1122,12 +1226,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   return (
     <main
       ref={containerRef}
+      className="canvas-touch-surface"
       style={{
         position: 'relative',
         width: '100%',
-        height: 'calc(100vh - 72px)',
+        height: '100%',
+        flex: 1,
         overflow: 'hidden',
-        backgroundColor: '#F8F3EC'
+        backgroundColor: '#F8F3EC',
+        touchAction: 'none'
       }}
       aria-label="Canvas Workspace"
     >

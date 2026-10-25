@@ -264,7 +264,57 @@ button {
   box-shadow: var(--shadow-floating);
   animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   max-height: 90vh;
+  max-width: min(94vw, 820px);
+  width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+
+/* Touch & Mobile Optimizations */
+@media (hover: none) {
+  /* Disable stuck hover tooltips on mobile touch devices */
+  .tooltip-content {
+    display: none !important;
+  }
+}
+
+.canvas-touch-surface {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mobile-bottom-sheet {
+  animation: slideUpSheet 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbars for clean horizontal docks on mobile */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    border-radius: 18px;
+    width: 95vw !important;
+    max-height: 88vh;
+  }
+}
+

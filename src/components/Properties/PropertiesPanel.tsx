@@ -14,7 +14,8 @@ import {
   Trash2,
   Check,
   Minimize2,
-  Maximize2
+  Maximize2,
+  X
 } from 'lucide-react';
 import type {
   ToolType,
@@ -23,6 +24,7 @@ import type {
   LineStyle
 } from '../../types/canvas';
 import { TEXT_STYLES, FONT_CATEGORIES } from '../../constants/fonts';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { STICKY_SIZE_PRESETS } from '../../services/stickyNoteService';
 import {
   SHAPE_DEFINITIONS,
@@ -42,6 +44,7 @@ interface PropertiesPanelProps {
   onBringForward?: () => void;
   onSendBackward?: () => void;
   onToggleLock: () => void;
+  onClose?: () => void;
 }
 
 export interface RGBColor {
@@ -132,8 +135,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onUpdateSelectedObject,
   onDuplicateSelected,
   onDeleteSelected,
-  onToggleLock
+  onToggleLock,
+  onClose
 }) => {
+  const isMobile = useIsMobile(768);
   const [showHexInput, setShowHexInput] = useState(false);
   const [hexValue, setHexValue] = useState(settings.color);
   const [colorMode, setColorMode] = useState<'rgb' | 'hex'>('rgb');
@@ -338,27 +343,47 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   return (
     <aside
+      className={isMobile ? 'mobile-bottom-sheet' : undefined}
       style={{
-        position: 'absolute',
-        top: 96,
-        right: 24,
-        zIndex: 40,
-        width: 254,
-        backgroundColor: 'rgba(253, 251, 247, 0.95)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
+        position: isMobile ? 'fixed' : 'absolute',
+        top: isMobile ? 'auto' : 96,
+        bottom: isMobile ? 0 : 'auto',
+        left: isMobile ? 0 : 'auto',
+        right: isMobile ? 0 : 24,
+        zIndex: 60,
+        width: isMobile ? '100vw' : 254,
+        maxWidth: isMobile ? '100vw' : undefined,
+        backgroundColor: 'rgba(253, 251, 247, 0.98)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         border: '1px solid #E8DED2',
-        borderRadius: 22,
-        padding: '16px 16px',
+        borderBottom: isMobile ? 'none' : '1px solid #E8DED2',
+        borderRadius: isMobile ? '24px 24px 0 0' : 22,
+        padding: isMobile ? '10px 18px 28px 18px' : '16px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: 13,
-        boxShadow: '0 12px 34px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
-        maxHeight: 'calc(100vh - 150px)',
+        boxShadow: isMobile
+          ? '0 -10px 40px rgba(0, 0, 0, 0.16)'
+          : '0 12px 34px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
+        maxHeight: isMobile ? '76vh' : 'calc(100vh - 150px)',
         overflowY: 'auto'
       }}
       aria-label="Properties Panel"
     >
+      {/* Mobile Grab Handle */}
+      {isMobile && (
+        <div
+          style={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: '#D5CBBF',
+            margin: '0 auto 4px auto'
+          }}
+        />
+      )}
+
       {/* Panel Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -374,19 +399,41 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             Properties
           </h2>
         </div>
-        <span
-          style={{
-            fontSize: 10.5,
-            fontWeight: 550,
-            color: '#676C4F',
-            backgroundColor: '#EEF0E5',
-            padding: '2.5px 7px',
-            borderRadius: 6,
-            letterSpacing: '0.2px'
-          }}
-        >
-          {getItemBadgeLabel()}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            style={{
+              fontSize: 10.5,
+              fontWeight: 550,
+              color: '#676C4F',
+              backgroundColor: '#EEF0E5',
+              padding: '2.5px 7px',
+              borderRadius: 6,
+              letterSpacing: '0.2px'
+            }}
+          >
+            {getItemBadgeLabel()}
+          </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              aria-label="Close Properties"
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#FAF5EE',
+                border: '1px solid #E2D7C8',
+                color: '#55534E',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* AESTHETIC & MINIMAL COLOR SECTION */}

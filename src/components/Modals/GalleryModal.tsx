@@ -95,7 +95,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ width: 680, height: 560 }}
+        style={{ width: 680, maxWidth: '94vw', height: 560, maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
