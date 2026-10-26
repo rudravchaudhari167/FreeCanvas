@@ -15,6 +15,7 @@ import {
   saveProject,
   deleteProject
 } from '../../services/db';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface ProjectsModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
   onNewProject,
   onToast
 }) => {
+  const isMobile = useIsMobile(640);
   const [projects, setProjects] = useState<CanvasProject[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
@@ -89,13 +91,18 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ width: 680, maxWidth: '94vw', height: 540, maxHeight: '90vh' }}
+        style={{
+          width: 680,
+          maxWidth: isMobile ? '96vw' : '94vw',
+          height: isMobile ? '86vh' : 540,
+          maxHeight: '90vh'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           style={{
-            padding: '18px 24px',
+            padding: isMobile ? '12px 16px' : '18px 24px',
             borderBottom: '1px solid #E8DED2',
             display: 'flex',
             alignItems: 'center',
@@ -113,18 +120,21 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#5E6547'
+                color: '#5E6547',
+                flexShrink: 0
               }}
             >
               <FolderOpen size={18} />
             </div>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#30312D' }}>
-                My Creative Projects
+              <h2 style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#30312D' }}>
+                My Projects
               </h2>
-              <p style={{ fontSize: 12, color: '#79766F' }}>
-                Locally saved drawing workspaces in browser storage
-              </p>
+              {!isMobile && (
+                <p style={{ fontSize: 12, color: '#79766F' }}>
+                  Locally saved drawing workspaces in browser storage
+                </p>
+              )}
             </div>
           </div>
 
@@ -137,26 +147,30 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
+                gap: 5,
+                padding: isMobile ? '6px 10px' : '6px 12px',
                 borderRadius: 10,
                 backgroundColor: '#5E6547',
                 color: '#FFFEFA',
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: 550,
+                border: 'none',
                 cursor: 'pointer'
               }}
             >
               <Plus size={15} />
-              <span>New Project</span>
+              <span>New</span>
             </button>
 
             <button
               onClick={onClose}
+              aria-label="Close modal"
               style={{
                 width: 32,
                 height: 32,
                 borderRadius: 8,
+                border: 'none',
+                backgroundColor: 'transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -170,7 +184,7 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
         </div>
 
         {/* Projects Grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px' : '20px 24px' }}>
           {projects.length === 0 ? (
             <div
               style={{
@@ -193,8 +207,8 @@ export const ProjectsModal: React.FC<ProjectsModalProps> = ({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                gap: 16
+                gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '135px' : '180px'}, 1fr))`,
+                gap: isMobile ? 10 : 16
               }}
             >
               {projects.map((proj) => {

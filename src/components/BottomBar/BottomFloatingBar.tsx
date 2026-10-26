@@ -47,16 +47,18 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowBgDropdown(false);
       }
     };
     if (showBgDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [showBgDropdown]);
 
@@ -66,21 +68,25 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
     <nav
       style={{
         position: isMobile ? 'fixed' : 'absolute',
-        bottom: isMobile ? 68 : 24,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        top: isMobile ? 64 : 'auto',
+        bottom: isMobile ? 'auto' : 24,
+        left: isMobile ? 'auto' : '50%',
+        right: isMobile ? 12 : 'auto',
+        transform: isMobile ? 'none' : 'translateX(-50%)',
         zIndex: 35,
         backgroundColor: 'rgba(253, 251, 247, 0.94)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid #E8DED2',
         borderRadius: 9999,
-        padding: isMobile ? '3px 8px' : '6px 14px',
+        padding: isMobile ? '2px 8px' : '6px 14px',
         display: 'flex',
         alignItems: 'center',
-        gap: isMobile ? 6 : 12,
-        boxShadow: '0 8px 30px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
-        height: isMobile ? 38 : 48
+        gap: isMobile ? 4 : 12,
+        boxShadow: isMobile
+          ? '0 4px 14px rgba(70, 60, 45, 0.1)'
+          : '0 8px 30px -4px rgba(70, 60, 45, 0.08), 0 2px 8px rgba(70, 60, 45, 0.04)',
+        height: isMobile ? 32 : 48
       }}
       aria-label="Canvas View Controls"
     >
@@ -246,7 +252,8 @@ export const BottomFloatingBar: React.FC<BottomFloatingBarProps> = ({
           <div
             style={{
               position: 'absolute',
-              bottom: 'calc(100% + 12px)',
+              bottom: isMobile ? 'auto' : 'calc(100% + 12px)',
+              top: isMobile ? 'calc(100% + 8px)' : 'auto',
               right: 0,
               width: 200,
               backgroundColor: '#FFFEFA',

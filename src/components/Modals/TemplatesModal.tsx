@@ -20,6 +20,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import type { TemplateType } from '../../types/canvas';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface TemplatesModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
   onApplyTemplate,
   currentTemplate = 'warm'
 }) => {
+  const isMobile = useIsMobile(640);
   const [activeTab, setActiveTab] = useState<'all' | 'college' | 'paper' | 'productivity' | 'creative'>('all');
 
   if (!isOpen) return null;
@@ -223,8 +225,8 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
         className="modal-content"
         style={{
           width: 820,
-          maxWidth: '94vw',
-          maxHeight: '90vh',
+          maxWidth: isMobile ? '96vw' : '94vw',
+          maxHeight: isMobile ? '88vh' : '90vh',
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#FFFEFA',
@@ -237,7 +239,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
         {/* Modal Header */}
         <div
           style={{
-            padding: '20px 24px 16px',
+            padding: isMobile ? '14px 16px' : '20px 24px 16px',
             borderBottom: '1px solid #E8DFD3',
             display: 'flex',
             alignItems: 'center',
@@ -245,28 +247,31 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             backgroundColor: '#FAF5EE'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
-                width: 38,
-                height: 38,
+                width: 34,
+                height: 34,
                 borderRadius: 10,
                 backgroundColor: '#EAEEDD',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#5E6547'
+                color: '#5E6547',
+                flexShrink: 0
               }}
             >
-              <LayoutTemplate size={22} />
+              <LayoutTemplate size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: 17, fontWeight: 600, color: '#30312D', margin: 0 }}>
-                Canvas Templates & Paper Styles
+              <h2 style={{ fontSize: isMobile ? 15 : 17, fontWeight: 600, color: '#30312D', margin: 0 }}>
+                Canvas Templates
               </h2>
-              <p style={{ fontSize: 12, color: '#79766F', margin: '2px 0 0' }}>
-                Explore student flowcharts, lab reports, SWOT analysis, paper grids, and study layouts.
-              </p>
+              {!isMobile && (
+                <p style={{ fontSize: 12, color: '#79766F', margin: '2px 0 0' }}>
+                  Explore student flowcharts, lab reports, SWOT analysis, paper grids, and study layouts.
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -289,15 +294,20 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
           </button>
         </div>
 
-        {/* Filter Navigation Tabs */}
+        {/* Filter Navigation Tabs with touch horizontal scroll */}
         <div
+          className="gallery-tabs-scroll-container hide-scrollbar"
           style={{
-            padding: '12px 24px',
+            padding: isMobile ? '10px 14px' : '12px 24px',
             borderBottom: '1px solid #EFE8DE',
             display: 'flex',
             gap: 8,
             backgroundColor: '#FDFAF5',
-            overflowX: 'auto'
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            whiteSpace: 'nowrap',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x'
           }}
         >
           {[
@@ -325,6 +335,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   border: 'none',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -338,11 +349,11 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
         {/* Templates Grid Content */}
         <div
           style={{
-            padding: '20px 24px',
+            padding: isMobile ? '12px 14px' : '20px 24px',
             overflowY: 'auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
-            gap: 14,
+            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '145px' : '230px'}, 1fr))`,
+            gap: isMobile ? 10 : 14,
             maxHeight: 520
           }}
         >

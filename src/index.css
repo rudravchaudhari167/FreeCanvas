@@ -301,6 +301,22 @@ button {
   animation: slideUpSheet 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Mobile quick contextual action shelf animation */
+@keyframes quickShelfPop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.mobile-quick-shelf {
+  animation: quickShelfPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
 /* Hide scrollbars for clean horizontal docks on mobile */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;

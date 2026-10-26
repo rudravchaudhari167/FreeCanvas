@@ -576,6 +576,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               gap: 16
             }}
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
           >
             {/* Project Title & Status */}
             <div

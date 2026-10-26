@@ -48,8 +48,12 @@ import { ProjectsModal } from './components/Modals/ProjectsModal';
 import { TemplatesModal } from './components/Modals/TemplatesModal';
 import { ShortcutsModal } from './components/Modals/ShortcutsModal';
 import { Toast } from './components/Modals/Toast';
+import { MobileQuickBar } from './components/Mobile/MobileQuickBar';
+import { useIsMobile } from './hooks/useIsMobile';
 
 export function App() {
+  const isMobile = useIsMobile(768);
+
   // Current Project State
   const [projectId, setProjectId] = useState<string>(() => 'proj_' + Date.now());
   const [projectName, setProjectName] = useState<string>('Ideas Into Beauty');
@@ -733,6 +737,16 @@ export function App() {
     setSelectedObject((prev) => (prev ? { ...prev, isLocked } : null));
     showToast(isLocked ? 'Object locked' : 'Object unlocked');
   }, [showToast]);
+
+  // Deselect active object
+  const handleDeselect = useCallback(() => {
+    const canvas = fabricCanvasRef.current;
+    if (canvas) {
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      setSelectedObject(null);
+    }
+  }, []);
 
   // Bring forward / send backward
   const handleBringForward = useCallback(() => {
@@ -1418,6 +1432,26 @@ export function App() {
           onSelectTool={setActiveTool}
           onOpenMoreTools={() => setIsMoreToolsOpen(!isMoreToolsOpen)}
           onOpenGallery={() => setIsGalleryOpen(true)}
+          onAddStickyNote={handleAddStickyNote}
+        />
+      )}
+
+      {/* 2.5 MOBILE QUICK ACTION BAR (1-tap context shelf for mobile) */}
+      {isMobile && (
+        <MobileQuickBar
+          activeTool={activeTool}
+          settings={settings}
+          selectedObject={selectedObject}
+          onSelectTool={setActiveTool}
+          onUpdateSettings={handleUpdateSettings}
+          onUpdateSelectedObject={handleUpdateSelectedObject}
+          onDuplicateSelected={handleDuplicateSelected}
+          onDeleteSelected={handleDeleteSelected}
+          onToggleLock={handleToggleLock}
+          onOpenProperties={() => setShowProperties(true)}
+          onDeselect={handleDeselect}
+          onAddStickyNote={handleAddStickyNote}
+          onClearCanvas={handleClearCanvas}
         />
       )}
 
