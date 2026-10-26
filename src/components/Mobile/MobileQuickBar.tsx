@@ -109,10 +109,11 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
       if (isSticky) return 'Sticky Note';
       if (isText) return 'Text';
       if (selectedObject.shapeType) return selectedObject.shapeType;
+      if (selectedObject.type === 'group') return 'Sticker';
+      if (selectedObject.type === 'image') return 'Illustration';
       if (selectedObject.type === 'rect') return 'Rectangle';
       if (selectedObject.type === 'circle') return 'Circle';
       if (selectedObject.type === 'activeselection') return 'Selection';
-      if (selectedObject.type === 'image') return 'Image';
       return 'Object';
     };
 

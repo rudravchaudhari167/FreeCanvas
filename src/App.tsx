@@ -974,7 +974,10 @@ export function App() {
                   subTargetCheck: false,
                   interactive: false,
                   selectable: true,
-                  evented: true
+                  evented: true,
+                  hasControls: true,
+                  hasBorders: true,
+                  lockRotation: false
                 });
                 (group as any).subTargetCheck = false;
                 (group as any).interactive = false;
@@ -1039,7 +1042,10 @@ export function App() {
         objectToInsert.set({
           scaleX: (objectToInsert.scaleX || 1) * scale,
           scaleY: (objectToInsert.scaleY || 1) * scale,
-          selectable: true
+          selectable: true,
+          hasControls: true,
+          hasBorders: true,
+          lockRotation: false
         });
 
         canvas.add(objectToInsert);

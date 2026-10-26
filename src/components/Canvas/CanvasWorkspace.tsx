@@ -1081,7 +1081,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           subTargetCheck: false,
           interactive: false,
           selectable: true,
-          evented: true
+          evented: true,
+          hasControls: true,
+          hasBorders: true,
+          lockRotation: false
         });
         (rootGroup as any).subTargetCheck = false;
         (rootGroup as any).interactive = false;
@@ -1108,30 +1111,48 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
         opt.target = rootGroup;
         opt.subTargets = [];
-        canvas.setActiveObject(rootGroup);
 
-        // Check if user clicked a resize / rotate control handle on the sticker group
-        const isControlClicked =
+        // Check if user clicked/touched a resize / rotate control handle on the sticker group
+        const curTransform = (canvas as any)._currentTransform;
+        const isTransformingControl = !!(curTransform && curTransform.corner);
+        const controlHit =
           typeof rootGroup.findControl === 'function' &&
           rootGroup.findControl(canvas.getViewportPoint(opt.e), true);
 
-        if (!isControlClicked) {
-          // Direct 1-finger touch and pointer dragging for the entire sticker / illustration
-          isDraggingTextRef.current = true;
-          textDragStartPointerRef.current = { x: pointer.x, y: pointer.y };
-          textDragStartObjectPosRef.current = { left: rootGroup.left || 0, top: rootGroup.top || 0 };
-          textDragTargetRef.current = rootGroup;
+        if (isTransformingControl || controlHit) {
+          // USER TOUCHED A STICKER / ILLUSTRATION POINT (ROTATE OR ADJUST SIZE)!
+          // Preserve Fabric's native scale/rotate transformation and DO NOT hijack with drag!
+          isDraggingTextRef.current = false;
+          textDragTargetRef.current = null;
+          textDragStartPointerRef.current = null;
+          textDragStartObjectPosRef.current = null;
           textDragMovedRef.current = false;
+
+          if (activeToolRef.current !== 'select' && onToolChange) {
+            onToolChange('select');
+          }
+          return;
         }
 
-        if (typeof (canvas as any)._setupCurrentTransform === 'function') {
-          (canvas as any)._setupCurrentTransform(opt.e, rootGroup, false);
+        // Otherwise, user touched the body of the sticker / illustration:
+        if (canvas.getActiveObject() !== rootGroup) {
+          canvas.setActiveObject(rootGroup);
+          canvas.requestRenderAll();
         }
+
+        // For stickers and illustrations, we DO NOT hijack with custom isDraggingTextRef.
+        // Fabric natively handles 1-finger group dragging via its built-in dragHandler,
+        // and leaving isDraggingTextRef false allows touchmove events to reach Fabric
+        // so corner point scaling (adjust size) and top point rotating execute smoothly!
+        isDraggingTextRef.current = false;
+        textDragTargetRef.current = null;
+        textDragStartPointerRef.current = null;
+        textDragStartObjectPosRef.current = null;
+        textDragMovedRef.current = false;
 
         if (activeToolRef.current !== 'select' && onToolChange) {
           onToolChange('select');
         }
-        canvas.requestRenderAll();
         return;
       }
 
