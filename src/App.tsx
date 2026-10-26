@@ -1204,9 +1204,14 @@ export function App() {
         showToast('Applied Kanban Board template');
       }
 
+      // Auto-fit template so all shapes and text are immediately visible and editable on mobile & desktop
+      setTimeout(() => {
+        handleFitScreen();
+      }, 60);
+
       handleCanvasChangeTrigger(JSON.stringify(canvas.toJSON()));
     }
-  }, [showToast, handleCanvasChangeTrigger]);
+  }, [showToast, handleCanvasChangeTrigger, handleFitScreen]);
 
   // Clear Canvas
   const handleClearCanvas = useCallback(() => {
@@ -1501,6 +1506,19 @@ export function App() {
           onDeselect={handleDeselect}
           onAddStickyNote={handleAddStickyNote}
           onClearCanvas={handleClearCanvas}
+          onEditText={() => {
+            const canvas = fabricCanvasRef.current;
+            if (!canvas) return;
+            const active = canvas.getActiveObject();
+            if (active) {
+              if (typeof (canvas as any).triggerTextEditing === 'function') {
+                (canvas as any).triggerTextEditing(active);
+              } else if (typeof (active as any).enterEditing === 'function') {
+                (active as any).enterEditing();
+                canvas.requestRenderAll();
+              }
+            }
+          }}
         />
       )}
 

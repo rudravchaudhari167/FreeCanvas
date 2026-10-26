@@ -16,7 +16,10 @@ import {
   Pencil,
   Highlighter,
   Bold,
-  RotateCcw
+  RotateCcw,
+  Edit3,
+  Shapes,
+  Check
 } from 'lucide-react';
 import type {
   ToolType,
@@ -39,6 +42,7 @@ interface MobileQuickBarProps {
   onDeselect: () => void;
   onAddStickyNote?: (color?: string) => void;
   onClearCanvas?: () => void;
+  onEditText?: () => void;
 }
 
 // Quick curated colors for 1-tap mobile selection & drawing
@@ -74,20 +78,28 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
   onOpenProperties,
   onDeselect,
   onAddStickyNote,
-  onClearCanvas
+  onClearCanvas,
+  onEditText
 }) => {
   const [showColorRow, setShowColorRow] = useState(false);
+  const [showShapeRow, setShowShapeRow] = useState(false);
+  const [shapeColorTarget, setShapeColorTarget] = useState<'fill' | 'stroke'>('fill');
+  const [showTextModal, setShowTextModal] = useState(false);
+  const [editTextValue, setEditTextValue] = useState('');
 
   // 1. SELECTION CONTEXT: An item is selected on the canvas
   if (selectedObject) {
     const isSticky = !!selectedObject.isStickyNote;
-    const isText = selectedObject.type === 'i-text' || selectedObject.type === 'text' || selectedObject.type === 'textbox';
+    const isText = selectedObject.type === 'i-text' || selectedObject.type === 'text' || selectedObject.type === 'textbox' || selectedObject.text !== undefined;
+    const isShape = !isText && !isSticky && (!!selectedObject.shapeType || ['rect', 'circle', 'ellipse', 'triangle', 'polygon'].includes(selectedObject.type || ''));
     const isLocked = !!selectedObject.isLocked;
 
     // Determine current color for the preview badge
     let currentColor = selectedObject.fill || '#777D5E';
     if (isSticky) {
       currentColor = selectedObject.backgroundColor || selectedObject.fill || '#FAF0D7';
+    } else if (isShape && shapeColorTarget === 'stroke') {
+      currentColor = selectedObject.stroke || '#5E6547';
     }
 
     const getItemName = () => {
@@ -106,6 +118,8 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
         onUpdateSelectedObject({ backgroundColor: color });
       } else if (isText) {
         onUpdateSelectedObject({ textColor: color, fill: color });
+      } else if (isShape && shapeColorTarget === 'stroke') {
+        onUpdateSelectedObject({ stroke: color, strokeWidth: selectedObject.strokeWidth || 2 });
       } else {
         onUpdateSelectedObject({ fill: color });
       }
@@ -113,165 +127,469 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
     };
 
     return (
-      <div
-        className="mobile-quick-shelf"
-        style={{
-          position: 'fixed',
-          bottom: 74,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 45,
-          width: 'calc(100vw - 24px)',
-          maxWidth: 440,
-          backgroundColor: 'rgba(253, 251, 247, 0.97)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid #E8DED2',
-          borderRadius: 18,
-          padding: '6px 10px',
-          boxShadow: '0 8px 30px -4px rgba(60, 50, 40, 0.16), 0 2px 8px rgba(60, 50, 40, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-          animation: 'fadeIn 0.15s ease-out'
-        }}
-      >
-        {/* Top Mini Color Picker Row (expanded on tap) */}
-        {showColorRow && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              padding: '6px 8px',
-              borderBottom: '1px solid #EFE8DE',
-              overflowX: 'auto',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
-            {(isSticky ? STICKY_PALETTE : QUICK_PALETTE).map((p) => (
-              <button
-                key={p.color}
-                onClick={() => handleApplyColor(p.color)}
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: '50%',
-                  backgroundColor: p.color,
-                  border: p.color.toLowerCase() === '#ffffff' ? '1.5px solid #D5CBBF' : '1.5px solid rgba(0,0,0,0.12)',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  transform: currentColor === p.color ? 'scale(1.2)' : 'none',
-                  boxShadow: currentColor === p.color ? '0 2px 6px rgba(0,0,0,0.25)' : 'none',
-                  transition: 'transform 0.15s'
-                }}
-                title={p.name}
-              />
-            ))}
-          </div>
-        )}
+      <>
+        <div
+          className="mobile-quick-shelf"
+          style={{
+            position: 'fixed',
+            bottom: 74,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 45,
+            width: 'calc(100vw - 24px)',
+            maxWidth: 440,
+            backgroundColor: 'rgba(253, 251, 247, 0.97)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid #E8DED2',
+            borderRadius: 18,
+            padding: '6px 10px',
+            boxShadow: '0 8px 30px -4px rgba(60, 50, 40, 0.16), 0 2px 8px rgba(60, 50, 40, 0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            animation: 'fadeIn 0.15s ease-out'
+          }}
+        >
+          {/* Top Mini Color Picker Row (expanded on tap) */}
+          {showColorRow && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6,
+                padding: '4px 6px',
+                borderBottom: '1px solid #EFE8DE'
+              }}
+            >
+              {/* Fill vs Border toggle for shapes */}
+              {isShape && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 2 }}>
+                  <div style={{ display: 'flex', backgroundColor: '#EFEAE0', borderRadius: 999, padding: 2, border: '1px solid #E2D9CC' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShapeColorTarget('fill')}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        fontSize: 10,
+                        fontWeight: 650,
+                        border: 'none',
+                        backgroundColor: shapeColorTarget === 'fill' ? '#FFFFFF' : 'transparent',
+                        color: shapeColorTarget === 'fill' ? '#30312D' : '#8A857A',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Fill Color
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShapeColorTarget('stroke')}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        fontSize: 10,
+                        fontWeight: 650,
+                        border: 'none',
+                        backgroundColor: shapeColorTarget === 'stroke' ? '#FFFFFF' : 'transparent',
+                        color: shapeColorTarget === 'stroke' ? '#30312D' : '#8A857A',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Border Color
+                    </button>
+                  </div>
+                  {/* Quick border width selector */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {[1.5, 3, 5].map((w) => (
+                      <button
+                        key={w}
+                        onClick={() => onUpdateSelectedObject({ strokeWidth: w })}
+                        style={{
+                          fontSize: 9.5,
+                          fontWeight: 600,
+                          padding: '2px 5px',
+                          borderRadius: 6,
+                          border: '1px solid #E2D9CC',
+                          backgroundColor: selectedObject.strokeWidth === w ? '#FAF0D7' : '#FFFFFF',
+                          color: '#4E504A',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {w}px
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-        {/* Main Selection Actions Row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-          {/* Left: Item Badge & Quick Color Trigger */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button
-              onClick={() => setShowColorRow(!showColorRow)}
-              title="Tap to change color"
+              {/* Swatches */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  padding: '2px 0'
+                }}
+              >
+                {(isSticky ? STICKY_PALETTE : QUICK_PALETTE).map((p) => (
+                  <button
+                    key={p.color}
+                    onClick={() => handleApplyColor(p.color)}
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      backgroundColor: p.color,
+                      border: p.color.toLowerCase() === '#ffffff' ? '1.5px solid #D5CBBF' : '1.5px solid rgba(0,0,0,0.12)',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      transform: currentColor === p.color ? 'scale(1.2)' : 'none',
+                      boxShadow: currentColor === p.color ? '0 2px 6px rgba(0,0,0,0.25)' : 'none',
+                      transition: 'transform 0.15s'
+                    }}
+                    title={p.name}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Shape Morphing Row (expanded on tap for shapes) */}
+          {showShapeRow && isShape && (
+            <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
-                padding: '4px 8px',
-                borderRadius: 10,
-                backgroundColor: '#F5EFE5',
-                border: '1px solid #E8DFD3',
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#30312D',
-                cursor: 'pointer'
+                justifyContent: 'center',
+                gap: 6,
+                padding: '6px 4px',
+                borderBottom: '1px solid #EFE8DE',
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch'
               }}
             >
-              <span
-                style={{
-                  width: 15,
-                  height: 15,
-                  borderRadius: '50%',
-                  backgroundColor: currentColor,
-                  border: '1px solid rgba(0,0,0,0.15)',
-                  display: 'inline-block'
+              {[
+                { type: 'rectangle' as ShapeType, label: 'Rect', icon: <Square size={14} /> },
+                { type: 'rounded-rect' as ShapeType, label: 'Rounded', icon: <Square size={14} style={{ borderRadius: 3 }} /> },
+                { type: 'circle' as ShapeType, label: 'Circle', icon: <Circle size={14} /> },
+                { type: 'triangle' as ShapeType, label: 'Triangle', icon: <Triangle size={14} /> },
+                { type: 'star' as ShapeType, label: 'Star', icon: <Star size={14} /> },
+                { type: 'heart' as ShapeType, label: 'Heart', icon: <Heart size={14} /> }
+              ].map((s) => (
+                <button
+                  key={s.type}
+                  onClick={() => {
+                    onUpdateSelectedObject({ shapeType: s.type });
+                    setShowShapeRow(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                    padding: '3px 7px',
+                    borderRadius: 7,
+                    border: '1px solid #E2D9CC',
+                    backgroundColor: selectedObject.shapeType === s.type ? '#FAF0D7' : '#FFFFFF',
+                    color: '#30312D',
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                >
+                  {s.icon}
+                  <span>{s.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Main Selection Actions Row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+            {/* Left: Item Badge & Color Trigger + Edit/Shape Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <button
+                onClick={() => {
+                  setShowColorRow(!showColorRow);
+                  setShowShapeRow(false);
                 }}
-              />
-              <span style={{ textTransform: 'capitalize', maxWidth: 85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {getItemName()}
-              </span>
-            </button>
-          </div>
+                title="Tap to change color"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '4px 8px',
+                  borderRadius: 10,
+                  backgroundColor: '#F5EFE5',
+                  border: '1px solid #E8DFD3',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#30312D',
+                  cursor: 'pointer'
+                }}
+              >
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    backgroundColor: currentColor,
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    display: 'inline-block'
+                  }}
+                />
+                <span style={{ textTransform: 'capitalize', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {getItemName()}
+                </span>
+              </button>
 
-          {/* Right: Quick Action Buttons (Duplicate, Delete, Lock, Properties, Deselect) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {/* Duplicate Button */}
-            <button
-              onClick={onDuplicateSelected}
-              aria-label="Duplicate item"
-              title="Duplicate"
-              style={quickBtnStyle}
-            >
-              <Copy size={16} color="#4A4B46" />
-            </button>
+              {/* Edit Text Button for templates & textboxes */}
+              {isText && (
+                <button
+                  onClick={() => {
+                    setEditTextValue(selectedObject.text || '');
+                    if (onEditText) onEditText();
+                    setShowTextModal(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '4px 9px',
+                    borderRadius: 10,
+                    backgroundColor: '#EAEEDD',
+                    border: '1px solid #C9D5B6',
+                    color: '#344A24',
+                    fontSize: 12,
+                    fontWeight: 650,
+                    cursor: 'pointer'
+                  }}
+                  title="Edit text content"
+                >
+                  <Edit3 size={13} color="#344A24" />
+                  <span>Edit</span>
+                </button>
+              )}
 
-            {/* Lock / Unlock */}
-            <button
-              onClick={onToggleLock}
-              aria-label={isLocked ? 'Unlock item' : 'Lock item'}
-              title={isLocked ? 'Unlock' : 'Lock'}
-              style={{
-                ...quickBtnStyle,
-                backgroundColor: isLocked ? '#FAF0D7' : 'transparent',
-                borderColor: isLocked ? '#DCD0B4' : 'transparent'
-              }}
-            >
-              {isLocked ? <Lock size={16} color="#B5812B" /> : <Unlock size={16} color="#79766F" />}
-            </button>
+              {/* Shape Morpher Button for template shapes */}
+              {isShape && (
+                <button
+                  onClick={() => {
+                    setShowShapeRow(!showShapeRow);
+                    setShowColorRow(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '4px 8px',
+                    borderRadius: 10,
+                    backgroundColor: showShapeRow ? '#E2DDD2' : '#F5EFE5',
+                    border: '1px solid #E8DFD3',
+                    color: '#30312D',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                  title="Change shape"
+                >
+                  <Shapes size={13} color="#5E6547" />
+                  <span>Shape</span>
+                </button>
+              )}
+            </div>
 
-            {/* Open Full Properties Panel */}
-            <button
-              onClick={onOpenProperties}
-              aria-label="Item properties"
-              title="Full Properties"
-              style={quickBtnStyle}
-            >
-              <Sliders size={16} color="#5E6547" />
-            </button>
+            {/* Right: Quick Action Buttons (Duplicate, Delete, Lock, Properties, Deselect) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {/* Duplicate Button */}
+              <button
+                onClick={onDuplicateSelected}
+                aria-label="Duplicate item"
+                title="Duplicate"
+                style={quickBtnStyle}
+              >
+                <Copy size={16} color="#4A4B46" />
+              </button>
 
-            {/* Delete Button (with red tint) */}
-            <button
-              onClick={onDeleteSelected}
-              aria-label="Delete item"
-              title="Delete"
-              style={{
-                ...quickBtnStyle,
-                backgroundColor: '#FDF2F0',
-                borderColor: '#F3D2CD',
-                color: '#D84C4C'
-              }}
-            >
-              <Trash2 size={16} color="#D84C4C" />
-            </button>
+              {/* Lock / Unlock */}
+              <button
+                onClick={onToggleLock}
+                aria-label={isLocked ? 'Unlock item' : 'Lock item'}
+                title={isLocked ? 'Unlock' : 'Lock'}
+                style={{
+                  ...quickBtnStyle,
+                  backgroundColor: isLocked ? '#FAF0D7' : 'transparent',
+                  borderColor: isLocked ? '#DCD0B4' : 'transparent'
+                }}
+              >
+                {isLocked ? <Lock size={16} color="#B5812B" /> : <Unlock size={16} color="#79766F" />}
+              </button>
 
-            {/* Close / Deselect */}
-            <button
-              onClick={onDeselect}
-              aria-label="Deselect"
-              title="Deselect"
-              style={{ ...quickBtnStyle, marginLeft: 2 }}
-            >
-              <X size={15} color="#8A857A" />
-            </button>
+              {/* Open Full Properties Panel */}
+              <button
+                onClick={onOpenProperties}
+                aria-label="Item properties"
+                title="Full Properties"
+                style={quickBtnStyle}
+              >
+                <Sliders size={16} color="#5E6547" />
+              </button>
+
+              {/* Delete Button (with red tint) */}
+              <button
+                onClick={onDeleteSelected}
+                aria-label="Delete item"
+                title="Delete"
+                style={{
+                  ...quickBtnStyle,
+                  backgroundColor: '#FDF2F0',
+                  borderColor: '#F3D2CD',
+                  color: '#D84C4C'
+                }}
+              >
+                <Trash2 size={16} color="#D84C4C" />
+              </button>
+
+              {/* Close / Deselect */}
+              <button
+                onClick={onDeselect}
+                aria-label="Deselect"
+                title="Deselect"
+                style={{ ...quickBtnStyle, marginLeft: 2 }}
+              >
+                <X size={15} color="#8A857A" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Dedicated Mobile Text Editor Modal for seamless editing on touch screens */}
+        {showTextModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(25, 23, 20, 0.45)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              padding: '0 0 20px 0'
+            }}
+            onClick={() => setShowTextModal(false)}
+          >
+            <div
+              style={{
+                width: 'calc(100vw - 24px)',
+                maxWidth: 420,
+                backgroundColor: '#FFFEFA',
+                borderRadius: 20,
+                border: '1px solid #E5DCCE',
+                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.25)',
+                padding: '16px 18px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                animation: 'slideUp 0.18s ease-out'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 size={16} color="#5E6547" />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#30312D' }}>Edit Template Text</span>
+                </div>
+                <button
+                  onClick={() => setShowTextModal(false)}
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: '50%',
+                    backgroundColor: '#F5EFE5',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#65635D'
+                  }}
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              <textarea
+                value={editTextValue}
+                onChange={(e) => setEditTextValue(e.target.value)}
+                rows={4}
+                autoFocus
+                placeholder="Type your text..."
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  border: '1.5px solid #D5CBBF',
+                  backgroundColor: '#FAF7F0',
+                  fontSize: 14,
+                  lineHeight: 1.45,
+                  color: '#30312D',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  resize: 'vertical',
+                  boxSizing: 'border-box'
+                }}
+              />
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                <button
+                  onClick={() => setShowTextModal(false)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: 10,
+                    border: '1px solid #E0D5C7',
+                    backgroundColor: '#FAF5EE',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#65635D',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    onUpdateSelectedObject({ text: editTextValue });
+                    setShowTextModal(false);
+                  }}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: 10,
+                    border: 'none',
+                    backgroundColor: '#5E6547',
+                    fontSize: 13,
+                    fontWeight: 650,
+                    color: '#FFFFFF',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 2px 8px rgba(94, 101, 71, 0.35)'
+                  }}
+                >
+                  <Check size={15} color="#FFFFFF" />
+                  <span>Update Text</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 

@@ -467,6 +467,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       onSelectionChange(null);
     };
 
+    (canvas as any).triggerTextEditing = (target?: Textbox | IText) => {
+      const active = target || (canvas.getActiveObject() as any);
+      if (active && (active instanceof Textbox || active instanceof IText || active.type === 'textbox' || active.type === 'i-text')) {
+        triggerTextEditing(active);
+      }
+    };
+
     // Resize handler
     const handleResize = () => {
       if (!containerRef.current || !fabricCanvasRef.current) return;
@@ -1139,7 +1146,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           if (typeof (opt.target as Group).getObjects === 'function') {
             textTarget = ((opt.target as Group).getObjects().find((o) => o.type === 'textbox' || o.type === 'i-text') as Textbox | IText) || null;
           }
-        } else if (!opt.target) {
+        }
+
+        // Even if opt.target was an underlying card or shape, check if the touch point hits a text object
+        if (!textTarget) {
           const allObjects = canvas.getObjects();
           for (let i = allObjects.length - 1; i >= 0; i--) {
             const obj = allObjects[i];
@@ -1158,7 +1168,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         if (textTarget) {
           const now = Date.now();
           const lastTap = lastTapRef.current;
-          const isDoubleTap = !!(lastTap && lastTap.target === textTarget && now - lastTap.time < 380);
+          const isDoubleTap = !!(lastTap && lastTap.target === textTarget && now - lastTap.time < 450);
+          const isAlreadyActive = canvas.getActiveObject() === textTarget;
 
           lastTapRef.current = { time: now, target: textTarget };
 
@@ -1172,8 +1183,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           // Always ensure the clicked text is set as active
           canvas.setActiveObject(textTarget);
 
-          // If double tap, or text tool active -> enter editing!
-          if (isDoubleTap || activeToolRef.current === 'text') {
+          // If double tap, already selected text tapped again, or text tool active -> enter editing!
+          if (isDoubleTap || isAlreadyActive || activeToolRef.current === 'text') {
             triggerTextEditing(textTarget, opt.e);
           } else {
             // Select mode or mobile drag:
@@ -1212,11 +1223,35 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
       }
 
-      // If user clicked on an existing object (shape, card, etc.) outside of text, let Fabric handle selection/transformation
+      // If user clicked on an existing object (shape, card, etc.) outside of text:
+      // Select it and enable 1-finger touch dragging so template shapes can be edited, resized, and moved on mobile!
       if (opt.target && activeTool !== 'eraser') {
-        if (opt.target.group && !(opt.target.group as any).isStickyNote) {
-          canvas.setActiveObject(opt.target.group);
+        const shapeTarget = (opt.target.group && !(opt.target.group as any).isStickyNote)
+          ? opt.target.group
+          : opt.target;
+
+        canvas.setActiveObject(shapeTarget);
+
+        const isControlClicked =
+          typeof shapeTarget.findControl === 'function' &&
+          shapeTarget.findControl(canvas.getViewportPoint(opt.e), true);
+
+        if (!isControlClicked) {
+          isDraggingTextRef.current = true;
+          textDragStartPointerRef.current = { x: pointer.x, y: pointer.y };
+          textDragStartObjectPosRef.current = { left: shapeTarget.left || 0, top: shapeTarget.top || 0 };
+          textDragTargetRef.current = shapeTarget;
+          textDragMovedRef.current = false;
         }
+
+        if (typeof (canvas as any)._setupCurrentTransform === 'function') {
+          (canvas as any)._setupCurrentTransform(opt.e, shapeTarget, false);
+        }
+
+        if (activeToolRef.current !== 'select' && onToolChange) {
+          onToolChange('select');
+        }
+        canvas.requestRenderAll();
         return;
       }
 
