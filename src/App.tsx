@@ -335,6 +335,23 @@ export function App() {
       }
     }
 
+    if (props.angle !== undefined) {
+      activeObj.set('angle', props.angle);
+      activeObj.setCoords?.();
+      activeObj.set('dirty', true);
+    }
+
+    if (props.scaleMultiplier !== undefined) {
+      const curScaleX = activeObj.scaleX || 1;
+      const curScaleY = activeObj.scaleY || 1;
+      activeObj.set({
+        scaleX: Math.max(0.05, curScaleX * props.scaleMultiplier),
+        scaleY: Math.max(0.05, curScaleY * props.scaleMultiplier)
+      });
+      activeObj.setCoords?.();
+      activeObj.set('dirty', true);
+    }
+
     // Shape Morphing / Changing
     if (props.shapeType !== undefined) {
       const isCurrentShape = ['rect', 'circle', 'ellipse', 'triangle', 'polygon', 'path'].includes(activeObj.type || '');

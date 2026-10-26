@@ -368,9 +368,15 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     });
 
     // Configure touch handling and control handles
-    FabricObject.prototype.cornerSize = 12;
-    FabricObject.prototype.touchCornerSize = 28;
+    FabricObject.prototype.cornerSize = 14;
+    FabricObject.prototype.touchCornerSize = 48; // Generous 48px touch target for mobile fingertips
+    FabricObject.prototype.cornerStyle = 'circle';
+    FabricObject.prototype.cornerColor = '#FFFFFF';
+    FabricObject.prototype.cornerStrokeColor = '#5E6547';
+    FabricObject.prototype.borderColor = '#777D5E';
+    FabricObject.prototype.borderScaleFactor = 2;
     FabricObject.prototype.transparentCorners = false;
+    FabricObject.prototype.padding = 6;
     Group.prototype.subTargetCheck = false;
     Group.prototype.interactive = false;
 
@@ -492,6 +498,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         onSelectionChange(null);
         return;
       }
+      activeObj.setCoords?.();
       const isSticky = !!(activeObj as any).isStickyNote;
       let fillVal = typeof activeObj.fill === 'string' ? activeObj.fill : undefined;
       let strokeVal = typeof activeObj.stroke === 'string' ? activeObj.stroke : undefined;
@@ -1193,11 +1200,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               textTarget.exitEditing();
             }
 
+            const curTransform = (canvas as any)._currentTransform;
+            const isTransformingControl = !!(curTransform && curTransform.corner);
             const isControlClicked =
               typeof (textTarget as any).findControl === 'function' &&
               (textTarget as any).findControl(canvas.getViewportPoint(opt.e), true);
 
-            if (!isControlClicked) {
+            if (!isControlClicked && !isTransformingControl) {
               const dragItem =
                 textTarget.group && !(textTarget.group as any).interactive
                   ? (textTarget.group as any)
@@ -1208,10 +1217,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               textDragStartObjectPosRef.current = { left: dragItem.left || 0, top: dragItem.top || 0 };
               textDragTargetRef.current = dragItem;
               textDragMovedRef.current = false;
-            }
 
-            if (typeof (canvas as any)._setupCurrentTransform === 'function') {
-              (canvas as any)._setupCurrentTransform(opt.e, textTarget, false);
+              if (typeof (canvas as any)._setupCurrentTransform === 'function') {
+                (canvas as any)._setupCurrentTransform(opt.e, textTarget, false);
+              }
+            } else {
+              isDraggingTextRef.current = false;
+              textDragTargetRef.current = null;
             }
           }
 
@@ -1224,34 +1236,52 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
 
       // If user clicked on an existing object (shape, card, etc.) outside of text:
-      // Select it and enable 1-finger touch dragging so template shapes can be edited, resized, and moved on mobile!
       if (opt.target && activeTool !== 'eraser') {
         const shapeTarget = (opt.target.group && !(opt.target.group as any).isStickyNote)
           ? opt.target.group
           : opt.target;
 
-        canvas.setActiveObject(shapeTarget);
+        // Check if the click/touch landed on any control handle (corner scale handles or top rotation handle)
+        const curTransform = (canvas as any)._currentTransform;
+        const isTransformingControl = !!(curTransform && curTransform.corner);
+        const controlHit =
+          typeof (shapeTarget as any).findControl === 'function' &&
+          (shapeTarget as any).findControl(canvas.getViewportPoint(opt.e), true);
 
-        const isControlClicked =
-          typeof shapeTarget.findControl === 'function' &&
-          shapeTarget.findControl(canvas.getViewportPoint(opt.e), true);
-
-        if (!isControlClicked) {
-          isDraggingTextRef.current = true;
-          textDragStartPointerRef.current = { x: pointer.x, y: pointer.y };
-          textDragStartObjectPosRef.current = { left: shapeTarget.left || 0, top: shapeTarget.top || 0 };
-          textDragTargetRef.current = shapeTarget;
+        if (isTransformingControl || controlHit) {
+          // USER TOUCHED A CONTROL POINT (ROTATE, MINIMISE/MAXIMISE)!
+          // Preserve Fabric's native scale/rotate transformation and DO NOT hijack with drag!
+          isDraggingTextRef.current = false;
+          textDragTargetRef.current = null;
+          textDragStartPointerRef.current = null;
+          textDragStartObjectPosRef.current = null;
           textDragMovedRef.current = false;
+
+          if (activeToolRef.current !== 'select' && onToolChange) {
+            onToolChange('select');
+          }
+          return;
         }
 
-        if (typeof (canvas as any)._setupCurrentTransform === 'function') {
-          (canvas as any)._setupCurrentTransform(opt.e, shapeTarget, false);
+        // Otherwise, user touched the body of the shape:
+        if (canvas.getActiveObject() !== shapeTarget) {
+          canvas.setActiveObject(shapeTarget);
+          canvas.requestRenderAll();
         }
+
+        // For shapes, do NOT hijack with custom text dragging.
+        // Fabric natively handles 1-finger shape dragging, and leaving isDraggingTextRef false
+        // allows touchmove events to reach Fabric so corner points (minimise/maximise)
+        // and rotation point (rotate) execute smoothly via Fabric!
+        isDraggingTextRef.current = false;
+        textDragTargetRef.current = null;
+        textDragStartPointerRef.current = null;
+        textDragStartObjectPosRef.current = null;
+        textDragMovedRef.current = false;
 
         if (activeToolRef.current !== 'select' && onToolChange) {
           onToolChange('select');
         }
-        canvas.requestRenderAll();
         return;
       }
 

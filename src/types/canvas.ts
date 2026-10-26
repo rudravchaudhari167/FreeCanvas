@@ -113,6 +113,7 @@ export interface SelectedObjectProperties {
   height?: number;
   scaleX?: number;
   scaleY?: number;
+  scaleMultiplier?: number;
   angle?: number;
   fill?: string;
   stroke?: string;

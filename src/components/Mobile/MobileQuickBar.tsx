@@ -17,6 +17,9 @@ import {
   Highlighter,
   Bold,
   RotateCcw,
+  RotateCw,
+  Minimize2,
+  Maximize2,
   Edit3,
   Shapes,
   Check
@@ -403,8 +406,41 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
               )}
             </div>
 
-            {/* Right: Quick Action Buttons (Duplicate, Delete, Lock, Properties, Deselect) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {/* Right: Quick Action Buttons (Rotate, Minimise, Maximise, Duplicate, Lock, Properties, Delete, Deselect) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3.5, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              {/* Rotate 45° Button */}
+              <button
+                onClick={() => {
+                  const curAngle = selectedObject.angle || 0;
+                  onUpdateSelectedObject({ angle: (curAngle + 45) % 360 });
+                }}
+                aria-label="Rotate 45 degrees"
+                title="Rotate 45°"
+                style={quickBtnStyle}
+              >
+                <RotateCw size={14.5} color="#4A4B46" />
+              </button>
+
+              {/* Minimise Button */}
+              <button
+                onClick={() => onUpdateSelectedObject({ scaleMultiplier: 0.85 })}
+                aria-label="Minimise size"
+                title="Minimise (scale down)"
+                style={quickBtnStyle}
+              >
+                <Minimize2 size={14.5} color="#4A4B46" />
+              </button>
+
+              {/* Maximise Button */}
+              <button
+                onClick={() => onUpdateSelectedObject({ scaleMultiplier: 1.15 })}
+                aria-label="Maximise size"
+                title="Maximise (scale up)"
+                style={quickBtnStyle}
+              >
+                <Maximize2 size={14.5} color="#4A4B46" />
+              </button>
+
               {/* Duplicate Button */}
               <button
                 onClick={onDuplicateSelected}
@@ -412,7 +448,7 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
                 title="Duplicate"
                 style={quickBtnStyle}
               >
-                <Copy size={16} color="#4A4B46" />
+                <Copy size={15} color="#4A4B46" />
               </button>
 
               {/* Lock / Unlock */}
