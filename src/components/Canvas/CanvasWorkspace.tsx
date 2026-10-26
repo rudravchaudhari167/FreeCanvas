@@ -98,6 +98,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
   const isMobile = useIsMobile(768);
   const lastTapRef = useRef<{ time: number; target: any } | null>(null);
+  const pendingDoubleTapTextRef = useRef<Textbox | IText | null>(null);
 
   // History state
   const undoStackRef = useRef<string[]>([]);
@@ -826,7 +827,19 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
         if (Math.hypot(dx, dy) > 2) {
           textDragMovedRef.current = true;
+          pendingDoubleTapTextRef.current = null; // Finger moved, cancel double-tap edit candidate
           const target = textDragTargetRef.current;
+
+          // Ensure virtual keypad is closed while dragging
+          if ((target as any).isEditing && typeof (target as any).exitEditing === 'function') {
+            (target as any).exitEditing();
+          }
+          const hiddenTa = (target as any).hiddenTextarea as HTMLTextAreaElement | null;
+          if (hiddenTa) hiddenTa.blur();
+          if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
+            (document.activeElement as HTMLElement).blur();
+          }
+
           target.set({
             left: textDragStartObjectPosRef.current.left + dx,
             top: textDragStartObjectPosRef.current.top + dy
@@ -872,6 +885,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     };
 
     const onTouchEnd = (e: TouchEvent) => {
+      const pendingDoubleTap = pendingDoubleTapTextRef.current;
+      pendingDoubleTapTextRef.current = null;
+
       if (isDraggingTextRef.current) {
         isDraggingTextRef.current = false;
         const wasMoved = textDragMovedRef.current;
@@ -888,7 +904,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           updateLayers();
           updateSelectionProps();
           canvas.fire('object:modified', { target });
+        } else if (pendingDoubleTap && !wasMoved) {
+          // Stationary double-tap: user tapped twice in place without dragging -> enter editing
+          triggerTextEditing(pendingDoubleTap, e);
         }
+      } else if (pendingDoubleTap) {
+        triggerTextEditing(pendingDoubleTap, e);
       }
 
       if (e.touches.length < 2) {
@@ -1046,6 +1067,21 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         return;
       }
 
+      // Reset pending double-tap candidate
+      pendingDoubleTapTextRef.current = null;
+
+      // When not using the text tool, dismiss any previous text editing and close the mobile keyboard
+      if (activeToolRef.current !== 'text') {
+        canvas.getObjects().forEach((o: any) => {
+          if (o.isEditing && typeof o.exitEditing === 'function') {
+            o.exitEditing();
+          }
+        });
+        if (document.activeElement && (document.activeElement as HTMLElement).tagName === 'TEXTAREA') {
+          (document.activeElement as HTMLElement).blur();
+        }
+      }
+
       const pointer = canvas.getScenePoint(opt.e);
 
       // 1. Group / Sticker / Illustration Unified Targeting:
@@ -1197,13 +1233,12 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           const now = Date.now();
           const lastTap = lastTapRef.current;
           const isDoubleTap = !!(lastTap && lastTap.target === textTarget && now - lastTap.time < 450);
-          const isAlreadyActive = canvas.getActiveObject() === textTarget;
 
           lastTapRef.current = { time: now, target: textTarget };
 
-          // Exit editing on any other text object so cursor never leaks or ghost-edits
+          // Exit editing on any text object so cursor never leaks or ghost-edits, and keyboard closes
           canvas.getObjects().forEach((o: any) => {
-            if (o !== textTarget && o.isEditing && typeof o.exitEditing === 'function') {
+            if (o.isEditing && typeof o.exitEditing === 'function') {
               o.exitEditing();
             }
           });
@@ -1211,14 +1246,27 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           // Always ensure the clicked text is set as active
           canvas.setActiveObject(textTarget);
 
-          // If double tap, already selected text tapped again, or text tool active -> enter editing!
-          if (isDoubleTap || isAlreadyActive || activeToolRef.current === 'text') {
+          // If the text tool is specifically active in the toolbar -> enter editing!
+          if (activeToolRef.current === 'text') {
             triggerTextEditing(textTarget, opt.e);
           } else {
             // Select mode or mobile drag:
-            // If the text was editing, exit editing so it is completely draggable
+            // Ensure editing is exited and virtual keyboard is completely dismissed
             if (textTarget.isEditing && typeof textTarget.exitEditing === 'function') {
               textTarget.exitEditing();
+            }
+            const hiddenTa = (textTarget as any).hiddenTextarea as HTMLTextAreaElement | null;
+            if (hiddenTa) hiddenTa.blur();
+            if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
+              (document.activeElement as HTMLElement).blur();
+            }
+
+            // If it's a double-tap, remember as candidate for in-place edit on release (touchend/mouseup)
+            // ONLY if the user does NOT drag!
+            if (isDoubleTap) {
+              pendingDoubleTapTextRef.current = textTarget;
+            } else {
+              pendingDoubleTapTextRef.current = null;
             }
 
             const curTransform = (canvas as any)._currentTransform;
@@ -1426,7 +1474,19 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
         if (Math.hypot(dx, dy) > 2) {
           textDragMovedRef.current = true;
+          pendingDoubleTapTextRef.current = null; // User moved their cursor/finger, cancel double-tap edit
           const target = textDragTargetRef.current;
+
+          // Ensure virtual keypad is never open during dragging
+          if ((target as any).isEditing && typeof (target as any).exitEditing === 'function') {
+            (target as any).exitEditing();
+          }
+          const hiddenTa = (target as any).hiddenTextarea as HTMLTextAreaElement | null;
+          if (hiddenTa) hiddenTa.blur();
+          if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
+            (document.activeElement as HTMLElement).blur();
+          }
+
           target.set({
             left: textDragStartObjectPosRef.current.left + dx,
             top: textDragStartObjectPosRef.current.top + dy
@@ -1482,7 +1542,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (opt?: any) => {
+      const pendingDoubleTap = pendingDoubleTapTextRef.current;
+      pendingDoubleTapTextRef.current = null;
+
       if (isDraggingTextRef.current) {
         isDraggingTextRef.current = false;
         const wasMoved = textDragMovedRef.current;
@@ -1499,7 +1562,13 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           updateLayers();
           canvas.fire('object:modified', { target });
           return;
+        } else if (pendingDoubleTap && !wasMoved) {
+          triggerTextEditing(pendingDoubleTap, opt?.e);
+          return;
         }
+      } else if (pendingDoubleTap) {
+        triggerTextEditing(pendingDoubleTap, opt?.e);
+        return;
       }
 
       if (isPanningRef.current) {
