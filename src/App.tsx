@@ -953,8 +953,36 @@ export function App() {
               );
               if (validObjects.length > 0) {
                 const group = util.groupSVGElements(validObjects, options);
-                (group as any).subTargetCheck = true;
-                (group as any).interactive = true;
+                group.set({
+                  subTargetCheck: false,
+                  interactive: false,
+                  selectable: true,
+                  evented: true
+                });
+                (group as any).subTargetCheck = false;
+                (group as any).interactive = false;
+                (group as any).isIllustration = true;
+                (group as any).isSticker = true;
+
+                const lockDescendants = (child: any) => {
+                  child.set({
+                    selectable: false,
+                    evented: false,
+                    lockMovementX: true,
+                    lockMovementY: true
+                  });
+                  child.selectable = false;
+                  child.evented = false;
+                  if (typeof child.getObjects === 'function') {
+                    child.set({ subTargetCheck: false, interactive: false });
+                    child.subTargetCheck = false;
+                    child.interactive = false;
+                    child.getObjects().forEach(lockDescendants);
+                  }
+                };
+
+                validObjects.forEach(lockDescendants);
+
                 objectToInsert = group;
               }
             } catch (svgErr) {
@@ -1240,6 +1268,27 @@ export function App() {
 
     try {
       canvas.loadFromJSON(JSON.parse(project.canvasData)).then(() => {
+        canvas.getObjects().forEach((o: any) => {
+          if (o.type === 'group' && !o.isStickyNote) {
+            o.set({ subTargetCheck: false, interactive: false });
+            o.subTargetCheck = false;
+            o.interactive = false;
+            const lockChildren = (c: any) => {
+              c.set({ selectable: false, evented: false, lockMovementX: true, lockMovementY: true });
+              c.selectable = false;
+              c.evented = false;
+              if (typeof c.getObjects === 'function') {
+                c.set({ subTargetCheck: false, interactive: false });
+                c.subTargetCheck = false;
+                c.interactive = false;
+                c.getObjects().forEach(lockChildren);
+              }
+            };
+            if (typeof o.getObjects === 'function') {
+              o.getObjects().forEach(lockChildren);
+            }
+          }
+        });
         setProjectId(project.id);
         setProjectName(project.name);
         setBackgroundColor(project.backgroundColor || '#FFFEFA');

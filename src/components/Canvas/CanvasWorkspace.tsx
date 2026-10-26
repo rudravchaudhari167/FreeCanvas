@@ -371,6 +371,28 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
     FabricObject.prototype.cornerSize = 12;
     FabricObject.prototype.touchCornerSize = 28;
     FabricObject.prototype.transparentCorners = false;
+    Group.prototype.subTargetCheck = false;
+    Group.prototype.interactive = false;
+
+    const lockGroupDescendants = (group: Group) => {
+      group.set({ subTargetCheck: false, interactive: false });
+      (group as any).subTargetCheck = false;
+      (group as any).interactive = false;
+      const lock = (child: any) => {
+        child.set({ selectable: false, evented: false, lockMovementX: true, lockMovementY: true });
+        child.selectable = false;
+        child.evented = false;
+        if (typeof child.getObjects === 'function') {
+          child.set({ subTargetCheck: false, interactive: false });
+          child.subTargetCheck = false;
+          child.interactive = false;
+          child.getObjects().forEach(lock);
+        }
+      };
+      if (typeof group.getObjects === 'function') {
+        group.getObjects().forEach(lock);
+      }
+    };
 
     fabricCanvasRef.current = canvas;
     if (canvasRefCallback) canvasRefCallback(canvas);
@@ -393,6 +415,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       isHistoryActionRef.current = true;
       canvas.loadFromJSON(JSON.parse(prevState)).then(() => {
+        canvas.getObjects().forEach((o: any) => {
+          if (o.type === 'group' && !o.isStickyNote) {
+            lockGroupDescendants(o as Group);
+          }
+        });
         canvas.renderAll();
         isHistoryActionRef.current = false;
         setHasObjects(canvas.getObjects().length > 0);
@@ -412,6 +439,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       isHistoryActionRef.current = true;
       canvas.loadFromJSON(JSON.parse(nextState)).then(() => {
+        canvas.getObjects().forEach((o: any) => {
+          if (o.type === 'group' && !o.isStickyNote) {
+            lockGroupDescendants(o as Group);
+          }
+        });
         canvas.renderAll();
         isHistoryActionRef.current = false;
         setHasObjects(canvas.getObjects().length > 0);
@@ -461,7 +493,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       let textObj: IText | null = null;
       if (activeObj.type === 'i-text' || activeObj.type === 'text' || activeObj.type === 'textbox') {
         textObj = activeObj as IText;
-      } else if (activeObj.type === 'group') {
+      } else if (activeObj.type === 'group' && (activeObj as any).isStickyNote) {
         const found = (activeObj as Group).getObjects().find((o) => o.type === 'i-text' || o.type === 'text' || o.type === 'textbox');
         if (found) textObj = found as IText;
       }
@@ -553,14 +585,16 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       let textObj: Textbox | IText | null = null;
       if (target instanceof Textbox || target.type === 'textbox' || target instanceof IText || target.type === 'i-text') {
-        textObj = target as Textbox | IText;
-      } else if (target.type === 'group' || (target as any).isStickyNote) {
+        if (!target.group || (target.group as any).isStickyNote) {
+          textObj = target as Textbox | IText;
+        }
+      } else if ((target as any).isStickyNote) {
         const group = target as Group;
         const subTargets = opt.subTargets || [];
         const subText = subTargets.find((o: any) => o.type === 'textbox' || o.type === 'i-text');
         if (subText) {
           textObj = subText as Textbox | IText;
-        } else {
+        } else if (typeof group.getObjects === 'function') {
           textObj = (group.getObjects().find((o) => o.type === 'textbox' || o.type === 'i-text') as Textbox | IText) || null;
         }
       }
@@ -572,6 +606,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
           const obj = allObjects[i];
           if (
             (obj instanceof Textbox || obj.type === 'textbox' || obj instanceof IText || obj.type === 'i-text') &&
+            (!obj.group || (obj.group as any).isStickyNote) &&
             typeof obj.containsPoint === 'function' &&
             obj.containsPoint(pointer)
           ) {
@@ -586,12 +621,35 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
       }
     });
 
-    // History trigger events & sticky note scale/size normalization
+    // History trigger events, sticky note configuration & sticker/illustration group locking
     canvas.on('object:added', (opt: any) => {
       const target = opt?.target;
-      if (target && (target as any).isStickyNote && !(target as any)._configuredSticky) {
-        configureStickyNoteObject(target as Textbox, (target as any).cardHeight || 170);
-        (target as any)._configuredSticky = true;
+      if (target) {
+        if ((target as any).isStickyNote && !(target as any)._configuredSticky) {
+          configureStickyNoteObject(target as Textbox, (target as any).cardHeight || 170);
+          (target as any)._configuredSticky = true;
+        } else if (target.type === 'group' && !(target as any).isStickyNote) {
+          target.set({
+            subTargetCheck: false,
+            interactive: false
+          });
+          (target as any).subTargetCheck = false;
+          (target as any).interactive = false;
+          const lock = (child: any) => {
+            child.set({ selectable: false, evented: false, lockMovementX: true, lockMovementY: true });
+            child.selectable = false;
+            child.evented = false;
+            if (typeof child.getObjects === 'function') {
+              child.set({ subTargetCheck: false, interactive: false });
+              child.subTargetCheck = false;
+              child.interactive = false;
+              child.getObjects().forEach(lock);
+            }
+          };
+          if (typeof target.getObjects === 'function') {
+            target.getObjects().forEach(lock);
+          }
+        }
       }
       if (!isHistoryActionRef.current) saveStateToHistory();
     });
@@ -976,6 +1034,93 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       const pointer = canvas.getScenePoint(opt.e);
 
+      // 1. Group / Sticker / Illustration Unified Targeting:
+      // If the clicked target is a component inside a group, or is a sticker/illustration group,
+      // unify targeting to the root group so the entire sticker/illustration is dragged as a single whole object.
+      let rootGroup: Group | null = null;
+      if (opt.target) {
+        if (opt.target.group && !(opt.target.group as any).isStickyNote) {
+          let curr = opt.target.group;
+          while (curr && curr.group && !(curr.group as any).isStickyNote) {
+            curr = curr.group;
+          }
+          rootGroup = curr as Group;
+        } else if (opt.target.type === 'group' && !(opt.target as any).isStickyNote) {
+          rootGroup = opt.target as Group;
+        }
+      }
+
+      // If activeTool is eraser, erase the whole sticker / illustration group
+      if (activeTool === 'eraser' && rootGroup) {
+        isErasingRef.current = true;
+        hasErasedRef.current = false;
+        canvas.remove(rootGroup);
+        canvas.discardActiveObject();
+        canvas.renderAll();
+        hasErasedRef.current = true;
+        return;
+      }
+
+      if (rootGroup && activeTool !== 'eraser') {
+        // Enforce that this group and all its nested children are completely atomic
+        rootGroup.set({
+          subTargetCheck: false,
+          interactive: false,
+          selectable: true,
+          evented: true
+        });
+        (rootGroup as any).subTargetCheck = false;
+        (rootGroup as any).interactive = false;
+
+        const lockDescendants = (obj: any) => {
+          obj.set({
+            selectable: false,
+            evented: false,
+            lockMovementX: true,
+            lockMovementY: true
+          });
+          obj.selectable = false;
+          obj.evented = false;
+          if (typeof obj.getObjects === 'function') {
+            obj.set({ subTargetCheck: false, interactive: false });
+            (obj as any).subTargetCheck = false;
+            (obj as any).interactive = false;
+            obj.getObjects().forEach(lockDescendants);
+          }
+        };
+        if (typeof rootGroup.getObjects === 'function') {
+          rootGroup.getObjects().forEach(lockDescendants);
+        }
+
+        opt.target = rootGroup;
+        opt.subTargets = [];
+        canvas.setActiveObject(rootGroup);
+
+        // Check if user clicked a resize / rotate control handle on the sticker group
+        const isControlClicked =
+          typeof rootGroup.findControl === 'function' &&
+          rootGroup.findControl(canvas.getViewportPoint(opt.e), true);
+
+        if (!isControlClicked) {
+          // Direct 1-finger touch and pointer dragging for the entire sticker / illustration
+          isDraggingTextRef.current = true;
+          textDragStartPointerRef.current = { x: pointer.x, y: pointer.y };
+          textDragStartObjectPosRef.current = { left: rootGroup.left || 0, top: rootGroup.top || 0 };
+          textDragTargetRef.current = rootGroup;
+          textDragMovedRef.current = false;
+        }
+
+        if (typeof (canvas as any)._setupCurrentTransform === 'function') {
+          (canvas as any)._setupCurrentTransform(opt.e, rootGroup, false);
+        }
+
+        if (activeToolRef.current !== 'select' && onToolChange) {
+          onToolChange('select');
+        }
+        canvas.requestRenderAll();
+        return;
+      }
+
       // Prioritize text selection: if the user clicked on or inside any text object,
       // select/edit the text and do not let the underlying or surrounding shape hijack the selection.
       if (activeTool !== 'eraser') {
@@ -987,21 +1132,20 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             opt.target instanceof IText ||
             opt.target.type === 'i-text')
         ) {
-          textTarget = opt.target as Textbox | IText;
-        } else if (opt.target && (opt.target.type === 'group' || (opt.target as any).isStickyNote)) {
-          const subTargets = opt.subTargets || [];
-          const subText = subTargets.find((o: any) => o.type === 'textbox' || o.type === 'i-text');
-          if (subText) {
-            textTarget = subText as Textbox | IText;
-          } else if (typeof (opt.target as Group).getObjects === 'function') {
+          if (!opt.target.group || (opt.target.group as any).isStickyNote) {
+            textTarget = opt.target as Textbox | IText;
+          }
+        } else if (opt.target && (opt.target as any).isStickyNote) {
+          if (typeof (opt.target as Group).getObjects === 'function') {
             textTarget = ((opt.target as Group).getObjects().find((o) => o.type === 'textbox' || o.type === 'i-text') as Textbox | IText) || null;
           }
-        } else {
+        } else if (!opt.target) {
           const allObjects = canvas.getObjects();
           for (let i = allObjects.length - 1; i >= 0; i--) {
             const obj = allObjects[i];
             if (
               (obj instanceof Textbox || obj.type === 'textbox' || obj instanceof IText || obj.type === 'i-text') &&
+              (!obj.group || (obj.group as any).isStickyNote) &&
               typeof obj.containsPoint === 'function' &&
               obj.containsPoint(pointer)
             ) {
@@ -1070,6 +1214,9 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
 
       // If user clicked on an existing object (shape, card, etc.) outside of text, let Fabric handle selection/transformation
       if (opt.target && activeTool !== 'eraser') {
+        if (opt.target.group && !(opt.target.group as any).isStickyNote) {
+          canvas.setActiveObject(opt.target.group);
+        }
         return;
       }
 
@@ -1090,7 +1237,11 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             canvas.discardActiveObject();
             canvas.renderAll();
           } else {
-            canvas.remove(target);
+            let toRemove = target;
+            if (target.group && !(target.group as any).isStickyNote) {
+              toRemove = target.group;
+            }
+            canvas.remove(toRemove);
             canvas.discardActiveObject();
             canvas.renderAll();
             hasErasedRef.current = true;
