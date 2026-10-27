@@ -48,14 +48,16 @@ interface MobileQuickBarProps {
   onEditText?: () => void;
 }
 
-// Quick curated colors for 1-tap mobile selection & drawing
+// Quick curated colors for 1-tap mobile selection & drawing (Red first for quick visibility)
 const QUICK_PALETTE = [
-  { name: 'Sage', color: '#777D5E' },
-  { name: 'Slate', color: '#30312D' },
+  { name: 'Red', color: '#E03131' },
   { name: 'Terracotta', color: '#CC7A60' },
-  { name: 'Ocean', color: '#3B7AC4' },
   { name: 'Amber', color: '#D9822B' },
+  { name: 'Sage', color: '#777D5E' },
+  { name: 'Forest', color: '#2F9E44' },
+  { name: 'Ocean', color: '#3B7AC4' },
   { name: 'Lavender', color: '#8E85B2' },
+  { name: 'Slate', color: '#30312D' },
   { name: 'White', color: '#FFFFFF' }
 ];
 
@@ -84,9 +86,10 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
   onClearCanvas,
   onEditText
 }) => {
-  const [showColorRow, setShowColorRow] = useState(false);
+  const [showColorRow, setShowColorRow] = useState(true);
   const [showShapeRow, setShowShapeRow] = useState(false);
   const [shapeColorTarget, setShapeColorTarget] = useState<'fill' | 'stroke'>('fill');
+  const [shapeToolTarget, setShapeToolTarget] = useState<'fill' | 'stroke'>('fill');
   const [showTextModal, setShowTextModal] = useState(false);
   const [editTextValue, setEditTextValue] = useState('');
 
@@ -94,7 +97,7 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
   if (selectedObject) {
     const isSticky = !!selectedObject.isStickyNote;
     const isText = selectedObject.type === 'i-text' || selectedObject.type === 'text' || selectedObject.type === 'textbox' || selectedObject.text !== undefined;
-    const isShape = !isText && !isSticky && (!!selectedObject.shapeType || ['rect', 'circle', 'ellipse', 'triangle', 'polygon'].includes(selectedObject.type || ''));
+    const isShape = !isText && !isSticky && (!!selectedObject.shapeType || ['rect', 'circle', 'ellipse', 'triangle', 'polygon', 'path'].includes(selectedObject.type || ''));
     const isLocked = !!selectedObject.isLocked;
 
     // Determine current color for the preview badge
@@ -127,7 +130,6 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
       } else {
         onUpdateSelectedObject({ fill: color });
       }
-      setShowColorRow(false);
     };
 
     return (
@@ -232,32 +234,62 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
+                  justifyContent: isSticky ? 'center' : 'flex-start',
+                  gap: 9,
                   overflowX: 'auto',
                   WebkitOverflowScrolling: 'touch',
-                  padding: '2px 0'
+                  padding: '2px 4px'
                 }}
               >
-                {(isSticky ? STICKY_PALETTE : QUICK_PALETTE).map((p) => (
+                {isShape && shapeColorTarget === 'fill' && (
                   <button
-                    key={p.color}
-                    onClick={() => handleApplyColor(p.color)}
+                    onClick={() => handleApplyColor('transparent')}
                     style={{
                       width: 26,
                       height: 26,
                       borderRadius: '50%',
-                      backgroundColor: p.color,
-                      border: p.color.toLowerCase() === '#ffffff' ? '1.5px solid #D5CBBF' : '1.5px solid rgba(0,0,0,0.12)',
+                      backgroundColor: '#FFFFFF',
+                      border: currentColor === 'transparent' ? '2px solid #30312D' : '1.5px solid #D5CBBF',
                       cursor: 'pointer',
                       flexShrink: 0,
-                      transform: currentColor === p.color ? 'scale(1.2)' : 'none',
-                      boxShadow: currentColor === p.color ? '0 2px 6px rgba(0,0,0,0.25)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transform: currentColor === 'transparent' ? 'scale(1.2)' : 'none',
+                      boxShadow: currentColor === 'transparent' ? '0 2px 6px rgba(0,0,0,0.25)' : 'none',
                       transition: 'transform 0.15s'
                     }}
-                    title={p.name}
-                  />
-                ))}
+                    title="No Fill (Transparent)"
+                  >
+                    <div style={{ width: 14, height: 1.5, backgroundColor: '#E03131', transform: 'rotate(45deg)' }} />
+                  </button>
+                )}
+                {(isSticky ? STICKY_PALETTE : QUICK_PALETTE).map((p) => {
+                  const isSelected = currentColor?.toLowerCase() === p.color.toLowerCase();
+                  return (
+                    <button
+                      key={p.color}
+                      onClick={() => handleApplyColor(p.color)}
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: '50%',
+                        backgroundColor: p.color,
+                        border: p.color.toLowerCase() === '#ffffff'
+                          ? '1.5px solid #D5CBBF'
+                          : isSelected
+                          ? '2px solid #30312D'
+                          : '1.5px solid rgba(0,0,0,0.12)',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        transform: isSelected ? 'scale(1.2)' : 'none',
+                        boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.25)' : 'none',
+                        transition: 'transform 0.15s'
+                      }}
+                      title={p.name}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -774,15 +806,19 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
     );
   }
 
-  // 3. SHAPE CONTEXT: Shape tool is active
+  // 3. SHAPE CONTEXT: Shape tool is active (Pre-drawing color, border & shape selection)
   if (activeTool === 'shape') {
     const popularShapes: { type: ShapeType; icon: React.ReactNode; label: string }[] = [
-      { type: 'rectangle', icon: <Square size={16} />, label: 'Rect' },
-      { type: 'circle', icon: <Circle size={16} />, label: 'Circle' },
-      { type: 'triangle', icon: <Triangle size={16} />, label: 'Triangle' },
-      { type: 'star', icon: <Star size={16} />, label: 'Star' },
-      { type: 'heart', icon: <Heart size={16} />, label: 'Heart' }
+      { type: 'rectangle', icon: <Square size={15} />, label: 'Rect' },
+      { type: 'circle', icon: <Circle size={15} />, label: 'Circle' },
+      { type: 'triangle', icon: <Triangle size={15} />, label: 'Triangle' },
+      { type: 'star', icon: <Star size={15} />, label: 'Star' },
+      { type: 'heart', icon: <Heart size={15} />, label: 'Heart' }
     ];
+
+    const activeColor = shapeToolTarget === 'stroke'
+      ? (settings.strokeColor || '#5E6547')
+      : (settings.fillColor || settings.color || '#E8EBD9');
 
     return (
       <div
@@ -803,84 +839,227 @@ export const MobileQuickBar: React.FC<MobileQuickBarProps> = ({
           padding: '6px 10px',
           boxShadow: '0 8px 30px -4px rgba(60, 50, 40, 0.16)',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
           gap: 6,
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
           animation: 'fadeIn 0.15s ease-out'
         }}
       >
-        {/* Quick Shape Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          {popularShapes.map((s) => {
-            const isSelected = settings.shapeType === s.type;
-            return (
-              <button
-                key={s.type}
-                onClick={() => onUpdateSettings({ shapeType: s.type })}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: isSelected ? '#777D5E' : '#F5EFE5',
-                  color: isActiveColor(isSelected),
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-                title={s.label}
-              >
-                {s.icon}
-              </button>
-            );
-          })}
-        </div>
+        {/* Top Mini Color Picker Row: Fill / Border Target Toggle & Color Swatches */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 6,
+            padding: '2px 2px 4px',
+            borderBottom: '1px solid #EFE8DE'
+          }}
+        >
+          {/* Target Toggle: Fill vs Border */}
+          <div style={{ display: 'flex', backgroundColor: '#EFEAE0', borderRadius: 999, padding: 2, border: '1px solid #E2D9CC', flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => setShapeToolTarget('fill')}
+              style={{
+                padding: '2px 8px',
+                borderRadius: 999,
+                fontSize: 10,
+                fontWeight: 650,
+                border: 'none',
+                backgroundColor: shapeToolTarget === 'fill' ? '#FFFFFF' : 'transparent',
+                color: shapeToolTarget === 'fill' ? '#30312D' : '#8A857A',
+                cursor: 'pointer'
+              }}
+            >
+              Fill Color
+            </button>
+            <button
+              type="button"
+              onClick={() => setShapeToolTarget('stroke')}
+              style={{
+                padding: '2px 8px',
+                borderRadius: 999,
+                fontSize: 10,
+                fontWeight: 650,
+                border: 'none',
+                backgroundColor: shapeToolTarget === 'stroke' ? '#FFFFFF' : 'transparent',
+                color: shapeToolTarget === 'stroke' ? '#30312D' : '#8A857A',
+                cursor: 'pointer'
+              }}
+            >
+              Border Color
+            </button>
+          </div>
 
-        <div style={{ width: 1, height: 20, backgroundColor: '#EBE2D5', flexShrink: 0 }} />
+          {/* If Border Target selected: show width presets */}
+          {shapeToolTarget === 'stroke' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+              {[1.5, 3, 5].map((w) => (
+                <button
+                  key={w}
+                  onClick={() => onUpdateSettings({ strokeWidth: w })}
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 600,
+                    padding: '2px 5px',
+                    borderRadius: 6,
+                    border: '1px solid #E2D9CC',
+                    backgroundColor: (settings.strokeWidth || 2) === w ? '#FAF0D7' : '#FFFFFF',
+                    color: '#4E504A',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {w}px
+                </button>
+              ))}
+            </div>
+          )}
 
-        {/* 4 Quick Color Fill Dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-          {QUICK_PALETTE.slice(0, 4).map((p) => {
-            const isSelected = settings.fillColor.toLowerCase() === p.color.toLowerCase();
-            return (
+          {/* Color Swatches */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              padding: '2px 2px',
+              flex: 1
+            }}
+          >
+            {shapeToolTarget === 'fill' && (
               <button
-                key={p.color}
-                onClick={() => onUpdateSettings({ fillColor: p.color, color: p.color })}
+                onClick={() => onUpdateSettings({ fillColor: 'transparent' })}
                 style={{
                   width: 22,
                   height: 22,
                   borderRadius: '50%',
-                  backgroundColor: p.color,
-                  border: isSelected ? '2px solid #30312D' : '1px solid rgba(0,0,0,0.15)',
+                  backgroundColor: '#FFFFFF',
+                  border: (settings.fillColor === 'transparent') ? '2px solid #30312D' : '1px solid rgba(0,0,0,0.2)',
                   cursor: 'pointer',
-                  transform: isSelected ? 'scale(1.2)' : 'none'
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: (settings.fillColor === 'transparent') ? 'scale(1.15)' : 'none'
                 }}
-                title={p.name}
-              />
-            );
-          })}
+                title="No Fill (Transparent)"
+              >
+                <div style={{ width: 12, height: 1.5, backgroundColor: '#E03131', transform: 'rotate(45deg)' }} />
+              </button>
+            )}
+            {QUICK_PALETTE.map((p) => {
+              const isSelected = activeColor.toLowerCase() === p.color.toLowerCase();
+              return (
+                <button
+                  key={p.color}
+                  onClick={() => {
+                    if (shapeToolTarget === 'stroke') {
+                      onUpdateSettings({ strokeColor: p.color, strokeWidth: settings.strokeWidth || 2 });
+                    } else {
+                      onUpdateSettings({ fillColor: p.color, color: p.color });
+                    }
+                  }}
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    backgroundColor: p.color,
+                    border: p.color.toLowerCase() === '#ffffff'
+                      ? '1.5px solid #D5CBBF'
+                      : isSelected
+                      ? '2px solid #30312D'
+                      : '1px solid rgba(0,0,0,0.15)',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transform: isSelected ? 'scale(1.2)' : 'none',
+                    boxShadow: isSelected ? '0 1px 4px rgba(0,0,0,0.25)' : 'none',
+                    transition: 'transform 0.15s'
+                  }}
+                  title={p.name}
+                />
+              );
+            })}
+          </div>
         </div>
 
-        {/* All Shapes Button */}
-        <button
-          onClick={onOpenProperties}
-          style={{
-            padding: '4px 8px',
-            borderRadius: 8,
-            backgroundColor: '#F5EFE5',
-            border: '1px solid #E8DFD3',
-            fontSize: 11.5,
-            fontWeight: 600,
-            color: '#4A4843',
-            cursor: 'pointer',
-            flexShrink: 0
-          }}
-        >
-          All Shapes...
-        </button>
+        {/* Bottom Row: Shape Selector & Live Drawing Preview */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            {popularShapes.map((s) => {
+              const isSelected = settings.shapeType === s.type;
+              return (
+                <button
+                  key={s.type}
+                  onClick={() => onUpdateSettings({ shapeType: s.type })}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                    padding: '3px 7px',
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    backgroundColor: isSelected ? '#777D5E' : '#F5EFE5',
+                    color: isActiveColor(isSelected),
+                    border: '1px solid #E2D9CC',
+                    cursor: 'pointer'
+                  }}
+                  title={s.label}
+                >
+                  {s.icon}
+                  <span>{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+            {/* Live Preview Indicator */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '3px 6px',
+                borderRadius: 8,
+                backgroundColor: '#FAF5EE',
+                border: '1px solid #E5DCD0',
+                fontSize: 10,
+                fontWeight: 650,
+                color: '#4E504A'
+              }}
+              title="Touch canvas to draw this shape"
+            >
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: settings.shapeType === 'circle' ? '50%' : 2,
+                  backgroundColor: settings.fillColor || settings.color || '#E8EBD9',
+                  border: `${Math.min(3, Math.max(1, (settings.strokeWidth || 2) / 1.5))}px solid ${settings.strokeColor || '#5E6547'}`
+                }}
+              />
+              <span>Draw</span>
+            </div>
+
+            <button
+              onClick={onOpenProperties}
+              style={{
+                padding: '3px 7px',
+                borderRadius: 8,
+                backgroundColor: '#F5EFE5',
+                border: '1px solid #E8DFD3',
+                fontSize: 10.5,
+                fontWeight: 600,
+                color: '#4A4843',
+                cursor: 'pointer'
+              }}
+            >
+              All...
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

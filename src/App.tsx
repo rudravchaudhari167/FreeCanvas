@@ -268,7 +268,9 @@ export function App() {
         activeObj.set('dirty', true);
       } else {
         activeObj.set('fill', props.fill);
+        activeObj.set('dirty', true);
       }
+      setSettings((prev) => ({ ...prev, fillColor: props.fill!, color: props.fill! }));
     }
     if (props.stroke !== undefined) {
       if ((activeObj as any).isStickyNote) {
@@ -293,9 +295,12 @@ export function App() {
           const groupObjects = (activeObj as Group).getObjects();
           if (groupObjects[0]) {
             groupObjects[0].set('stroke', props.stroke);
+            groupObjects[0].set('dirty', true);
           }
         }
+        activeObj.set('dirty', true);
       }
+      setSettings((prev) => ({ ...prev, strokeColor: props.stroke! }));
     }
     if (props.strokeWidth !== undefined) {
       if ((activeObj as any).isStickyNote) {
@@ -320,9 +325,12 @@ export function App() {
           const groupObjects = (activeObj as Group).getObjects();
           if (groupObjects[0]) {
             groupObjects[0].set('strokeWidth', props.strokeWidth);
+            groupObjects[0].set('dirty', true);
           }
         }
+        activeObj.set('dirty', true);
       }
+      setSettings((prev) => ({ ...prev, strokeWidth: props.strokeWidth! }));
     }
     if (props.opacity !== undefined) {
       activeObj.set('opacity', props.opacity);
@@ -597,6 +605,7 @@ export function App() {
     if (activeObj && canvas.getActiveObject() !== activeObj) {
       canvas.setActiveObject(activeObj);
     }
+    activeObj.set('dirty', true);
     activeObj.setCoords?.();
     canvas.requestRenderAll();
     setSelectedObject((prev) => (prev ? { ...prev, ...props } : null));

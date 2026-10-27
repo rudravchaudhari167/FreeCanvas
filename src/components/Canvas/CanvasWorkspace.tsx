@@ -134,6 +134,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
   settingsRef.current = settings;
   const onZoomChangeRef = useRef(onZoomChange);
   onZoomChangeRef.current = onZoomChange;
+  const updateSelectionPropsRef = useRef<() => void>(() => {});
+  const handleMouseUpRef = useRef<(opt?: any) => void>(() => {});
 
   // Update layer list for Layers panel
   const updateLayers = useCallback(() => {
@@ -574,6 +576,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         textColor: textColorVal
       });
     };
+    updateSelectionPropsRef.current = updateSelectionProps;
 
     canvas.on('selection:created', updateSelectionProps);
     canvas.on('selection:updated', updateSelectionProps);
@@ -910,6 +913,10 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
       } else if (pendingDoubleTap) {
         triggerTextEditing(pendingDoubleTap, e);
+      }
+
+      if (isDrawingShapeRef.current) {
+        handleMouseUpRef.current({ e });
       }
 
       if (e.touches.length < 2) {
@@ -1335,6 +1342,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         // Otherwise, user touched the body of the shape:
         if (canvas.getActiveObject() !== shapeTarget) {
           canvas.setActiveObject(shapeTarget);
+          updateSelectionPropsRef.current();
           canvas.requestRenderAll();
         }
 
@@ -1419,19 +1427,21 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         isDrawingShapeRef.current = true;
         shapeStartRef.current = { x: pointer.x, y: pointer.y };
 
-        const fillColor = settings.fillColor || settings.color || '#E8EBD9';
-        const strokeColor = settings.strokeColor || '#5E6547';
+        const curSettings = settingsRef.current;
+        const fillColor = curSettings.fillColor || curSettings.color || '#E8EBD9';
+        const strokeColor = curSettings.strokeColor || '#5E6547';
         const commonProps = {
           left: pointer.x,
           top: pointer.y,
           fill: fillColor,
           stroke: strokeColor,
-          strokeWidth: settings.strokeWidth || 2,
-          opacity: settings.opacity,
+          strokeWidth: curSettings.strokeWidth || 2,
+          opacity: curSettings.opacity,
           selectable: true
         };
 
-        const shapeObj = createFabricShape(settings.shapeType, commonProps, 2, 2);
+        const shapeObj = createFabricShape(curSettings.shapeType, commonProps, 2, 2);
+        (shapeObj as any).shapeType = curSettings.shapeType;
         activeShapeObjectRef.current = shapeObj;
         canvas.add(shapeObj);
         return;
@@ -1602,6 +1612,8 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             actualH = (obj.height || 0) * (obj.scaleY || 1);
           }
 
+          let finalCreatedObject: FabricObject = obj;
+
           // If shape is arrow, add arrowhead
           if (activeTool === 'arrow') {
             const line = obj as FabricLine;
@@ -1634,6 +1646,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
             const arrowGroup = new Group([line, arrowHead], { selectable: true });
             canvas.add(arrowGroup);
             arrowGroup.setCoords();
+            finalCreatedObject = arrowGroup;
           } else if (activeTool === 'line') {
             const line = obj as FabricLine;
             let x1 = line.x1 || start.x;
@@ -1644,14 +1657,24 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
               line.set({ x1, y1, x2: x1 + 120, y2: y1 });
             }
             line.setCoords();
+            finalCreatedObject = line;
           } else if (activeTool === 'shape') {
             // ONLY if the user single-clicked without dragging (< 10px), provide a standard default size
             if (actualW < 10 && actualH < 10) {
               applyDefaultShapeDimensions(obj, start.x, start.y);
             }
             obj.setCoords();
+            finalCreatedObject = obj;
           } else {
             obj.setCoords();
+            finalCreatedObject = obj;
+          }
+
+          finalCreatedObject.setCoords();
+          canvas.setActiveObject(finalCreatedObject);
+          updateSelectionPropsRef.current();
+          if (onToolChange) {
+            onToolChange('select');
           }
 
           canvas.renderAll();
@@ -1669,6 +1692,7 @@ export const CanvasWorkspace: React.FC<CanvasWorkspaceProps> = ({
         }
       }
     };
+    handleMouseUpRef.current = handleMouseUp;
 
     canvas.on('mouse:down', handleMouseDown);
     canvas.on('mouse:move', handleMouseMove);
